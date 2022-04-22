@@ -1,0 +1,8 @@
+Order of workflow
+1-Data preparation
+2-DEG analysis
+3-Extract overlapped genes
+4-Pathway Analysis
+5-Create heatmap
+6-Network analysis
+7-Metabolomics analysis
