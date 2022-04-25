@@ -26,6 +26,7 @@ require(downloader)
 download(fileUrl, "data/metabolomics.csv.gz", mode = "wb")
 
 #Note: if the URL download does not work, the zipped file is located on GitHub to continue the rest of this script.
+if(!"R.utils" %in% installed.packages()){install.packages("R.utils")}
 library(R.utils)
 gunzip("data/metabolomics.csv.gz", remove=FALSE)
 
@@ -48,6 +49,7 @@ mSet_Cleaned <- mSet[!is.na(mSet$"HMDB...Representative.ID."),]
 #Remove all elements without an actual HMDB ID:
 mSet_Cleaned_Ion <- mSet_Cleaned[!grepl("redundant ion", mSet_Cleaned$HMDB...Representative.ID.),]
 
+if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
 library(dplyr)
 
 #IDs ending with a * (indicating ...) are placed in a separate column (to keep track of for future reference)
@@ -65,12 +67,61 @@ mSet_Cleaned_HMDB_NEW <- data.frame(lapply(mSet_Cleaned_HMDB, function(x) {
                   gsub("HMDB", "HMDB00", x)
              }))
 
+
+remove(mSet,mSet_Cleaned, mSet_Cleaned_Ion, mSet_Cleaned_Star, mSet_Cleaned_HMDB)
+
 ##DATA PROCESSING:
 
-# The file called "sampleLabels" will be used to connect the column names to the correct disorder/control group.
-##TO-DO: find location of this datasource, see issue  #7 on GitHub
+#Remove metabolites with < 50% data (located in columns 8-553.
+removeLines <- rowSums(is.na(mSet_Cleaned_HMDB_NEW[,8-553]))
+fifty_percent <- floor((553-8)/2)
 
-#Remove not processed data and intermediate products:
-remove(mSet, mSet_Cleaned, mSet_Cleaned_Ion, mSet_Cleaned_Star, mSet_Cleaned_HMDB)
+mSet_MissingDataCounted <- cbind(mSet_Cleaned_HMDB_NEW, removeLines)
+mSet_NoMissingData <- subset(mSet_MissingDataCounted, removeLines <= fifty_percent)
+
+#Convert intensity data to numeric values                         
+mSet_NoMissingData[ , c(8:553)] <- apply(mSet_NoMissingData[ , c(8:553)], 2, function(x) as.numeric(as.character(x)))
+
+##TODO ask Duygu what this step does?
+#set the rest features as column mean 
+
+##normalization (see https://doi.org/10.1177%2F1469066720918446 )
+#Cube root transformation on intensity data
+mSet_cube_root <- cbind(mSet_NoMissingData[,c(1:7,554,555)], mSet_NoMissingData[,8:553]^(1/3))
+
+remove(mSet_Cleaned_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData)
+```
+
+## Calculate logFC and p-value
+```{r basic_statistics, warning=FALSE, message=FALSE}
+# The file called "sampleLabels" will be used to connect the column names to the correct disorder/control group.
+##TODO: find location of this datasource, see issue  #7 on GitHub
+
+##calculate logFC for 2 groups (CD vs control, UC vs control)  
+
+##Calculate p-value for two groups based on two-tailed t-test.
+```
+
+
+## Volcano plot
+--> Update script below, to create an Volcano plot without MetaboAnalystR
+
+```{r volcano_plot,warning=FALSE, message=FALSE}
+#See https://bioconductor.org/packages/devel/bioc/vignettes/EnhancedVolcano/inst/doc/EnhancedVolcano.html
+if (!requireNamespace('BiocManager', quietly = TRUE))
+    install.packages('BiocManager')
+  BiocManager::install('EnhancedVolcano')
+
+library(EnhancedVolcano)
+
+```
+
+
+Export the data:
+```{r data_export, warning=FALSE, message=FALSE}
+# Saving output
+if(dir.exists("output"))#if the output folder already exist
+  unlink("output", recursive=TRUE)#first delete the existing one
+dir.create("output")#create a new output folder
 ```
 
