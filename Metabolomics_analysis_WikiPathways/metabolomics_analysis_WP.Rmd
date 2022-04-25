@@ -25,6 +25,7 @@ fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metabolites/1723/HMP2_metabo
 require(downloader)
 download(fileUrl, "data/metabolomics.csv.gz", mode = "wb")
 
+#Note: if the URL download does not work, the zipped file is located on GitHub to continue the rest of this script.
 library(R.utils)
 gunzip("data/metabolomics.csv.gz", remove=FALSE)
 
@@ -66,6 +67,8 @@ mSet_Cleaned_HMDB_NEW <- data.frame(lapply(mSet_Cleaned_HMDB, function(x) {
 
 ##DATA PROCESSING:
 
+# The file called "sampleLabels" will be used to connect the column names to the correct disorder/control group.
+##TO-DO: find location of this datasource, see issue  #7 on GitHub
 
 #Remove not processed data and intermediate products:
 remove(mSet, mSet_Cleaned, mSet_Cleaned_Ion, mSet_Cleaned_Star, mSet_Cleaned_HMDB)
