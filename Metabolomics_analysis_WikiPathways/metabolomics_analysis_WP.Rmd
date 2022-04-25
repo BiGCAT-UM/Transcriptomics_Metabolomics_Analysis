@@ -1,0 +1,73 @@
+---
+title: "metabolomics_analysis"
+author: 
+- "ddedesener"
+- "DeniseSl22"
+date: "25/04/2022"
+output:
+ md_document:
+    variant: markdown_github
+always_allow_html: true
+---
+
+## Introduction
+In this workflow, we will apply statistical analysis on metabolomics data and link the metabolites of interest to pathway data from WikiPathways.
+
+First we download the required data.
+```{r data_download,warning=FALSE, message=FALSE}
+# Set Working Directory, download data and store in /Data folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
+# Obtain a file locally by its url
+install.packages("downloader")
+fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metabolites/1723/HMP2_metabolomics.csv.gz?accessType=DOWNLOAD"
+require(downloader)
+download(fileUrl, "data/metabolomics.csv.gz", mode = "wb")
+
+library(R.utils)
+gunzip("data/metabolomics.csv.gz", remove=FALSE)
+
+remove(fileUrl)
+```
+
+Second, we perform data extraction from the file, and process the data
+```{r data_import,warning=FALSE, message=FALSE}
+##DATA CLEANUP:
+
+# Read in the csv file with data (note this might take some time, 81867 rows in original dataset)
+mSet <- read.csv("data/metabolomics.csv", na.strings=c("", "NA"))
+
+#Replace all empty values with NA
+mSet[mSet==""] <- NA
+
+#remove all lines with an empty value for the column called "HDMB"
+mSet_Cleaned <- mSet[!is.na(mSet$"HMDB...Representative.ID."),]
+
+#Remove all elements without an actual HMDB ID:
+mSet_Cleaned_Ion <- mSet_Cleaned[!grepl("redundant ion", mSet_Cleaned$HMDB...Representative.ID.),]
+
+library(dplyr)
+
+#IDs ending with a * (indicating ...) are placed in a separate column (to keep track of for future reference)
+mSet_Cleaned_Star <- mSet_Cleaned_Ion%>%mutate(Star = case_when(
+ grepl("[*]",mSet_Cleaned_Ion$HMDB...Representative.ID.) ~ 1
+))
+
+#Update IDs with a * to regular IDs.
+mSet_Cleaned_HMDB <- data.frame(lapply(mSet_Cleaned_Star, function(x) {
+                  gsub("[*]", "", x)
+             }))
+
+#Update IDs To new HMDB structure
+mSet_Cleaned_HMDB_NEW <- data.frame(lapply(mSet_Cleaned_HMDB, function(x) {
+                  gsub("HMDB", "HMDB00", x)
+             }))
+
+##DATA PROCESSING:
+
+
+#Remove not processed data and intermediate products:
+remove(mSet, mSet_Cleaned, mSet_Cleaned_Ion, mSet_Cleaned_Star, mSet_Cleaned_HMDB)
+```
+
