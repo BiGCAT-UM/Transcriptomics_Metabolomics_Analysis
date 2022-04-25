@@ -1,7 +1,9 @@
 ---
 title: "metabolomics_analysis"
-author: "ddedesener"
-date: "03/01/2022"
+author: 
+- "ddedesener"
+- "DeniseSl22"
+date: "25/04/2022"
 output:
  md_document:
     variant: markdown_github
@@ -9,8 +11,7 @@ always_allow_html: true
 ---
 
 ## Introduction
-In this workflow, we will apply statis one factoral analysis on metabolomics data
-using MetaboAnalyst software R packages.
+In this workflow, we will apply statistical analysis on metabolomics data using the MetaboAnalyst software R packages.
 MetaboAnalystR 3 contains the R functions and libraries underlying the popular MetaboAnalyst web server, including metabolomic data analysis, visualization, and functional interpretation. The package is synchronized with the MetaboAnalyst web server. After installing and loading the package, users will be able to reproduce the same results from their local computers using the corresponding R command history downloaded from MetaboAnalyst web site, thereby achieving maximum flexibility and reproducibility.
 source:https://www.metaboanalyst.ca/MetaboAnalyst/docs/RTutorial.xhtml
 
@@ -27,7 +28,18 @@ library(BiocManager)
 library(rstudioapi)
 library(MetaboAnalystR)
 ```
+## Install MetaboAnalystR
+```{r setup_MetaboAnalystR, warning=FALSE, message=FALSE}
+# Step 2: Install devtools
+install.packages("devtools")
+library(devtools)
 
+# Step 3: Install MetaboAnalystR with documentation
+devtools::install_github("xia-lab/MetaboAnalystR", build = TRUE, build_vignettes = TRUE, build_manual =T)
+
+# Step 4: load the actual library.
+library(MetaboAnalystR)
+```
 # Data import and preprocessing
 ```{r data_import,warning=FALSE, message=FALSE}
 # set your working environment to the location where your current source file is saved into.
