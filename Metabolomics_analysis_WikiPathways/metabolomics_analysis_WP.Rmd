@@ -87,7 +87,7 @@ mSet_NoMissingData[ , c(8:553)] <- apply(mSet_NoMissingData[ , c(8:553)], 2, fun
 
 ##normalization (see https://doi.org/10.1177%2F1469066720918446 and https://www.statology.org/transform-data-in-r/)
 ##Users can select different transformation styles here:
-transformation <- "log_2" #log_2 transformation on intensity data selected for IBD dataset, other options: square_root, log_2, log_10
+transformation <- "log_2" #log_2 transformation on intensity data selected for IBD dataset, options are: cube_root, square_root, log_2, log_10
 
 if(transformation == "cube_root"){
     mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], mSet_NoMissingData[,8:553]^(1/3))
@@ -129,14 +129,70 @@ remove(mSet_Cleaned_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData, mSet_
 
 ## Calculate logFC and p-value
 ```{r basic_statistics, warning=FALSE, message=FALSE}
-# The file called "sampleLabels" will be used to connect the column names to the correct disorder/control group.
-##TODO: find location of this datasource, see issue  #7 on GitHub
+##Download metadata, extract metabolomics sample IDs, location and disorders.
+fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metadata/hmp2_metadata.csv?accessType=DOWNLOAD"
+require(downloader)
+download(fileUrl, "data/hmp2_metadata.csv", mode = "wb")
+
+#Read metadata
+htxMeta <- read.csv("data/hmp2_metadata.csv")
+#Filter out by data type as metabolomics
+htxMeta <- htxMeta  %>% filter(htxMeta$data_type == "metabolomics")
+
+#Filter out data by disorders CD, UC and nonIBD samples 
+htxMeta <-htxMeta  %>% filter(  (htxMeta$diagnosis == "CD" ) 
+                                |  (htxMeta$diagnosis == "UC") 
+                                |  (htxMeta$diagnosis == "nonIBD") 
+                              )
+#filter out unused columns
+htxMeta <- htxMeta %>% select(External.ID,Participant.ID,diagnosis)
+# order sample names based on columns external.ID
+htxMeta <- htxMeta[order(htxMeta$External.ID),]
+
+#Obtain Sample IDs which are both in mSet data and metadata
+names.use <- names(mSet_transformed)[(names(mSet_transformed) %in% htxMeta$External.ID)]
+
+#filter out metabolomics based on names.use and create metabolomicsFINAL (only retaining HMDB ID intensity data)
+mSet_FINAL <- mSet_transformed[, names.use]
+
+#metabolomicsFINAL data are ordered based on column names to match samples between metabolomicsFINAL and sampleLabels
+mSet_FINAL <- mSet_FINAL[,order(names(mSet_FINAL))]
+#check whether they are in same order
+colnames(mSet_FINAL) == htxMeta[,"External.ID"]
+
+#add updated column names to the metadata file
+colnames(htxMeta) <- c("sampleID", "participantID","disease")
+#check whether sample names are in same order
+all(colnames(mSet_FINAL) == rownames(htxMeta$sampleID))
+
+#Connect disease info to metabolomics data
+colname_Disorders <- htxMeta$disease
+colnames(mSet_FINAL) <-c(colname_Disorders)
+
+##Order columns based on disease
+mSet_FINAL <- mSet_FINAL[ , order(names(mSet_FINAL))]
+
+##ADD HMDB column at start
+mSet_FINAL <- cbind(mSet_transformed$HMDB...Representative.ID., mSet_FINAL)
+##Rename first column
+colnames(mSet_FINAL)[1] <- "HMDB_ID"
 
 ##calculate logFC for 2 groups (CD vs control, UC vs control)  
+library(stringr)
+columns_CD <- sum(str_count(colname_Disorders, "CD"))
+columns_nonIBD <- sum(str_count(colname_Disorders, "nonIBD"))
+columns_UC <- sum(str_count(colname_Disorders, "UC"))
+numberofMetabolites <- nrow(mSet_FINAL)
 
 ##Calculate p-value for two groups based on two-tailed t-test.
+##TODO: run t-test, and stor p-value for all HMDB IDs (in new dataframe?)
+t.test(mSet_FINAL[1,2:(columns_CD[1]+1)], mSet_FINAL[1,(columns_CD[1]+2):(columns_nonIBD[1]+2)], c("two.sided"))
 
 ##Check for duplicate IDs, only retain those which are significant.
+
+
+
+remove(fileUrl, mSet_transformed, names.use)
 ```
 
 
