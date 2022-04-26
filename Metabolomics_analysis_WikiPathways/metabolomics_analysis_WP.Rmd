@@ -85,11 +85,46 @@ mSet_NoMissingData[ , c(8:553)] <- apply(mSet_NoMissingData[ , c(8:553)], 2, fun
 ##TODO ask Duygu what this step does?
 #set the rest features as column mean 
 
-##normalization (see https://doi.org/10.1177%2F1469066720918446 )
-#Cube root transformation on intensity data
-mSet_cube_root <- cbind(mSet_NoMissingData[,c(1:7,554,555)], mSet_NoMissingData[,8:553]^(1/3))
+##normalization (see https://doi.org/10.1177%2F1469066720918446 and https://www.statology.org/transform-data-in-r/)
+##Users can select different transformation styles here:
+transformation <- "log_2" #log_2 transformation on intensity data selected for IBD dataset, other options: square_root, log_2, log_10
 
-remove(mSet_Cleaned_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData)
+if(transformation == "cube_root"){
+    mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], mSet_NoMissingData[,8:553]^(1/3))
+}else if(transformation == "square_root"){
+    mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], mSet_NoMissingData[,8:553]^(1/2))
+}else if(transformation == "log_2"){
+    mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], log2(mSet_NoMissingData[,8:553]))
+}else if(transformation == "log_10"){
+    mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], log10(mSet_NoMissingData[,8:553]))
+}else{print("Warning: name for transformation not recognized")}
+
+## Visualize the data after the transformation (for one sample to get an idea of suitability of transformation:
+#create histogram for original distribution for first column with data
+hist(mSet_NoMissingData$HSM5FZBQ, col='steelblue', main='Original')
+#create histogram for log-transformed distribution 
+hist(mSet_transformed$HSM5FZBQ, col='coral2', main=transformation)
+
+## Testing if the transformation creates a normally distributed dataset (alpha >= 0.05)
+##Calculate all Shapiro values for raw and transformed data:
+mSet_NoMissingData_Shapiro <- lapply(mSet_NoMissingData[,8:553], shapiro.test)
+mSet_transformed_Shapiro <- lapply(mSet_transformed[,10:555], shapiro.test)
+
+#Obtain the p-values for raw and transformed data
+mSet_NoMissingData_Shapiro_pvalues <- do.call(rbind, mSet_NoMissingData_Shapiro)
+mSet_transformed_Shapiro_pvalues <- do.call(rbind, mSet_transformed_Shapiro)
+
+## Count how often the p-value is above 0.05, to obtain an estimate of achieved normality due to transformation
+mSet_NoMissingData_Shapiro_pvalues_sum <- sum(mSet_NoMissingData_Shapiro_pvalues[,2] >= 0.05, na.rm=TRUE)
+mSet_transformed_Shapiro_pvalues_sum <- sum(mSet_transformed_Shapiro_pvalues[,2] >= 0.05, na.rm=TRUE)
+
+eighty_percent <- floor(((553-8)/10)*8)
+
+#Print relevant information:
+if(mSet_transformed_Shapiro_pvalues_sum[1] > eighty_percent ){paste0("Data after ", transformation ," transformation seems to follow a normal distribution for more then 80% of your data")} else{
+  print("Advised to select a different data transformation procedure")}
+
+remove(mSet_Cleaned_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData, mSet_NoMissingData_Shapiro, mSet_NoMissingData_Shapiro_pvalues, mSet_transformed_Shapiro, mSet_transformed_Shapiro_pvalues, eighty_percent, fifty_percent, mSet_NoMissingData_Shapiro_pvalues_sum, mSet_transformed_Shapiro_pvalues_sum, transformation, removeLines)
 ```
 
 ## Calculate logFC and p-value
@@ -100,6 +135,8 @@ remove(mSet_Cleaned_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData)
 ##calculate logFC for 2 groups (CD vs control, UC vs control)  
 
 ##Calculate p-value for two groups based on two-tailed t-test.
+
+##Check for duplicate IDs, only retain those which are significant.
 ```
 
 
