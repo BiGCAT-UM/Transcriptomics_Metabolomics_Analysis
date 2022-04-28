@@ -124,7 +124,7 @@ eighty_percent <- floor(((553-8)/10)*8)
 if(mSet_transformed_Shapiro_pvalues_sum[1] > eighty_percent ){paste0("Data after ", transformation ," transformation seems to follow a normal distribution for more then 80% of your data")} else{
   print("Advised to select a different data transformation procedure")}
 
-remove(mSet_Cleaned_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData, mSet_NoMissingData_Shapiro, mSet_NoMissingData_Shapiro_pvalues, mSet_transformed_Shapiro, mSet_transformed_Shapiro_pvalues, eighty_percent, fifty_percent, mSet_NoMissingData_Shapiro_pvalues_sum, mSet_transformed_Shapiro_pvalues_sum, transformation, removeLines)
+remove(mSet_Cleaned_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData, mSet_NoMissingData_Shapiro, mSet_NoMissingData_Shapiro_pvalues, mSet_transformed_Shapiro, mSet_transformed_Shapiro_pvalues, eighty_percent, fifty_percent, mSet_NoMissingData_Shapiro_pvalues_sum, mSet_transformed_Shapiro_pvalues_sum, removeLines)
 ```
 
 ## Calculate logFC and p-value
@@ -158,12 +158,13 @@ mSet_FINAL <- mSet_transformed[, names.use]
 #metabolomicsFINAL data are ordered based on column names to match samples between metabolomicsFINAL and sampleLabels
 mSet_FINAL <- mSet_FINAL[,order(names(mSet_FINAL))]
 #check whether they are in same order
-colnames(mSet_FINAL) == htxMeta[,"External.ID"]
+#colnames(mSet_FINAL) == htxMeta[,"External.ID"]
 
 #add updated column names to the metadata file
 colnames(htxMeta) <- c("sampleID", "participantID","disease")
 #check whether sample names are in same order
-all(colnames(mSet_FINAL) == rownames(htxMeta$sampleID))
+checker <- all(colnames(mSet_FINAL) == rownames(htxMeta$sampleID)) 
+paste("Matching between sample IDs and disorders went correctly:", checker)
 
 #Connect disease info to metabolomics data
 colname_Disorders <- htxMeta$disease
@@ -177,22 +178,59 @@ mSet_FINAL <- cbind(mSet_transformed$HMDB...Representative.ID., mSet_FINAL)
 ##Rename first column
 colnames(mSet_FINAL)[1] <- "HMDB_ID"
 
-##calculate logFC for 2 groups (CD vs control, UC vs control)  
+#Find relevant columns per group.
 library(stringr)
 columns_CD <- sum(str_count(colname_Disorders, "CD"))
 columns_nonIBD <- sum(str_count(colname_Disorders, "nonIBD"))
 columns_UC <- sum(str_count(colname_Disorders, "UC"))
-numberofMetabolites <- nrow(mSet_FINAL)
 
-##Calculate p-value for two groups based on two-tailed t-test.
-##TODO: run t-test, and stor p-value for all HMDB IDs (in new dataframe?)
-t.test(mSet_FINAL[1,2:(columns_CD[1]+1)], mSet_FINAL[1,(columns_CD[1]+2):(columns_nonIBD[1]+2)], c("two.sided"))
+##Note: first column contains HMDB IDs.
+end_CD_columns <- (columns_CD+1)
+start_nonIBD_columns <- (columns_CD+2)
+end_nonIBD_columns <- ((columns_CD+columns_nonIBD+1))
+start_UC_columns <- ((columns_CD+columns_nonIBD+2))
 
-##Check for duplicate IDs, only retain those which are significant.
+##calculate logFC for 2 groups (CD vs control, UC vs control), ignoring missing values (NAs) when calculating the mean.  
+disease_CD = apply(mSet_FINAL[,2:end_CD_columns], 1, mean, na.rm=TRUE)
+control_IBD = apply(mSet_FINAL[,start_nonIBD_columns:end_nonIBD_columns], 1, mean, na.rm=TRUE)
+disease_UC = apply(mSet_FINAL[,start_UC_columns:ncol(mSet_FINAL)], 1, mean, na.rm=TRUE)
 
+#because the metabolomics data is already log2 transformed, we need to take the difference between the means (iso dividing the means over one another), since log2 Fold Change or log2 Ratio == log2(control / condition). Note: if the transformation step applied is cube_root or square_root, one needs to divide control over disease for this step!
 
+if(transformation == "log_2" | transformation == "log10"){
+    foldchange_CD <- control_IBD - disease_CD
+    foldchange_UC <- control_IBD - disease_UC
+}else{
+  foldchange_CD <- (control_IBD / disease_CD)
+  foldchange_UC <- (control_IBD / disease_UC)}
 
-remove(fileUrl, mSet_transformed, names.use)
+##ADD HMDB column at start, add fold change columns.
+mSet_AnalysisReady <- cbind(mSet_FINAL$HMDB_ID, foldchange_CD, foldchange_UC)
+##Rename first column
+colnames(mSet_AnalysisReady)[1] <- "HMDB_ID"
+
+##Calculate p-value for two groups based on t-test (comparing control to disease).
+##general function to store p-values for multiple rows:
+ttest_mSet <- function(df, grp1, grp2) {
+  x = df[grp1]
+  y = df[grp2]
+  x = as.numeric(x)
+  y = as.numeric(y)  
+  results = t.test(x, y)
+  results$p.value
+}
+##CD:
+p_values_CD <- apply(mSet_FINAL, 1, ttest_mSet, grp1 = c(start_nonIBD_columns:end_nonIBD_columns), grp2 = c(2:end_CD_columns))
+p_values_UC <- apply(mSet_FINAL, 1, ttest_mSet, grp1 = c(start_nonIBD_columns:end_nonIBD_columns), grp2 = c(start_UC_columns:ncol(mSet_FINAL)))
+
+##Add p_values columns to analysis dataset:
+mSet_AnalysisReady <- cbind(mSet_AnalysisReady, p_values_CD, p_values_UC)
+
+#Convert logFC and p-values columns to numeric values            
+mSet_AnalysisReady <- as.data.frame(mSet_AnalysisReady)
+mSet_AnalysisReady[ , c(2:5)] <- apply(mSet_AnalysisReady[ , c(2:5)], 2, function(x) as.numeric(as.character(x)))
+
+remove(fileUrl, mSet_transformed, names.use, transformation, columns_CD, columns_nonIBD, columns_UC, end_CD_columns, start_nonIBD_columns, end_nonIBD_columns, start_UC_columns, foldchange_CD, foldchange_UC, p_values_CD, p_values_UC, colname_Disorders, control_IBD, disease_CD, disease_UC, ttest_mSet, checker, htxMeta, mSet_FINAL)
 ```
 
 
@@ -201,11 +239,22 @@ remove(fileUrl, mSet_transformed, names.use)
 
 ```{r volcano_plot,warning=FALSE, message=FALSE}
 #See https://bioconductor.org/packages/devel/bioc/vignettes/EnhancedVolcano/inst/doc/EnhancedVolcano.html
+##Potentially relevant packages needing to be updated before installing EnHancedVolcano (for Linux Debian):
+install.packages("libfontconfig1-dev", "pkgconfig", "systemfonts", "Cairo")
+
+
+#'getOption("repos")' replaces Bioconductor standard repositories, see '?repositories' for details
+
 if (!requireNamespace('BiocManager', quietly = TRUE))
     install.packages('BiocManager')
-  BiocManager::install('EnhancedVolcano')
+  BiocManager::install('EnhancedVolcano', lib = "/home/deniseslenter/R/x86_64-pc-linux-gnu-library/4.1")
 
 library(EnhancedVolcano)
+  
+EnhancedVolcano(mSet_AnalysisReady,
+    lab = rownames(mSet_AnalysisReady),
+    x = 'log2FoldChange',
+    y = 'pvalue')
 
 ```
 
