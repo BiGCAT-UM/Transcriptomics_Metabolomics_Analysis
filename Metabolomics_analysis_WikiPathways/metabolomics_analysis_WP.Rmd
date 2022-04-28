@@ -235,26 +235,44 @@ remove(fileUrl, mSet_transformed, names.use, transformation, columns_CD, columns
 
 
 ## Volcano plot
---> Update script below, to create an Volcano plot without MetaboAnalystR
+The next step will visualize relevant metabolites in a Volcano plot, with thresholds defined for the log2FCs and p-values.
+Since we are dealing with nontargeted LC_MS data, we are applying stringent criteria here (p-value below 0.01, and |log2FC| >= 1.5)
 
 ```{r volcano_plot,warning=FALSE, message=FALSE}
-#See https://bioconductor.org/packages/devel/bioc/vignettes/EnhancedVolcano/inst/doc/EnhancedVolcano.html
-##Potentially relevant packages needing to be updated before installing EnHancedVolcano (for Linux Debian):
-install.packages("libfontconfig1-dev", "pkgconfig", "systemfonts", "Cairo")
+##Inspired on: https://biocorecrg.github.io/CRG_RIntroduction/volcano-plots.html
+library('ggplot2')
 
+##Define the thresholds for log2 (Fold Change) and p-values
+#For cut-off value uncertainties, see https://doi.org/10.1039/C6AN01342B .
+log2FC_min <- -1.5
+log2FC_max <- 1.5
+p_value_threshold <- 0.01
 
-#'getOption("repos")' replaces Bioconductor standard repositories, see '?repositories' for details
+##Create column with HMDB_IDs, only if the data is relevant
+mSet_AnalysisReady$relevant_labels_CD <- mSet_AnalysisReady$HMDB_ID
+mSet_AnalysisReady$relevant_labels_CD[!((mSet_AnalysisReady$foldchange_CD <= log2FC_min | mSet_AnalysisReady$foldchange_CD >= log2FC_max) &  mSet_AnalysisReady$p_values_CD <= p_value_threshold)] <- NA
 
-if (!requireNamespace('BiocManager', quietly = TRUE))
-    install.packages('BiocManager')
-  BiocManager::install('EnhancedVolcano', lib = "/home/deniseslenter/R/x86_64-pc-linux-gnu-library/4.1")
+mSet_AnalysisReady$relevant_labels_UC <- mSet_AnalysisReady$HMDB_ID
+mSet_AnalysisReady$relevant_labels_UC[!((mSet_AnalysisReady$foldchange_UC <= log2FC_min | mSet_AnalysisReady$foldchange_UC >= log2FC_max) &  mSet_AnalysisReady$p_values_UC <= p_value_threshold)] <- NA
 
-library(EnhancedVolcano)
-  
-EnhancedVolcano(mSet_AnalysisReady,
-    lab = rownames(mSet_AnalysisReady),
-    x = 'log2FoldChange',
-    y = 'pvalue')
+# Library needed to space out the labels
+library(ggrepel)
+
+##volcanoPlot_CD 
+volcanoPlot_CD <- ggplot(data=mSet_AnalysisReady, aes(x=foldchange_CD, y=-log10(p_values_CD), label=relevant_labels_CD)) + geom_point() + theme_minimal() + geom_text_repel()
+
+##volcanoPlot_UC 
+volcanoPlot_UC <- ggplot(data=mSet_AnalysisReady, aes(x=foldchange_UC, y=-log10(p_values_UC), label=relevant_labels_UC)) + geom_point() + theme_minimal() + geom_text_repel()
+
+## Add vertical lines for FoldChange and P-value thresholds:
+volcanoPlot_CD <- volcanoPlot_CD + geom_vline(xintercept=c(log2FC_min, log2FC_max), col="blue") +
+    geom_hline(yintercept=-log10(p_value_threshold), col="red")
+volcanoPlot_UC <- volcanoPlot_UC + geom_vline(xintercept=c(log2FC_min, log2FC_max), col="blue") +
+    geom_hline(yintercept=-log10(p_value_threshold), col="red")
+
+# Show the plots in the notebook output:
+volcanoPlot_CD
+volcanoPlot_UC
 
 ```
 
