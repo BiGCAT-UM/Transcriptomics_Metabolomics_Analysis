@@ -21,9 +21,32 @@ Installing and loading required libraries
 # check if libraries are already installed > otherwise install it
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
-if(!"MetaboAnalystR" %in% installed.packages()) BiocManager::install("MetaboAnalystR")
 
-#load installed librariers
+## MetaboAnalyst R not supported in BioConductor 3.15
+#if(!"MetaboAnalystR" %in% installed.packages()) BiocManager::install("MetaboAnalystR")
+
+## Install MetaboAnalyst R via Github repo:
+
+### Dependancies for MetaboAnalystR from BioConductor (version 3.15)
+BiocManager::install("pcaMethods")
+BiocManager::install("Biobase")
+BiocManager::install("RBGL")
+BiocManager::install("BiocParallel")
+BiocManager::install("edgeR")
+BiocManager::install("fgsea")
+BiocManager::install("impute")
+BiocManager::install("MSnbase")
+BiocManager::install("siggenes")
+
+### Dependencies for MetaboAnalystR from CRAN
+install.packages("crmn")
+
+### Remotes and devtools packages helps install packages from GitHub
+install.packages("devtools")
+install.packages('remotes')
+remotes::install_github('xia-lab/MetaboAnalystR')
+
+#load installed libraries
 library(BiocManager)
 library(rstudioapi)
 library(MetaboAnalystR)
