@@ -144,6 +144,11 @@ htxMeta <-htxMeta  %>% filter(  (htxMeta$diagnosis == "CD" )
                                 |  (htxMeta$diagnosis == "UC") 
                                 |  (htxMeta$diagnosis == "nonIBD") 
                               )
+
+#filter out samples by visit_num=4 (for metabolomics)
+## Still test!
+#htxMeta <-htxMeta  %>% filter(htxMeta$visit_num == "4")
+
 #filter out unused columns
 htxMeta <- htxMeta %>% select(External.ID,Participant.ID,diagnosis)
 # order sample names based on columns external.ID
@@ -256,6 +261,7 @@ mSet_AnalysisReady$relevant_labels_UC <- mSet_AnalysisReady$HMDB_ID
 mSet_AnalysisReady$relevant_labels_UC[!((mSet_AnalysisReady$foldchange_UC <= log2FC_min | mSet_AnalysisReady$foldchange_UC >= log2FC_max) &  mSet_AnalysisReady$p_values_UC <= p_value_threshold)] <- NA
 
 # Library needed to space out the labels
+install.packages('ggrepel')
 library(ggrepel)
 
 ##volcanoPlot_CD 
@@ -273,6 +279,35 @@ volcanoPlot_UC <- volcanoPlot_UC + geom_vline(xintercept=c(log2FC_min, log2FC_ma
 # Show the plots in the notebook output:
 volcanoPlot_CD
 volcanoPlot_UC
+
+## Add labels to the IDs with BridgeDb
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+install.packages('rJava') ## See https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/ if you have issues with this package on Ubuntu.
+BiocManager::install("BridgeDbR")
+library(BridgeDbR)
+
+##Download the Metabolite mapping file:
+fileUrl <- "https://ndownloader.figshare.com/files/26001794?accessType=DOWNLOAD"
+require(downloader)
+download(fileUrl, "data/metabolites.bridge", mode = "wb")
+
+mapper <- loadDatabase('data/metabolites.bridge')
+
+## Obtain the System codes for the databases HMDB (source database of dataset) and ChEBI (intended output database)
+code = getOrganismCode("Homo sapiens")
+code_mappingFrom <- getSystemCode("HMDB")
+code_mappingTo <- getSystemCode("ChEBI")
+
+## Create a dataframe with the mappings and the correct SystemCode
+input = data.frame(
+  source = rep(code_mappingFrom, length(mSet_AnalysisReady[,1])),
+  identifier = mSet_AnalysisReady[,1]
+)
+
+#Obtain all mappings from HMDB to ChEBI
+MultiMappings = maps(mapper, input, code_mappingTo)
+
+##Remove all rows in the mapped data which do not include the prefix "CHEBI:"
 
 ```
 
