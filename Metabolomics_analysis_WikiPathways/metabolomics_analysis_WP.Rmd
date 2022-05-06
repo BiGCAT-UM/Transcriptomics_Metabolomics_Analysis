@@ -1,0 +1,322 @@
+---
+title: "metabolomics_analysis"
+author: 
+- "ddedesener"
+- "DeniseSl22"
+date: "25/04/2022"
+output:
+ md_document:
+    variant: markdown_github
+always_allow_html: true
+---
+
+## Introduction
+In this workflow, we will apply statistical analysis on metabolomics data and link the metabolites of interest to pathway data from WikiPathways.
+
+First we download the required data.
+```{r data_download,warning=FALSE, message=FALSE}
+# Set Working Directory, download data and store in /Data folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
+# Obtain a file locally by its url
+install.packages("downloader")
+fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metabolites/1723/HMP2_metabolomics.csv.gz?accessType=DOWNLOAD"
+require(downloader)
+download(fileUrl, "data/metabolomics.csv.gz", mode = "wb")
+
+#Note: if the URL download does not work, the zipped file is located on GitHub to continue the rest of this script.
+if(!"R.utils" %in% installed.packages()){install.packages("R.utils")}
+library(R.utils)
+gunzip("data/metabolomics.csv.gz", remove=FALSE)
+
+remove(fileUrl)
+```
+
+Second, we perform data extraction from the file, and process the data
+```{r data_import,warning=FALSE, message=FALSE}
+##DATA CLEANUP:
+
+# Read in the csv file with data (note this might take some time, 81867 rows in original dataset)
+mSet <- read.csv("data/metabolomics.csv", na.strings=c("", "NA"))
+
+#Replace all empty values with NA
+mSet[mSet==""] <- NA
+
+#remove all lines with an empty value for the column called "HDMB"
+mSet_Cleaned <- mSet[!is.na(mSet$"HMDB...Representative.ID."),]
+
+#Remove all elements without an actual HMDB ID:
+mSet_Cleaned_Ion <- mSet_Cleaned[!grepl("redundant ion", mSet_Cleaned$HMDB...Representative.ID.),]
+
+if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
+library(dplyr)
+
+#IDs ending with a * (indicating ...) are placed in a separate column (to keep track of for future reference)
+mSet_Cleaned_Star <- mSet_Cleaned_Ion%>%mutate(Star = case_when(
+ grepl("[*]",mSet_Cleaned_Ion$HMDB...Representative.ID.) ~ 1
+))
+
+#Update IDs with a * to regular IDs.
+mSet_Cleaned_HMDB <- data.frame(lapply(mSet_Cleaned_Star, function(x) {
+                  gsub("[*]", "", x)
+             }))
+
+#Update IDs To new HMDB structure
+mSet_Cleaned_HMDB_NEW <- data.frame(lapply(mSet_Cleaned_HMDB, function(x) {
+                  gsub("HMDB", "HMDB00", x)
+             }))
+
+
+remove(mSet,mSet_Cleaned, mSet_Cleaned_Ion, mSet_Cleaned_Star, mSet_Cleaned_HMDB)
+
+##DATA PROCESSING:
+
+#Remove metabolites with < 50% data (located in columns 8-553.
+removeLines <- rowSums(is.na(mSet_Cleaned_HMDB_NEW[,8-553]))
+fifty_percent <- floor((553-8)/2)
+
+mSet_MissingDataCounted <- cbind(mSet_Cleaned_HMDB_NEW, removeLines)
+mSet_NoMissingData <- subset(mSet_MissingDataCounted, removeLines <= fifty_percent)
+
+#Convert intensity data to numeric values                         
+mSet_NoMissingData[ , c(8:553)] <- apply(mSet_NoMissingData[ , c(8:553)], 2, function(x) as.numeric(as.character(x)))
+
+##TODO ask Duygu what this step does?
+#set the rest features as column mean 
+
+##normalization (see https://doi.org/10.1177%2F1469066720918446 and https://www.statology.org/transform-data-in-r/)
+##Users can select different transformation styles here:
+transformation <- "log_2" #log_2 transformation on intensity data selected for IBD dataset, options are: cube_root, square_root, log_2, log_10
+
+if(transformation == "cube_root"){
+    mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], mSet_NoMissingData[,8:553]^(1/3))
+}else if(transformation == "square_root"){
+    mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], mSet_NoMissingData[,8:553]^(1/2))
+}else if(transformation == "log_2"){
+    mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], log2(mSet_NoMissingData[,8:553]))
+}else if(transformation == "log_10"){
+    mSet_transformed <- cbind(mSet_NoMissingData[,c(1:7,554,555)], log10(mSet_NoMissingData[,8:553]))
+}else{print("Warning: name for transformation not recognized")}
+
+## Visualize the data after the transformation (for one sample to get an idea of suitability of transformation:
+#create histogram for original distribution for first column with data
+hist(mSet_NoMissingData$HSM5FZBQ, col='steelblue', main='Original')
+#create histogram for log-transformed distribution 
+hist(mSet_transformed$HSM5FZBQ, col='coral2', main=transformation)
+
+## Testing if the transformation creates a normally distributed dataset (alpha >= 0.05)
+##Calculate all Shapiro values for raw and transformed data:
+mSet_NoMissingData_Shapiro <- lapply(mSet_NoMissingData[,8:553], shapiro.test)
+mSet_transformed_Shapiro <- lapply(mSet_transformed[,10:555], shapiro.test)
+
+#Obtain the p-values for raw and transformed data
+mSet_NoMissingData_Shapiro_pvalues <- do.call(rbind, mSet_NoMissingData_Shapiro)
+mSet_transformed_Shapiro_pvalues <- do.call(rbind, mSet_transformed_Shapiro)
+
+## Count how often the p-value is above 0.05, to obtain an estimate of achieved normality due to transformation
+mSet_NoMissingData_Shapiro_pvalues_sum <- sum(mSet_NoMissingData_Shapiro_pvalues[,2] >= 0.05, na.rm=TRUE)
+mSet_transformed_Shapiro_pvalues_sum <- sum(mSet_transformed_Shapiro_pvalues[,2] >= 0.05, na.rm=TRUE)
+
+eighty_percent <- floor(((553-8)/10)*8)
+
+#Print relevant information:
+if(mSet_transformed_Shapiro_pvalues_sum[1] > eighty_percent ){paste0("Data after ", transformation ," transformation seems to follow a normal distribution for more then 80% of your data")} else{
+  print("Advised to select a different data transformation procedure")}
+
+remove(mSet_Cleaned_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData, mSet_NoMissingData_Shapiro, mSet_NoMissingData_Shapiro_pvalues, mSet_transformed_Shapiro, mSet_transformed_Shapiro_pvalues, eighty_percent, fifty_percent, mSet_NoMissingData_Shapiro_pvalues_sum, mSet_transformed_Shapiro_pvalues_sum, removeLines)
+```
+
+## Calculate logFC and p-value
+```{r basic_statistics, warning=FALSE, message=FALSE}
+##Download metadata, extract metabolomics sample IDs, location and disorders.
+fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metadata/hmp2_metadata.csv?accessType=DOWNLOAD"
+require(downloader)
+download(fileUrl, "data/hmp2_metadata.csv", mode = "wb")
+
+#Read metadata
+htxMeta <- read.csv("data/hmp2_metadata.csv")
+#Filter out by data type as metabolomics
+htxMeta <- htxMeta  %>% filter(htxMeta$data_type == "metabolomics")
+
+#Filter out data by disorders CD, UC and nonIBD samples 
+htxMeta <-htxMeta  %>% filter(  (htxMeta$diagnosis == "CD" ) 
+                                |  (htxMeta$diagnosis == "UC") 
+                                |  (htxMeta$diagnosis == "nonIBD") 
+                              )
+
+#filter out samples by visit_num=4 (for metabolomics)
+## Still test!
+#htxMeta <-htxMeta  %>% filter(htxMeta$visit_num == "4")
+
+#filter out unused columns
+htxMeta <- htxMeta %>% select(External.ID,Participant.ID,diagnosis)
+# order sample names based on columns external.ID
+htxMeta <- htxMeta[order(htxMeta$External.ID),]
+
+#Obtain Sample IDs which are both in mSet data and metadata
+names.use <- names(mSet_transformed)[(names(mSet_transformed) %in% htxMeta$External.ID)]
+
+#filter out metabolomics based on names.use and create metabolomicsFINAL (only retaining HMDB ID intensity data)
+mSet_FINAL <- mSet_transformed[, names.use]
+
+#metabolomicsFINAL data are ordered based on column names to match samples between metabolomicsFINAL and sampleLabels
+mSet_FINAL <- mSet_FINAL[,order(names(mSet_FINAL))]
+#check whether they are in same order
+#colnames(mSet_FINAL) == htxMeta[,"External.ID"]
+
+#add updated column names to the metadata file
+colnames(htxMeta) <- c("sampleID", "participantID","disease")
+#check whether sample names are in same order
+checker <- all(colnames(mSet_FINAL) == rownames(htxMeta$sampleID)) 
+paste("Matching between sample IDs and disorders went correctly:", checker)
+
+#Connect disease info to metabolomics data
+colname_Disorders <- htxMeta$disease
+colnames(mSet_FINAL) <-c(colname_Disorders)
+
+##Order columns based on disease
+mSet_FINAL <- mSet_FINAL[ , order(names(mSet_FINAL))]
+
+##ADD HMDB column at start
+mSet_FINAL <- cbind(mSet_transformed$HMDB...Representative.ID., mSet_FINAL)
+##Rename first column
+colnames(mSet_FINAL)[1] <- "HMDB_ID"
+
+#Find relevant columns per group.
+library(stringr)
+columns_CD <- sum(str_count(colname_Disorders, "CD"))
+columns_nonIBD <- sum(str_count(colname_Disorders, "nonIBD"))
+columns_UC <- sum(str_count(colname_Disorders, "UC"))
+
+##Note: first column contains HMDB IDs.
+end_CD_columns <- (columns_CD+1)
+start_nonIBD_columns <- (columns_CD+2)
+end_nonIBD_columns <- ((columns_CD+columns_nonIBD+1))
+start_UC_columns <- ((columns_CD+columns_nonIBD+2))
+
+##calculate logFC for 2 groups (CD vs control, UC vs control), ignoring missing values (NAs) when calculating the mean.  
+disease_CD = apply(mSet_FINAL[,2:end_CD_columns], 1, mean, na.rm=TRUE)
+control_IBD = apply(mSet_FINAL[,start_nonIBD_columns:end_nonIBD_columns], 1, mean, na.rm=TRUE)
+disease_UC = apply(mSet_FINAL[,start_UC_columns:ncol(mSet_FINAL)], 1, mean, na.rm=TRUE)
+
+#because the metabolomics data is already log2 transformed, we need to take the difference between the means (iso dividing the means over one another), since log2 Fold Change or log2 Ratio == log2(control / condition). Note: if the transformation step applied is cube_root or square_root, one needs to divide control over disease for this step!
+
+if(transformation == "log_2" | transformation == "log10"){
+    foldchange_CD <- control_IBD - disease_CD
+    foldchange_UC <- control_IBD - disease_UC
+}else{
+  foldchange_CD <- (control_IBD / disease_CD)
+  foldchange_UC <- (control_IBD / disease_UC)}
+
+##ADD HMDB column at start, add fold change columns.
+mSet_AnalysisReady <- cbind(mSet_FINAL$HMDB_ID, foldchange_CD, foldchange_UC)
+##Rename first column
+colnames(mSet_AnalysisReady)[1] <- "HMDB_ID"
+
+##Calculate p-value for two groups based on t-test (comparing control to disease).
+##general function to store p-values for multiple rows:
+ttest_mSet <- function(df, grp1, grp2) {
+  x = df[grp1]
+  y = df[grp2]
+  x = as.numeric(x)
+  y = as.numeric(y)  
+  results = t.test(x, y)
+  results$p.value
+}
+##CD:
+p_values_CD <- apply(mSet_FINAL, 1, ttest_mSet, grp1 = c(start_nonIBD_columns:end_nonIBD_columns), grp2 = c(2:end_CD_columns))
+p_values_UC <- apply(mSet_FINAL, 1, ttest_mSet, grp1 = c(start_nonIBD_columns:end_nonIBD_columns), grp2 = c(start_UC_columns:ncol(mSet_FINAL)))
+
+##Add p_values columns to analysis dataset:
+mSet_AnalysisReady <- cbind(mSet_AnalysisReady, p_values_CD, p_values_UC)
+
+#Convert logFC and p-values columns to numeric values            
+mSet_AnalysisReady <- as.data.frame(mSet_AnalysisReady)
+mSet_AnalysisReady[ , c(2:5)] <- apply(mSet_AnalysisReady[ , c(2:5)], 2, function(x) as.numeric(as.character(x)))
+
+remove(fileUrl, mSet_transformed, names.use, transformation, columns_CD, columns_nonIBD, columns_UC, end_CD_columns, start_nonIBD_columns, end_nonIBD_columns, start_UC_columns, foldchange_CD, foldchange_UC, p_values_CD, p_values_UC, colname_Disorders, control_IBD, disease_CD, disease_UC, ttest_mSet, checker, htxMeta, mSet_FINAL)
+```
+
+
+## Volcano plot
+The next step will visualize relevant metabolites in a Volcano plot, with thresholds defined for the log2FCs and p-values.
+Since we are dealing with nontargeted LC_MS data, we are applying stringent criteria here (p-value below 0.01, and |log2FC| >= 1.5)
+
+```{r volcano_plot,warning=FALSE, message=FALSE}
+##Inspired on: https://biocorecrg.github.io/CRG_RIntroduction/volcano-plots.html
+library('ggplot2')
+
+##Define the thresholds for log2 (Fold Change) and p-values
+#For cut-off value uncertainties, see https://doi.org/10.1039/C6AN01342B .
+log2FC_min <- -1.5
+log2FC_max <- 1.5
+p_value_threshold <- 0.01
+
+##Create column with HMDB_IDs, only if the data is relevant
+mSet_AnalysisReady$relevant_labels_CD <- mSet_AnalysisReady$HMDB_ID
+mSet_AnalysisReady$relevant_labels_CD[!((mSet_AnalysisReady$foldchange_CD <= log2FC_min | mSet_AnalysisReady$foldchange_CD >= log2FC_max) &  mSet_AnalysisReady$p_values_CD <= p_value_threshold)] <- NA
+
+mSet_AnalysisReady$relevant_labels_UC <- mSet_AnalysisReady$HMDB_ID
+mSet_AnalysisReady$relevant_labels_UC[!((mSet_AnalysisReady$foldchange_UC <= log2FC_min | mSet_AnalysisReady$foldchange_UC >= log2FC_max) &  mSet_AnalysisReady$p_values_UC <= p_value_threshold)] <- NA
+
+# Library needed to space out the labels
+install.packages('ggrepel')
+library(ggrepel)
+
+##volcanoPlot_CD 
+volcanoPlot_CD <- ggplot(data=mSet_AnalysisReady, aes(x=foldchange_CD, y=-log10(p_values_CD), label=relevant_labels_CD)) + geom_point() + theme_minimal() + geom_text_repel()
+
+##volcanoPlot_UC 
+volcanoPlot_UC <- ggplot(data=mSet_AnalysisReady, aes(x=foldchange_UC, y=-log10(p_values_UC), label=relevant_labels_UC)) + geom_point() + theme_minimal() + geom_text_repel()
+
+## Add vertical lines for FoldChange and P-value thresholds:
+volcanoPlot_CD <- volcanoPlot_CD + geom_vline(xintercept=c(log2FC_min, log2FC_max), col="blue") +
+    geom_hline(yintercept=-log10(p_value_threshold), col="red")
+volcanoPlot_UC <- volcanoPlot_UC + geom_vline(xintercept=c(log2FC_min, log2FC_max), col="blue") +
+    geom_hline(yintercept=-log10(p_value_threshold), col="red")
+
+# Show the plots in the notebook output:
+volcanoPlot_CD
+volcanoPlot_UC
+
+## Add labels to the IDs with BridgeDb
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+install.packages('rJava') ## See https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/ if you have issues with this package on Ubuntu.
+BiocManager::install("BridgeDbR")
+library(BridgeDbR)
+
+##Download the Metabolite mapping file:
+fileUrl <- "https://ndownloader.figshare.com/files/26001794?accessType=DOWNLOAD"
+require(downloader)
+download(fileUrl, "data/metabolites.bridge", mode = "wb")
+
+mapper <- loadDatabase('data/metabolites.bridge')
+
+## Obtain the System codes for the databases HMDB (source database of dataset) and ChEBI (intended output database)
+code = getOrganismCode("Homo sapiens")
+code_mappingFrom <- getSystemCode("HMDB")
+code_mappingTo <- getSystemCode("ChEBI")
+
+## Create a dataframe with the mappings and the correct SystemCode
+input = data.frame(
+  source = rep(code_mappingFrom, length(mSet_AnalysisReady[,1])),
+  identifier = mSet_AnalysisReady[,1]
+)
+
+#Obtain all mappings from HMDB to ChEBI
+MultiMappings = maps(mapper, input, code_mappingTo)
+
+##Remove all rows in the mapped data which do not include the prefix "CHEBI:"
+
+```
+
+
+Export the data:
+```{r data_export, warning=FALSE, message=FALSE}
+# Saving output
+if(dir.exists("output"))#if the output folder already exist
+  unlink("output", recursive=TRUE)#first delete the existing one
+dir.create("output")#create a new output folder
+```
+
