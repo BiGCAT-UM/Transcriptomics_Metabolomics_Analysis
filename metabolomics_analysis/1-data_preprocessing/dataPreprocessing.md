@@ -1,0 +1,91 @@
+## Introduction
+
+In this script, filtering options will be applied for metabolomics data
+to be prepared for the analysis
+
+## Setup
+
+``` r
+# check if libraries are already installed > otherwise install it
+if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
+if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
+if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
+#load libraries
+library(rstudioapi)
+library(dplyr)
+# set your working environment to the location where your current source file is saved into.
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+```
+
+## Read netadata and filtering processes
+
+``` r
+#read metadata file
+metaData <- read.csv("data/hmp2_metadata_2018-08-20.csv")
+#filter out by data type and week num
+metaDataMBX <- subset(metaData, metaData$data_type == "metabolomics" )
+#we need to have the samples which has same visit number
+metaDataMBX<- subset(metaDataMBX, metaDataMBX$visit_num == 4)
+#we should match transcriptomics (htx) samples and metabolomics (mbx) samples with participantID
+#but samples are given by their externalID in mbx file so we should keep them both
+#select columns which will be used
+metaDataMBX <- metaDataMBX %>% select(External.ID,Participant.ID,diagnosis)
+#rename columns of metaDataMBX
+colnames(metaDataMBX) <- c("ExternalID","ParticipantID","disease" )
+
+#read metabolomics peak intensity data
+mbxData <- read.csv("data/iHMP_metabolomics.csv")
+#delete unused columns
+mbxData = subset(mbxData, select = -c(1,2,3,4,6,7) )
+```
+
+``` r
+### row (metabolite) filtering ###
+#delete metabolite or row if it has NA or empty value for hmdbID
+mbxData<- mbxData[!(is.na(mbxData$HMDB...Representative.ID.) | mbxData$HMDB...Representative.ID.=="") , ]
+#remove rows which has hmdb as "redundant ion"
+mbxData<- mbxData[!(mbxData$HMDB...Representative.ID.=="redundant ion") , ]
+#remove character (asterisk) in some hmdb column values
+mbxData$HMDB...Representative.ID.<- stringr::str_replace(mbxData$HMDB...Representative.ID., '\\*', '')
+#back up original mbxdata
+mbxData.b <- mbxData
+
+### modify mbxData based on sample names given in metaData file (created with the criteria visit_num=4 )###
+#filter out mbxData columns (samples) based metaDataMBX externalIDs
+names.use <- names(mbxData)[ names(mbxData) %in% metaDataMBX$ExternalID]
+#update mbx data with used names
+mbxData <- mbxData [ ,names.use]
+#order data based on col names
+mbxData <- mbxData[ , order(names(mbxData))]
+
+#order metadata based on externalID
+metaDataMBX <- metaDataMBX[order(metaDataMBX$ExternalID),]
+
+#add HMDBID column to the mbx data
+mbxData <- cbind(mbxData.b$HMDB...Representative.ID.,mbxData)
+colnames(mbxData)[1] <- "HMDB.ID"
+
+#add disease labels to the mbx data
+diseaseLabels <- metaDataMBX$disease
+diseaseLabels <- append(diseaseLabels, "",after = 0)
+mbxData <- rbind(diseaseLabels, mbxData)
+```
+
+``` r
+yedek <- mbxData
+#to eliminate duplicate HMDB IDs
+mbxData <- mbxData[!duplicated(mbxData$HMDB.ID), ]
+
+#write only UC versus nonIBD comparison
+mbxDataUC <- mbxData[ ,(mbxData[1, ] == "UC" | mbxData[1, ] == "nonIBD")]
+#add hmdb id again
+mbxDataUC <- cbind(mbxData[,1],mbxDataUC)
+colnames(mbxDataUC)[1]="HMBDB.ID"
+write.table(mbxDataUC, "output/mbxDataUC_nonIBD.csv", sep =",", row.names = FALSE)
+
+#write only CD_healthy comparison
+mbxDataCD <- mbxData[ ,(mbxData[1, ] == "CD" | mbxData[1, ] == "nonIBD")]
+mbxDataCD <- cbind(mbxData[,1],mbxDataCD)
+colnames(mbxDataCD)[1]="HMBDB.ID"
+write.table(mbxDataCD, "output/mbxDataCD_nonIBD.csv", sep =",", row.names = FALSE)
+```
