@@ -38,7 +38,17 @@ metaDataMBX <- metaDataMBX %>% select(External.ID,Participant.ID,diagnosis)
 #rename columns of metaDataMBX
 colnames(metaDataMBX) <- c("ExternalID","ParticipantID","disease" )
 
-#read metabolomics peak intensity data
+#download and read metabolomics peak intensity data
+install.packages("downloader")
+fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metabolites/1723/HMP2_metabolomics.csv.gz?accessType=DOWNLOAD"
+require(downloader)
+download(fileUrl, "data/metabolomics.csv.gz", mode = "wb")
+
+#Note: if the URL download does not work, the zipped file is located on GitHub to continue the rest of this script.
+if(!"R.utils" %in% installed.packages()){install.packages("R.utils")}
+library(R.utils)
+gunzip("data/metabolomics.csv.gz", remove=FALSE)
+
 mbxData <- read.csv("data/iHMP_metabolomics.csv")
 #delete unused columns
 mbxData = subset(mbxData, select = -c(1,2,3,4,6,7) )
