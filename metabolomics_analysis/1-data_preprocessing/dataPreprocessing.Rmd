@@ -1,6 +1,8 @@
 ---
 title: "dataPreparation"
-author: "ddedesener"
+author: 
+- "ddedesener"
+- "DeniseSl22"
 date: "05/02/22"
 output:
  md_document:
@@ -49,7 +51,7 @@ if(!"R.utils" %in% installed.packages()){install.packages("R.utils")}
 library(R.utils)
 gunzip("data/metabolomics.csv.gz", remove=FALSE)
 
-mbxData <- read.csv("data/iHMP_metabolomics.csv")
+mbxData <- read.csv("data/metabolomics.csv")
 #delete unused columns
 mbxData = subset(mbxData, select = -c(1,2,3,4,6,7) )
 ```
