@@ -30,7 +30,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 work_DIR <- getwd()
 
 ## Select a disorder to analyse (options; CD or UC)
-disorder <- "UC"
+disorder <- "CD"
 
 if (disorder == "CD") {
   mSet = mSet_CD 
@@ -167,7 +167,7 @@ mSet_AnalysisReady <- cbind(mSet_AnalysisReady, p_values_disorder)
 mSet_AnalysisReady <- as.data.frame(mSet_AnalysisReady)
 mSet_AnalysisReady[ , c(2,3)] <- apply(mSet_AnalysisReady[ , c(2,3)], 2, function(x) as.numeric(as.character(x)))
 
-remove(mSet_transformed, transformation, columns_disorders, columnNumber, end_Disorders, foldchange_disorder, p_values_disorder, control_IBD, disease, ttest_mSet, mSet_FINAL)
+remove(mSet_transformed, columns_disorders, columnNumber, end_Disorders, foldchange_disorder, p_values_disorder, control_IBD, disease, ttest_mSet, mSet_FINAL)
 ```
 
 
@@ -200,6 +200,14 @@ volcanoPlot_disorder <- ggplot(data=mSet_AnalysisReady, aes(x=foldchange_disorde
 ## Add vertical lines for FoldChange and P-value thresholds:
 volcanoPlot_disorder <- volcanoPlot_disorder + geom_vline(xintercept=c(log2FC_min, log2FC_max), col="blue") +
     geom_hline(yintercept=-log10(p_value_threshold), col="red") + theme(plot.background = element_rect(fill = "white"))
+
+if (disorder == "UC") {disorderName <- "Ulcerative Colitis (UC)"}else{disorderName <- "Crohn's disease (CD)"}
+
+titleVolcano <- paste0("Volcano plot of ", transformation, " transformed data for ", disorderName )
+verticalAxisTitle <- paste0(transformation, " Fold Change, control versus ", disorderName)
+
+## Add title and update axis labels:
+volcanoPlot_disorder <- volcanoPlot_disorder + ggtitle(titleVolcano) + labs(y = "-log10(p-value)", x = verticalAxisTitle)
 
 ##TODO: Add a title, change the axis labels:
 
