@@ -1,15 +1,19 @@
 ## Introduction
 
-In this script, filtering options will be applied for metabolomics data
-to be prepared for the analysis
+In this section of the workflow, we will obtain the metabolomics data
+and apply filtering options, to create a dataset ready for further
+statistical and pathway analysis.
 
-## Setup
+First, we setup the required libraries to get started.
 
 ``` r
 # check if libraries are already installed > otherwise install it
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
 if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
+#Libraries required for markdown documents:
+if(!"markdown" %in% installed.packages()){install.packages("markdown")}
+if(!"rmarkdown" %in% installed.packages()){install.packages("rmarkdown")}
 #load libraries
 library(rstudioapi)
 library(dplyr)
@@ -17,12 +21,22 @@ library(dplyr)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
-## Read netadata and filtering processes
+Second, we download the required data, read the metadata and filter out
+not-relevant data.
 
 ``` r
+#Library to download data from online files:
+if(!"downloader" %in% installed.packages()){install.packages("downloader")}
+require(downloader)
+
+##Download metadata, extract metabolomics sample IDs, location and disorders.
+fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metadata/hmp2_metadata.csv?accessType=DOWNLOAD"
+require(downloader)
+download(fileUrl, "data/hmp2_metadata.csv", mode = "wb")
+
 #read metadata file
-metaData <- read.csv("data/hmp2_metadata_2018-08-20.csv")
-#filter out by data type and week num
+metaData <- read.csv("data/hmp2_metadata.csv")
+#filter out by data type and week number
 metaDataMBX <- subset(metaData, metaData$data_type == "metabolomics" )
 #we need to have the samples which has same visit number
 metaDataMBX<- subset(metaDataMBX, metaDataMBX$visit_num == 4)
@@ -33,11 +47,21 @@ metaDataMBX <- metaDataMBX %>% select(External.ID,Participant.ID,diagnosis)
 #rename columns of metaDataMBX
 colnames(metaDataMBX) <- c("ExternalID","ParticipantID","disease" )
 
-#read metabolomics peak intensity data
-mbxData <- read.csv("data/iHMP_metabolomics.csv")
-#delete unused columns
+#download and read metabolomics peak intensity data
+fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metabolites/1723/HMP2_metabolomics.csv.gz?accessType=DOWNLOAD"
+download(fileUrl, "data/metabolomics.csv.gz", mode = "wb")
+
+#Note: if the URL download does not work, the zipped file is located on GitHub to continue the rest of this script.
+if(!"R.utils" %in% installed.packages()){install.packages("R.utils")}
+library(R.utils)
+gunzip("data/metabolomics.csv.gz", remove=FALSE)
+
+mbxData <- read.csv("data/metabolomics.csv")
+#delete not used columns
 mbxData = subset(mbxData, select = -c(1,2,3,4,6,7) )
 ```
+
+Third, we perform data extraction, and process the data
 
 ``` r
 ### row (metabolite) filtering ###
@@ -71,6 +95,9 @@ diseaseLabels <- append(diseaseLabels, "",after = 0)
 mbxData <- rbind(diseaseLabels, mbxData)
 ```
 
+Fourth, we split up the data for UC and CD, include the control data
+nonIBD, and save this data to an output folder.
+
 ``` r
 yedek <- mbxData
 #to eliminate duplicate HMDB IDs
@@ -88,4 +115,9 @@ mbxDataCD <- mbxData[ ,(mbxData[1, ] == "CD" | mbxData[1, ] == "nonIBD")]
 mbxDataCD <- cbind(mbxData[,1],mbxDataCD)
 colnames(mbxDataCD)[1]="HMBDB.ID"
 write.table(mbxDataCD, "output/mbxDataCD_nonIBD.csv", sep =",", row.names = FALSE)
+
+##Clean up R-studio environment
+remove(diseaseLabels, fileUrl, names.use, mbxData, mbxData.b, mbxDataCD, mbxDataUC, metaDataMBX, metaData, yedek)
 ```
+
+After data processing, we continue to step 8, statistical analysis.
