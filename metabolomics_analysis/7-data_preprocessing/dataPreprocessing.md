@@ -4,7 +4,7 @@ In this section of the workflow, we will obtain the metabolomics data
 and apply filtering options, to create a dataset ready for further
 statistical and pathway analysis.
 
-First, we setup the required libraries to get started.
+### First, we setup the required libraries to get started.
 
 ``` r
 # check if libraries are already installed > otherwise install it
@@ -21,8 +21,7 @@ library(dplyr)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
-Second, we download the required data, read the metadata and filter out
-not-relevant data.
+### Second, we download the required data, read the metadata and filter out not-relevant data.
 
 ``` r
 #Library to download data from online files:
@@ -30,10 +29,16 @@ if(!"downloader" %in% installed.packages()){install.packages("downloader")}
 require(downloader)
 
 ##Download metadata, extract metabolomics sample IDs, location and disorders.
+if(file.exists("data/hmp2_metadata.csv")){print("Metadata already downloaded")}else{
 fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metadata/hmp2_metadata.csv?accessType=DOWNLOAD"
 require(downloader)
 download(fileUrl, "data/hmp2_metadata.csv", mode = "wb")
+}
+```
 
+    ## [1] "Metadata already downloaded"
+
+``` r
 #read metadata file
 metaData <- read.csv("data/hmp2_metadata.csv")
 #filter out by data type and week number
@@ -48,20 +53,32 @@ metaDataMBX <- metaDataMBX %>% select(External.ID,Participant.ID,diagnosis)
 colnames(metaDataMBX) <- c("ExternalID","ParticipantID","disease" )
 
 #download and read metabolomics peak intensity data
+if(file.exists("data/metabolomics.csv.gz")){print("Metabolomics zipped data already downloaded")}else{
 fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metabolites/1723/HMP2_metabolomics.csv.gz?accessType=DOWNLOAD"
 download(fileUrl, "data/metabolomics.csv.gz", mode = "wb")
+}
+```
 
+    ## [1] "Metabolomics zipped data already downloaded"
+
+``` r
 #Note: if the URL download does not work, the zipped file is located on GitHub to continue the rest of this script.
+if(file.exists("data/metabolomics.csv")){print("Unzipped Metabolomics data already downloaded")}else{
 if(!"R.utils" %in% installed.packages()){install.packages("R.utils")}
 library(R.utils)
 gunzip("data/metabolomics.csv.gz", remove=FALSE)
+}
+```
 
+    ## [1] "Unzipped Metabolomics data already downloaded"
+
+``` r
 mbxData <- read.csv("data/metabolomics.csv")
 #delete not used columns
 mbxData = subset(mbxData, select = -c(1,2,3,4,6,7) )
 ```
 
-Third, we perform data extraction, and process the data
+### Third, we perform data extraction, and process the data
 
 ``` r
 ### row (metabolite) filtering ###
@@ -95,8 +112,7 @@ diseaseLabels <- append(diseaseLabels, "",after = 0)
 mbxData <- rbind(diseaseLabels, mbxData)
 ```
 
-Fourth, we split up the data for UC and CD, include the control data
-nonIBD, and save this data to an output folder.
+### Fourth, we split up the data for UC and CD, include the control data nonIBD, and save this data to an output folder.
 
 ``` r
 yedek <- mbxData
@@ -115,9 +131,36 @@ mbxDataCD <- mbxData[ ,(mbxData[1, ] == "CD" | mbxData[1, ] == "nonIBD")]
 mbxDataCD <- cbind(mbxData[,1],mbxDataCD)
 colnames(mbxDataCD)[1]="HMBDB.ID"
 write.table(mbxDataCD, "output/mbxDataCD_nonIBD.csv", sep =",", row.names = FALSE)
+```
+
+### Last, we create a Jupyter notebook and markdown file from this script
+
+``` r
+#Jupyter Notebook file
+BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+```
+
+    ## 
+    ## * checking for file ‘/tmp/Rtmp6JZEg7/remotes4cc66a65c29c/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * preparing ‘rmd2jupyter’:
+    ## * checking DESCRIPTION meta-information ... OK
+    ## * checking for LF line-endings in source and make files and shell scripts
+    ## * checking for empty or unneeded directories
+    ## Omitted ‘LazyData’ from DESCRIPTION
+    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+
+``` r
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("dataPreprocessing.Rmd")
+
+#Markdown file: (still testing, currently giving error: "Error in parse_block(g[-1], g[1], params.src, markdown_mode) : Duplicate chunk label 'setup', which has been used for the chunk:"")
+#rmarkdown::render('dataPreprocessing.Rmd', clean = TRUE,  output_format = 'md_document')
 
 ##Clean up R-studio environment
 remove(diseaseLabels, fileUrl, names.use, mbxData, mbxData.b, mbxDataCD, mbxDataUC, metaDataMBX, metaData, yedek)
 ```
 
-After data processing, we continue to step 8, statistical analysis.
+### After data processing, we continue to step 8, statistical analysis.
