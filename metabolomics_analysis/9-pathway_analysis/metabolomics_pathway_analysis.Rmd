@@ -12,3 +12,90 @@ always_allow_html: true
 
 ## Introduction
 In this workflow, we link the metabolites of interest to pathway data from WikiPathways, based on their HMDB identifier.
+
+```{r data_import,warning=FALSE, message=FALSE}
+# Obtain Working Directory for step 8 to find processed data
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+getwd()
+setwd('..')
+work_DIR <- getwd()
+
+#Obtain data from step 8
+mSet_CD <- read.csv("8-statistical_analysis/output/mbxData_CD.csv", na.strings=c("", "NA"))
+mSet_UC <- read.csv("8-statistical_analysis/output/mbxData_UC.csv", na.strings=c("", "NA"))
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
+## Select a disorder to analyse (options; CD or UC)
+disorder <- "CD"
+
+if (disorder == "CD") {
+  mSet = mSet_CD 
+  print("Selected disorder is Crohn's disease")}else if(disorder == "UC"){ 
+    mSet = mSet_UC
+    print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
+```
+Find pathways based on relevant labels column
+```{r pathway_analysis,warning=FALSE, message=FALSE}
+if(!"SPARQL" %in% installed.packages()){
+  install.packages("SPARQL")
+}
+library(SPARQL)
+##Connect to Endpoint WikiPathways
+endpointwp <- "https://sparql.wikipathways.org/sparql"
+## 1. Query metadata:
+queryMetadata <-
+"SELECT DISTINCT ?dataset (str(?titleLit) as ?title) ?date ?license 
+WHERE {
+   ?dataset a void:Dataset ;
+   dcterms:title ?titleLit ;
+   dcterms:license ?license ;
+   pav:createdOn ?date .
+ }"
+resultsMetadata <- SPARQL(endpointwp,queryMetadata,curl_args=list(useragent=R.version.string))
+showresultsMetadata <- resultsMetadata$results
+remove(queryMetadata, resultsMetadata)
+
+
+## Create a list of HMDB IDs according to filtering criteria from step 8.
+list_Relevant_HMDB_IDs <- na.exclude(mSet$relevant_labels)
+##Add the HMDb prefix IRI in front of all IDs.
+split_string_HMDB <- as.list(strsplit(list_Relevant_HMDB_IDs, ' ')[[1]])
+cleaned_string_HMDB <- as.list(str_replace(split_string_HMDB, "ch:", ""))
+
+#For now, filter out Reactome PWs due to visualization issues.
+item1 = "PREFIX ch:<https://identifiers.org/hmdb/>
+PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
+select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?chebiMetabolite) AS ?CHEBIsInPWs) (GROUP_CONCAT(DISTINCT fn:substring(?hgnc,37);separator=' ') AS ?Proteins) (GROUP_CONCAT(DISTINCT fn:substring(?chebiMetabolite,37);separator=' ') AS ?includedCHEBIs)
+where {
+VALUES ?chebiMetabolite {"
+item2 = "}
+ 
+ ?datanode	a wp:Metabolite ;          
+           	wp:bdbHmdb  ?chebiMetabolite ;
+    		dcterms:isPartOf ?pathwayRes .
+ ?pathwayRes a wp:Pathway ;
+             wp:organismName 'Homo sapiens' ; 
+    		dcterms:identifier ?wpid ;
+    		dc:title ?title .
+    		
+ ?datanode2 wp:bdbHgncSymbol ?hgnc ;
+    		dcterms:isPartOf ?pathwayRes .
+    		
+  #?pathwayRes wp:ontologyTag cur:Reactome_Approved . 
+  ?pathwayRes wp:ontologyTag cur:AnalysisCollection .   		
+}
+ORDER BY DESC(?CHEBIsInPWs) "
+query_CombinePWs <- paste(item1,list_Relevant_HMDB_IDs,item2)
+remove(item1, item2)
+results_CombinePWs <- SPARQL(endpointwp,query_CombinePWs,curl_args=list(useragent=R.version.string))
+showresults_CombinePWs <- results_CombinePWs$results
+remove(query_CombinePWs,results_CombinePWs)
+#Print table with first 5 relevant pathways (if less than 5 are found, print only those)
+if(nrow(showresults_CombinePWs) < 5){
+print(showresults_CombinePWs_Second[1:nrow(showresults_CombinePWs_Second),c(2:4,6,5)])
+}else{print(showresults_CombinePWs[1:5,c(2:4,6,5)])}
+```
+
