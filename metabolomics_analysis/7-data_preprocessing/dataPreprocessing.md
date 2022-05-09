@@ -141,14 +141,15 @@ BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
+    ##      checking for file ‘/tmp/RtmpEgtkHA/remotes35cc508a864/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ...  ✔  checking for file ‘/tmp/RtmpEgtkHA/remotes35cc508a864/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’
+    ##   ─  preparing ‘rmd2jupyter’:
+    ##      checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##   ─  checking for LF line-endings in source and make files and shell scripts
+    ##   ─  checking for empty or unneeded directories
+    ##    Omitted ‘LazyData’ from DESCRIPTION
+    ##   ─  building ‘rmd2jupyter_0.1.0.tar.gz’
+    ##      
     ## 
-    ## * checking for file ‘/tmp/Rtmp6JZEg7/remotes4cc66a65c29c/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
-    ## * checking DESCRIPTION meta-information ... OK
-    ## * checking for LF line-endings in source and make files and shell scripts
-    ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
 
 ``` r
 library(devtools)

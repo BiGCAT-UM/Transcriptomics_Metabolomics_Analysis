@@ -135,8 +135,8 @@ library(rmd2jupyter)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("dataPreprocessing.Rmd")
 
-#Markdown file: (still testing, currently giving error: "Error in parse_block(g[-1], g[1], params.src, markdown_mode) : Duplicate chunk label 'setup', which has been used for the chunk:"")
-#rmarkdown::render('dataPreprocessing.Rmd', clean = TRUE,  output_format = 'md_document')
+#Markdown file: 
+rmarkdown::render('dataPreprocessing.Rmd', clean = TRUE,  output_format = 'md_document')
 
 ##Clean up R-studio environment
 remove(diseaseLabels, fileUrl, names.use, mbxData, mbxData.b, mbxDataCD, mbxDataUC, metaDataMBX, metaData, yedek)
