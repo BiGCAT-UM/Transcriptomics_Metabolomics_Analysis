@@ -18,6 +18,9 @@ First, we setup the required libraries to get started.
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
 if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
+#Libraries required for markdown documents:
+if(!"markdown" %in% installed.packages()){install.packages("markdown")}
+if(!"rmarkdown" %in% installed.packages()){install.packages("rmarkdown")}
 #load libraries
 library(rstudioapi)
 library(dplyr)
