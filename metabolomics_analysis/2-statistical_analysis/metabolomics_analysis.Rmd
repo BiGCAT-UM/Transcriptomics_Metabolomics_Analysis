@@ -1,0 +1,105 @@
+---
+title: "metabolomics_analysis"
+author: 
+- "ddedesener"
+- "DeniseSl22"
+date: "25/04/2022"
+output:
+ md_document:
+    variant: markdown_github
+always_allow_html: true
+---
+
+## Introduction
+In this workflow, we will apply statistical analysis on metabolomics data using the MetaboAnalyst software R packages.
+MetaboAnalystR 3 contains the R functions and libraries underlying the popular MetaboAnalyst web server, including metabolomic data analysis, visualization, and functional interpretation. The package is synchronized with the MetaboAnalyst web server. After installing and loading the package, users will be able to reproduce the same results from their local computers using the corresponding R command history downloaded from MetaboAnalyst web site, thereby achieving maximum flexibility and reproducibility.
+source:https://www.metaboanalyst.ca/MetaboAnalyst/docs/RTutorial.xhtml
+
+## Setup
+Installing and loading required libraries
+```{r setup_environment, warning=FALSE, message=FALSE}
+# check if libraries are already installed > otherwise install it
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
+
+## MetaboAnalyst R not supported in BioConductor 3.15
+#if(!"MetaboAnalystR" %in% installed.packages()) BiocManager::install("MetaboAnalystR")
+
+## Install MetaboAnalyst R via Github repo:
+
+### Dependancies for MetaboAnalystR from BioConductor (version 3.15)
+BiocManager::install("pcaMethods")
+BiocManager::install("Biobase")
+BiocManager::install("RBGL")
+BiocManager::install("BiocParallel")
+BiocManager::install("edgeR")
+BiocManager::install("fgsea")
+BiocManager::install("impute")
+BiocManager::install("MSnbase")
+BiocManager::install("siggenes")
+
+### Dependencies for MetaboAnalystR from CRAN
+install.packages("crmn")
+
+### Remotes and devtools packages helps install packages from GitHub
+install.packages("devtools")
+install.packages('remotes')
+remotes::install_github('xia-lab/MetaboAnalystR')
+
+#load installed libraries
+library(BiocManager)
+library(rstudioapi)
+library(MetaboAnalystR)
+```
+## Install MetaboAnalystR
+```{r setup_MetaboAnalystR, warning=FALSE, message=FALSE}
+# Step 2: Install devtools
+install.packages("devtools")
+library(devtools)
+
+# Step 3: Install MetaboAnalystR with documentation
+devtools::install_github("xia-lab/MetaboAnalystR", build = TRUE, build_vignettes = TRUE, build_manual =T)
+
+# Step 4: load the actual library.
+library(MetaboAnalystR)
+```
+# Data import and preprocessing
+```{r data_import,warning=FALSE, message=FALSE}
+# set your working environment to the location where your current source file is saved into.
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
+#initialize data object
+mSet<-InitDataObjects("pktable", "stat", FALSE)
+#read data
+mSet<-Read.TextData(mSet, "data/mbxDataCD_nonIBD.csv", "colu", "disc");
+mSet<-SanityCheckData(mSet)
+
+#missing value removal by filtering out features has more than 50% missing
+mSet<-RemoveMissingPercent(mSet, percent=0.5)
+#set the rest features as column mean
+mSet<-ImputeMissingVar(mSet, method="mean")
+mSet<-SanityCheckData(mSet)
+
+#no filter applied
+mSet<-FilterVariable(mSet, "none", "F", 25)
+
+# Saving output
+if(dir.exists("output"))#if the output folder already exist
+  unlink("output", recursive=TRUE)#first delete the existing one
+dir.create("output")#create a new output folder
+#setwd(paste0(work_DIR,"/output"))
+
+#normalization
+mSet<-PreparePrenormData(mSet)
+mSet<-Normalization(mSet, "NULL", "CrNorm", "NULL", ratio=FALSE, ratioNum=20)
+mSet<-PlotNormSummary(mSet, "norm_0_", "png", 72, width=NA)
+mSet<-PlotSampleNormSummary(mSet, "snorm_0_", "png", 72, width=NA)
+```
+
+## Volcano plot
+```{r volcano plot,warning=FALSE, message=FALSE}
+mSet<-Volcano.Anal(mSet, FALSE, 1.0, 0, F, 1.0, TRUE, "raw")
+mSet<-PlotVolcano(mSet, "volcano_1_",1, 0, "png", 72, width=NA)
+```
+

@@ -1,0 +1,88 @@
+---
+title: "multi-omics_visualization"
+author: "ddedesener"
+date: "03/05/22"
+output:
+ md_document:
+    variant: markdown_github
+always_allow_html: true
+---
+## Introduction
+In this script, visualization of enriched pathway which include both altered genes and metabolites is performed
+
+## Setup
+```{r setup, warning=FALSE, message=FALSE}
+# check if libraries are already installed > otherwise install it
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
+if(!"RCy3" %in% installed.packages()) BiocManager::install("RCy3")
+if(!"rWikiPathways" %in% installed.packages()) BiocManager::install("rWikiPathways")
+if(!"RColorBrewer" %in% installed.packages()) BiocManager::install("RColorBrewer")
+
+#load libraries
+library(rstudioapi)
+library(RCy3)#connect cytoscape via R
+library(rWikiPathways)#to get pathways from WikiPathways
+library(RColorBrewer)#to manage colors with R
+
+# set your working environment to the location where your current source file is saved into.
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+```
+
+## Import pathway
+```{r}
+#make sure to launch cytoscape, if you get CyREST error you need to relaunch cytoscape
+cytoscapePing()
+#close all opened session before starting
+closeSession(FALSE)# close all opened sessions data without saving
+#pathway IDs
+pathway.id <- "WP4723"# omega-3/omega-6 fatty acid synthesis pathway is one of the enriched pathways in our study
+#so we will visualize the pathway in cytoscape
+
+##### STEP-1 Open enriched pathway #########
+#import pathways as network in cytoscape
+RCy3::commandsRun(paste0('wikipathways import-as-pathway id=',pathway.id )) 
+#RCy3::commandsRun(paste0('wikipathways import-as-network id=',pathway.id )) 
+
+#upload gene data table from the file
+geneData <- read.delim("data/transcriptomics")
+#load data to the pathway in cytoscape
+loadTableData(table = "node", data = geneData, data.key.column = "ENSEMBL.ID", table.key.column = "Ensembl")
+#read mbx data
+mbxData <- read.delim("data/metabolomics")
+#load mbx data to the pathway in cytoscape
+loadTableData(table = "node", data = mbxData, data.key.column = "CHEBI", table.key.column = "ChEBI")
+
+##visual style##
+RCy3::copyVisualStyle("default","pathwayStyle")
+#RCy3::setNodeLabelMapping("name", style.name="pathwayStyle")
+#RCy3::lockNodeDimensions(TRUE, style.name="pathwayStyle")
+#assign different shapes based on data type
+RCy3::setNodeShapeMapping('data.type', c('transcriptomics','metabolomics'), c("ELLIPSE","RECTANGLE"), style.name="pathwayStyle")
+#change node sizes
+RCy3::setNodeSizeMapping('data.type', c('transcriptomics','metabolomics'), c(40,40), mapping.type = "d", style.name = "pathwayStyle")
+
+#gene nodes are colored based on log2FC and pvalue
+log2FCgenes = getTableColumns('node','log2FC_gene')  
+min.logFC = min(log2FCgenes[,1],na.rm=TRUE)
+max.logFC = max(log2FCgenes[,1],na.rm=TRUE)
+data.values = c(min.logFC,0,max.logFC)
+display.brewer.all(length(data.values), colorblindFriendly=TRUE, type="div") # div,qual,seq,all
+node.colors <- c(rev(brewer.pal(length(data.values), "RdBu")))
+setNodeColorMapping('log2FC_gene', data.values, node.colors, style.name="pathwayStyle", default = "#D3D3D3")
+#node border with based on p-value
+pvalues = getTableColumns('node','pvalue_gene')  
+min.pval = min(pvalues[,1],na.rm=TRUE)
+RCy3::setNodeBorderWidthMapping('pvalue_gene', c(min.pval,0.05), c(5,1),style.name = "pathwayStyle")
+RCy3::setNodeBorderColorMapping('pvalue_gene', c(min.pval,0.05), c('#00FF00','#00FF00'),style.name = "pathwayStyle")
+
+#for coloring metabolomics data first we create a column filter to select met data
+createColumnFilter("metabolomicsFilter", "data.type", "metabolomics","IS")
+#set met nodes 
+createColumnFilter('metabolomicsFilter', 'pvalue_met', 0.05, "LESS_THAN")
+setNodeSelectionColorDefault('#FF69B4',style.name = "pathwayStyle")
+
+RCy3::setVisualStyle("pathwayStyle")
+RCy3::toggleGraphicsDetails()
+```
+
