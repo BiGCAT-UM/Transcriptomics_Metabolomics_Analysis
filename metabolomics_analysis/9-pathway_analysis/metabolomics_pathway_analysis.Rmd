@@ -1,0 +1,14 @@
+---
+title: "metabolomics_analysis"
+author: 
+- "ddedesener"
+- "DeniseSl22"
+date: "25/04/2022"
+output:
+ md_document:
+    variant: markdown_github
+always_allow_html: true
+---
+
+## Introduction
+In this workflow, we link the metabolites of interest to pathway data from WikiPathways, based on their HMDB identifier.
