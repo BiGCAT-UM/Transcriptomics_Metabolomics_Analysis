@@ -10,7 +10,7 @@ output:
 always_allow_html: true
 ---
 ## Introduction
-In this script, filtering options will be applied for metabolomics data to be prepared for the analysis
+In this section of the workflow, we will obtain the metabolomics data and apply filtering options, to create a dataset ready for further statistical and pathway analysis.
 
 ## Setup
 ```{r setup, warning=FALSE, message=FALSE}
