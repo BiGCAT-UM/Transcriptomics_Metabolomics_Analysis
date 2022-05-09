@@ -30,7 +30,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 work_DIR <- getwd()
 
 ## Select a disorder to analyse (options; CD or UC)
-disorder <- "CD"
+disorder <- "UC"
 
 if (disorder == "CD") {
   mSet = mSet_CD 
@@ -199,51 +199,27 @@ volcanoPlot_disorder <- ggplot(data=mSet_AnalysisReady, aes(x=foldchange_disorde
 
 ## Add vertical lines for FoldChange and P-value thresholds:
 volcanoPlot_disorder <- volcanoPlot_disorder + geom_vline(xintercept=c(log2FC_min, log2FC_max), col="blue") +
-    geom_hline(yintercept=-log10(p_value_threshold), col="red")
+    geom_hline(yintercept=-log10(p_value_threshold), col="red") + theme(plot.background = element_rect(fill = "white"))
 
 ##TODO: Add a title, change the axis labels:
 
 # Show the Volcano plot in the notebook output:
 volcanoPlot_disorder
-
-##Move next section to separate RMD file (after PW analysis)
-
-## Add labels to the IDs with BridgeDb
-if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rJava" %in% installed.packages()){install.packages("rJava")} ## See https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/ if you have issues with this package on Ubuntu.
-if(!"BridgeDbR" %in% installed.packages()) BiocManager::install("BridgeDbR")
-library(BridgeDbR)
-
-##Download the Metabolite mapping file: (only if file is not present yet TODO)
-if(file.exists("data/metabolites.bridge")){print("Metabilte Mapping file already downloaded")}else{
-fileUrl <- "https://ndownloader.figshare.com/files/26001794?accessType=DOWNLOAD"
-require(downloader)
-download(fileUrl, "data/metabolites.bridge", mode = "wb")
-}
-mapper <- loadDatabase('data/metabolites.bridge')
-
-## Obtain the System codes for the databases HMDB (source database of dataset) and ChEBI (intended output database)
-code = getOrganismCode("Homo sapiens")
-code_mappingFrom <- getSystemCode("HMDB")
-code_mappingTo <- getSystemCode("ChEBI")
-
-## Create a dataframe with the mappings and the correct SystemCode
-input = data.frame(
-  source = rep(code_mappingFrom, length(mSet_AnalysisReady[,1])),
-  identifier = mSet_AnalysisReady[,1]
-)
-
-#Obtain all mappings from HMDB to ChEBI
-MultiMappings = maps(mapper, input, code_mappingTo)
-
-##Remove all rows in the mapped data which do not include the prefix "CHEBI:"
-
 ```
-Export the data:
+Export the data and Volcano Plot:
 ```{r data_export, warning=FALSE, message=FALSE}
-# Saving output
-if(dir.exists("output"))#if the output folder already exist
-  unlink("output", recursive=TRUE)#first delete the existing one
-dir.create("output")#create a new output folder
+##Save the data file
+nameDataFile <- paste0("output/mbxData_", disorder ,".csv")
+write.table(mSet_AnalysisReady, nameDataFile, sep =",", row.names = FALSE)
+
+if(!"svglite" %in% installed.packages()){install.packages("svglite")}
+library('svglite')
+
+##Save the Volcano plot:
+imageType <- "png" ##Options are: svg, png, eps, ps, tex, pdf, jpeg, tiff, png, bmp, svg or wmf
+nameVolcano <- paste0("output/", disorder, "_VolcanoPlot_absLogFC_", log2FC_max, "_pValue_", p_value_threshold, ".", imageType)
+
+ggsave(nameVolcano)
+
 ```
 
