@@ -5,7 +5,7 @@ This Automated workflow contains functional analysis workflows including R scrip
 The setup of this project has been tested with:
 - OS Windows 10, R-studio x, R y.
 - OS Linux (Debian), R-studio 2022.02.2, R 4.2.
-=======
+
 The automated workflows are examples of how to bring together different software tools and methods to analyze transcriptomics and metabolomics data to reveal the underlying mechanism behind IBD disease as a use case study.
 
 ![image](https://user-images.githubusercontent.com/65600609/167213011-a954ebcb-1b83-4260-9b99-183a1ce2f108.png)
