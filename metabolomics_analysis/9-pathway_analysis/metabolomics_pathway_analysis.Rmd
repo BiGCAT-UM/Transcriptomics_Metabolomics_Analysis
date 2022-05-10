@@ -68,7 +68,9 @@ query_HMDBs <- paste("ch:", vector_HMDB, sep="")
 ##Merge the individual entries in the vector into one string, separated by a space
 string_HMDB <- paste(c(query_HMDBs), collapse=' ' )
 
-#For now, filter out Reactome PWs due to visualization issues.
+##TODO: add column with nr. of Metabolites in PW (to calculate PW impact)
+
+#For now, filter out Reactome PWs due to visualization issues in Cytoscape.
 item1 = "PREFIX ch: <https://identifiers.org/hmdb/>
 PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
 select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?hmdbMetabolite) AS ?HMDBsInPWs) (GROUP_CONCAT(DISTINCT fn:substring(?hgnc,37);separator=' ') AS ?Proteins) (GROUP_CONCAT(DISTINCT fn:substring(?hmdbMetabolite,37);separator=' ') AS ?includedHMDBs)
@@ -99,9 +101,14 @@ showresults_CombinePWs <- results_CombinePWs$results
 remove(query_CombinePWs,results_CombinePWs)
 #Print table with first 5 relevant pathways (if less than 5 are found, print only those)
 if(nrow(showresults_CombinePWs) < 5){
-print(showresults_CombinePWs_Second[1:nrow(showresults_CombinePWs_Second),c(2:4,6,5)])
+print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:4,6,5)])
 }else{print(showresults_CombinePWs[1:5,c(2:4,6,5)])}
 
 remove(cleaned_string_HMDB, list_Relevant_HMDB_IDs, query_HMDBs, vector_HMDB)
 ```
-
+Export the pathway data:
+```{r data_export, warning=FALSE, message=FALSE}
+##Save the data file
+nameDataFile <- paste0("output/mbxPWdata_", disorder ,".csv")
+write.table(showresults_CombinePWs, nameDataFile, sep =",", row.names = FALSE)
+```
