@@ -73,10 +73,13 @@ string_HMDB <- paste(c(query_HMDBs), collapse=' ' )
 #For now, filter out Reactome PWs due to visualization issues in Cytoscape.
 item1 = "PREFIX ch: <https://identifiers.org/hmdb/>
 PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
-select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?hmdbMetabolite) AS ?HMDBsInPWs) (GROUP_CONCAT(DISTINCT fn:substring(?hgnc,37);separator=' ') AS ?Proteins) (GROUP_CONCAT(DISTINCT fn:substring(?hmdbMetabolite,37);separator=' ') AS ?includedHMDBs)
+select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?hmdbMetabolite) AS ?HMDBsInPWs) (count(distinct ?metaboliteDatanode) AS ?TotalMetabolitesinPW) (GROUP_CONCAT(DISTINCT fn:substring(?hgnc,37);separator=' ') AS ?Proteins) (GROUP_CONCAT(DISTINCT fn:substring(?hmdbMetabolite,30);separator=' ') AS ?includedHMDBs)
 where {
 VALUES ?hmdbMetabolite {"
 item2 = "}
+ 
+ ?metaboliteDatanode	a wp:Metabolite ;
+                        dcterms:isPartOf ?pathwayRes .
  
  ?datanode	a wp:Metabolite ;          
            	wp:bdbHmdb  ?hmdbMetabolite ;
