@@ -90,6 +90,8 @@ mbxData<- mbxData[!(is.na(mbxData$HMDB...Representative.ID.) | mbxData$HMDB...Re
 mbxData<- mbxData[!(mbxData$HMDB...Representative.ID.=="redundant ion") , ]
 #remove character (asterisk) in some hmdb column values
 mbxData$HMDB...Representative.ID.<- stringr::str_replace(mbxData$HMDB...Representative.ID., '\\*', '')
+#Update HMDB IDs to new data structure
+mbxData$HMDB...Representative.ID.<- stringr::str_replace(mbxData$HMDB...Representative.ID., 'HMDB', 'HMDB00')
 #back up original mbxdata
 mbxData.b <- mbxData
 
@@ -112,8 +114,8 @@ colnames(mbxData)[2] <- "Compound.Name"
 #add disease labels to the mbx data
 diseaseLabels <- metaDataMBX$disease
 ##Add two empty strings to macth with additional column data.
-diseaseLabels <- append(diseaseLabels, "",after = 0)
-diseaseLabels <- append(diseaseLabels, "",after = 0)
+diseaseLabels <- append(diseaseLabels, "NA",after = 0)
+diseaseLabels <- append(diseaseLabels, "NA",after = 0)
 mbxData <- rbind(diseaseLabels, mbxData)
 ```
 
@@ -123,14 +125,16 @@ mbxData <- rbind(diseaseLabels, mbxData)
 #write only UC versus nonIBD comparison
 mbxDataUC <- mbxData[ ,(mbxData[1, ] == "UC" | mbxData[1, ] == "nonIBD")]
 #add hmdb id again
-mbxDataUC <- cbind(mbxData[,1],mbxDataUC)
+mbxDataUC <- cbind(mbxData[,1:2],mbxDataUC)
 colnames(mbxDataUC)[1]="HMBDB.ID"
+colnames(mbxDataUC)[2] <- "Compound.Name"
 write.table(mbxDataUC, "output/mbxDataUC_nonIBD.csv", sep =",", row.names = FALSE)
 
 #write only CD_healthy comparison
 mbxDataCD <- mbxData[ ,(mbxData[1, ] == "CD" | mbxData[1, ] == "nonIBD")]
-mbxDataCD <- cbind(mbxData[,1],mbxDataCD)
+mbxDataCD <- cbind(mbxData[,1:2],mbxDataCD)
 colnames(mbxDataCD)[1]="HMBDB.ID"
+colnames(mbxDataCD)[2] <- "Compound.Name"
 write.table(mbxDataCD, "output/mbxDataCD_nonIBD.csv", sep =",", row.names = FALSE)
 ```
 
@@ -143,7 +147,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpD7GwFF/remotes31057fc97a22/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpJcH5LY/remotes6dcd18278417/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
