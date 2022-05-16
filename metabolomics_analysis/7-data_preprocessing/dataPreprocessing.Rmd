@@ -144,7 +144,7 @@ rmd2jupyter("dataPreprocessing.Rmd")
 #if (file.exists(markdown_file)) {
 #   unlink(markdown_file, recursive=TRUE)#firs delete the existing one
 # }
-#Still trows an error
+#Still trows an error, now build with knittr manual selection.
 #rmarkdown::render("dataPreprocessing.Rmd", "md_document")
 
 ##Clean up R-studio environment
