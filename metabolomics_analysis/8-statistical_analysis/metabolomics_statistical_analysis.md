@@ -151,11 +151,11 @@ end_Disorders <- (columns_disorders+2) ##add two, to compensate for HMDB.ID and 
 disease = apply(mSet_FINAL[,3:end_Disorders], 1, mean, na.rm=TRUE)
 control_IBD = apply(mSet_FINAL[,(end_Disorders+1):ncol(mSet_FINAL)], 1, mean, na.rm=TRUE)
 
-#because the metabolomics data is already log2 transformed, we need to take the difference between the means (iso dividing the means over one another), since log2 Fold Change or log2 Ratio == log2(control / condition). Note: if the transformation step applied is cube_root or square_root, one needs to divide control over disease for this step!
+#because the metabolomics data is already log2 transformed, we need to take the difference between the means (iso dividing the means over one another), since log2 Fold Change or log2 Ratio == log2(condition / control). Note: if the transformation step applied is cube_root or square_root, one needs to divide control over disease for this step!
 if(transformation == "log_2" | transformation == "log10"){
-    foldchange_disorder <- control_IBD - disease
+    foldchange_disorder <-  disease - control_IBD
 }else{
-  foldchange_disorder <- (control_IBD / disease)}
+  foldchange_disorder <- (disease /control_IBD )}
 
 ##ADD HMDB column at start, add fold change columns.
 mSet_AnalysisReady <- cbind(mSet_FINAL$HMDB.ID, mSet_FINAL$Compound.Name, foldchange_disorder)
@@ -261,7 +261,7 @@ volcanoPlot_disorder <- volcanoPlot_disorder + geom_vline(xintercept=c(log2FC_mi
 if (disorder == "UC") {disorderName <- "Ulcerative Colitis (UC)"}else{disorderName <- "Crohn's disease (CD)"}
 
 titleVolcano <- paste0("Volcano plot of ", transformation, " transformed data for ", disorderName )
-verticalAxisTitle <- paste0(transformation, " Fold Change, control versus ", disorderName)
+verticalAxisTitle <- paste0(transformation, " Fold Change, ", disorderName, " versus control ")
 
 ## Add title and update axis labels:
 volcanoPlot_disorder <- volcanoPlot_disorder + ggtitle(titleVolcano) + labs(y = "-log10(p-value)", x = verticalAxisTitle)
@@ -297,7 +297,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/Rtmp1KO8di/remotes689813bca6d4/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/Rtmprr7OOD/remotes39754fd63c8/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
