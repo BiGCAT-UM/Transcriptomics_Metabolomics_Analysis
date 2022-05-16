@@ -1,23 +1,20 @@
----
-title: "metabolomics_analysis"
-author: 
-- "DeniseSl22"
-- "ddedesener"
-date: "25/04/2022"
-output:
- md_document:
-    variant: markdown_github
-always_allow_html: true
----
-
 ## Introduction
-In this workflow, we will apply statistical analysis on metabolomics data and link the metabolites of interest to pathway data from WikiPathways.
+
+In this workflow, we will apply statistical analysis on metabolomics
+data and link the metabolites of interest to pathway data from
+WikiPathways.
 
 First we locate the metabolomics data from step 7 (preprocessing).
-```{r data_download,warning=FALSE, message=FALSE}
+
+``` r
 # Obtain Working Directory for step 7 to find data
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 getwd()
+```
+
+    ## [1] "/home/deniseslenter/Documents/GitHub/Transcriptomics_Metabolomics_Analysis/metabolomics_analysis/8-statistical_analysis"
+
+``` r
 setwd('..')
 work_DIR <- getwd()
 
@@ -38,8 +35,12 @@ if (disorder == "CD") {
     mSet = mSet_UC
     print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
 ```
+
+    ## [1] "Selected disorder is Crohn's disease"
+
 Second, we perform data extraction from the file, and process the data
-```{r data_import,warning=FALSE, message=FALSE}
+
+``` r
 ##DATA CLEANUP:
 #if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
 #library(dplyr)
@@ -84,9 +85,18 @@ colnames(mSet_transformed)[2]="Compound.Name"
 ## Visualize the data after the transformation (for one sample to get an idea of suitability of transformation:
 #create histogram for original distribution for first column with data
 hist(mSet_NoMissingData[,3], col='steelblue', main='Original')
+```
+
+![](metabolomics_statistical_analysis_files/figure-markdown_github/data_import-1.png)
+
+``` r
 #create histogram for log-transformed distribution 
 hist(mSet_transformed[,3], col='coral2', main=transformation)
+```
 
+![](metabolomics_statistical_analysis_files/figure-markdown_github/data_import-2.png)
+
+``` r
 ## Testing if the transformation creates a normally distributed dataset (alpha >= 0.05)
 ##Calculate all Shapiro values for raw and transformed data:
 mSet_NoMissingData_Shapiro <- lapply(mSet_NoMissingData[,3:columns], shapiro.test)
@@ -105,12 +115,17 @@ eighty_percent <- floor(((columns)/10)*8)
 #Print relevant information:
 if(mSet_transformed_Shapiro_pvalues_sum[1] > eighty_percent ){paste0("Data after ", transformation ," transformation seems to follow a normal distribution for more then 80% of your data")} else{
   print("Advised to select a different data transformation procedure")}
+```
 
+    ## [1] "Data after log_2 transformation seems to follow a normal distribution for more then 80% of your data"
+
+``` r
 remove(mSet_HMDB_NEW, mSet_MissingDataCounted, mSet_NoMissingData, mSet_NoMissingData_Shapiro, mSet_NoMissingData_Shapiro_pvalues, mSet_transformed_Shapiro, mSet_transformed_Shapiro_pvalues, eighty_percent, fifty_percent, mSet_NoMissingData_Shapiro_pvalues_sum, mSet_transformed_Shapiro_pvalues_sum, removeLines, columns, rowsData)
 ```
 
 ## Calculate logFC and p-value
-```{r basic_statistics, warning=FALSE, message=FALSE}
+
+``` r
 #Create backup of data
 mSet_transformed.b <- mSet_transformed
 ##Order columns based on disease abbreviation (located in column names); adding the control group nonIBD as last columns:
@@ -171,9 +186,13 @@ remove(mSet_transformed, columns_disorders, columnNumber, end_Disorders, foldcha
 ```
 
 ## Volcano plot
-The next step will visualize relevant metabolites in a Volcano plot, with thresholds defined for the log2FCs and p-values.
-Since we are dealing with non-targeted LC_MS data, we are applying stringent criteria here (p-value below 0.01, and |log2FC| >= 1.5)
-```{r volcano_plot,warning=FALSE, message=FALSE}
+
+The next step will visualize relevant metabolites in a Volcano plot,
+with thresholds defined for the log2FCs and p-values. Since we are
+dealing with non-targeted LC_MS data, we are applying stringent criteria
+here (p-value below 0.01, and \|log2FC\| \>= 1.5)
+
+``` r
 ##Inspired by: https://biocorecrg.github.io/CRG_RIntroduction/volcano-plots.html
 if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
 library('ggplot2')
@@ -250,8 +269,11 @@ volcanoPlot_disorder <- volcanoPlot_disorder + ggtitle(titleVolcano) + labs(y = 
 # Show the Volcano plot in the notebook output:
 volcanoPlot_disorder
 ```
+
+![](metabolomics_statistical_analysis_files/figure-markdown_github/volcano_plot-1.png)
 Export the data and Volcano Plot:
-```{r data_export, warning=FALSE, message=FALSE}
+
+``` r
 ##Save the data file
 nameDataFile <- paste0("output/mbxData_", disorder ,".csv")
 write.table(mSet_AnalysisFinal, nameDataFile, sep =",", row.names = FALSE)
@@ -264,13 +286,26 @@ imageType <- "png" ##Options are: svg, png, eps, ps, tex, pdf, jpeg, tiff, png, 
 nameVolcano <- paste0("output/", disorder, "_", selectViz, "_VolcanoPlot_absLogFC_", log2FC_max, "_pValue_", p_value_threshold, ".", imageType)
 
 ggsave(nameVolcano)
-
 ```
+
 ### Last, we create a Jupyter notebook and markdown file from this script
-```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+
+``` r
 #Jupyter Notebook file
 if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+```
+
+    ## 
+    ## * checking for file ‘/tmp/Rtmp1KO8di/remotes689813bca6d4/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * preparing ‘rmd2jupyter’:
+    ## * checking DESCRIPTION meta-information ... OK
+    ## * checking for LF line-endings in source and make files and shell scripts
+    ## * checking for empty or unneeded directories
+    ## Omitted ‘LazyData’ from DESCRIPTION
+    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+
+``` r
 library(devtools)
 library(rmd2jupyter)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
