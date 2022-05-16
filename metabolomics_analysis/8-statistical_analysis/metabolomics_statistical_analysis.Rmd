@@ -213,15 +213,27 @@ left_join(mSet_AnalysisReady_FC, mSet_AnalysisReady_p, by=c("HMDB_ID", "Compound
 mSet_AnalysisFinal <- rbind(mSet_AnalysisReady_Duplicates, mSet_AnalysisReady_FCandp)
 
 ##Create column with HMDB_IDs again, only if the data is relevant, for visualization in Volcano Plot
-mSet_AnalysisFinal$relevant_labels <- mSet_AnalysisFinal$HMDB_ID
+mSet_AnalysisFinal$relevant_ids <- mSet_AnalysisFinal$HMDB_ID
+mSet_AnalysisFinal$relevant_ids[!((mSet_AnalysisFinal$foldchange_disorder <= log2FC_min | mSet_AnalysisFinal$foldchange_disorder >= log2FC_max) &  mSet_AnalysisFinal$p_values_disorder <= p_value_threshold)] <- NA
+
+##Create another column with Compound names, only if the data is relevant, for visualization in Volcano Plot
+mSet_AnalysisFinal$relevant_labels <- mSet_AnalysisFinal$Compound_Name
 mSet_AnalysisFinal$relevant_labels[!((mSet_AnalysisFinal$foldchange_disorder <= log2FC_min | mSet_AnalysisFinal$foldchange_disorder >= log2FC_max) &  mSet_AnalysisFinal$p_values_disorder <= p_value_threshold)] <- NA
+
+##Select visualization of HMDB-IDs(relevant_ids), or chemical compound names(relevant_labels)
+selectViz <- "relevant_labels"
 
 # Library needed to space out the labels
 if(!"ggrepel" %in% installed.packages()){install.packages("ggrepel")}
 library(ggrepel)
 
+if(selectViz == "relevant_labels"){
 ##volcanoPlot_Disorder 
 volcanoPlot_disorder <- ggplot(data=mSet_AnalysisFinal, aes(x=foldchange_disorder, y=-log10(p_values_disorder), label=relevant_labels)) + geom_point() + theme_minimal() + geom_text_repel()
+}else if(selectViz == "relevant_ids"){
+##volcanoPlot_Disorder 
+volcanoPlot_disorder <- ggplot(data=mSet_AnalysisFinal, aes(x=foldchange_disorder, y=-log10(p_values_disorder), label=relevant_ids)) + geom_point() + theme_minimal() + geom_text_repel()
+}else{print("Column name not recognized for label visualization.")}
 
 ## Add vertical lines for FoldChange and P-value thresholds:
 volcanoPlot_disorder <- volcanoPlot_disorder + geom_vline(xintercept=c(log2FC_min, log2FC_max), col="blue") +
@@ -242,14 +254,14 @@ Export the data and Volcano Plot:
 ```{r data_export, warning=FALSE, message=FALSE}
 ##Save the data file
 nameDataFile <- paste0("output/mbxData_", disorder ,".csv")
-write.table(mSet_AnalysisReady, nameDataFile, sep =",", row.names = FALSE)
+write.table(mSet_AnalysisFinal, nameDataFile, sep =",", row.names = FALSE)
 
 if(!"svglite" %in% installed.packages()){install.packages("svglite")}
 library('svglite')
 
 ##Save the Volcano plot:
 imageType <- "png" ##Options are: svg, png, eps, ps, tex, pdf, jpeg, tiff, png, bmp, svg or wmf
-nameVolcano <- paste0("output/", disorder, "_VolcanoPlot_absLogFC_", log2FC_max, "_pValue_", p_value_threshold, ".", imageType)
+nameVolcano <- paste0("output/", disorder, "_", selectViz, "_VolcanoPlot_absLogFC_", log2FC_max, "_pValue_", p_value_threshold, ".", imageType)
 
 ggsave(nameVolcano)
 
