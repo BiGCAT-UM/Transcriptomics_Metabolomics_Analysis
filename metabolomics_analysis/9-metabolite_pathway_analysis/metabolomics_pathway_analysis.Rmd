@@ -29,7 +29,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 work_DIR <- getwd()
 
 ## Select a disorder to analyse (options; CD or UC)
-disorder <- "UC"
+disorder <- "CD"
 
 if (disorder == "CD") {
   mSet = mSet_CD 
@@ -37,7 +37,7 @@ if (disorder == "CD") {
     mSet = mSet_UC
     print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
 ```
-Find pathways based on relevant labels column
+Find pathways based on relevant IDs column
 ```{r pathway_retrieval,warning=FALSE, message=FALSE}
 if(!"SPARQL" %in% installed.packages()){
   install.packages("SPARQL")
@@ -133,16 +133,43 @@ probabilities <- dhyper(Contingency_table[i,2], Contingency_table[i,3], Continge
 
 pathwayAnalysis_results <- cbind(showresults_CombinePWs[, c(2:4)], probabilities, showresults_CombinePWs[, c(6,7)])
 colnames(pathwayAnalysis_results)[5] <- "HGNCs"
-colnames(pathwayAnalysis_results)[6] <- "Proteins.In.PW"
+colnames(pathwayAnalysis_results)[6] <- "ProteinsInPWs"
 
-##Sort PW results based on 1. #HMDBs in PW, 2. relevant p-values (lower then or equal to 0.05), 3. number of proteins in PW (which might be relevant for transcriptomics analysis)
+##Sort PW results based on 1. highest amount of #HMDBs in PW, 2. lowest p-values,  3. highest amouny of proteins in PW (which might be relevant for transcriptomics analysis later)
+pathwayAnalysis_results_sorted <- pathwayAnalysis_results[  with(pathwayAnalysis_results, order(-HMDBsInPWs, probabilities, -ProteinsInPWs)),]
 
+print(pathwayAnalysis_results_sorted[1:5,])
 ```
-
-
 Export the pathway data:
 ```{r data_export, warning=FALSE, message=FALSE}
 ##Save the data file
 nameDataFile <- paste0("output/mbxPWdata_", disorder ,".csv")
-write.table(showresults_CombinePWs, nameDataFile, sep =",", row.names = FALSE)
+write.table(pathwayAnalysis_results_sorted, nameDataFile, sep =",", row.names = FALSE)
+```
+
+Print significantly changed metabolites which were not in a pathway, by ID and name:
+```{r missing_data,warning=FALSE, message=FALSE }
+#TODO
+```
+
+
+### Last, we create a Jupyter notebook and markdown file from this script
+```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("metabolomics_pathway_analysis.Rmd")
+
+#markdown_file <- "metabolomics_pathway_analysis.md"
+#if (file.exists(markdown_file)) {
+#   unlink(markdown_file, recursive=TRUE)#first delete the existing one
+# }
+#If this next line trows an error, build the md file with knittr manual selection (file, Knit document, or ctrl+shift+k -keyboard shortcut).
+#rmarkdown::render("metabolomics_pathway_analysis.Rmd", "md_document")
+
+##Clean up data
+remove(counter, i, probabilities, string_HMDB, vector_HMDB, Contingency_table, pathwayAnalysis_results, showresults_CombinePWs, showresultsMetadata)
 ```
