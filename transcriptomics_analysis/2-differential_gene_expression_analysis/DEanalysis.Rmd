@@ -11,9 +11,9 @@ always_allow_html: true
 In this workflow, differential gene expression analysis will be performed on host-transcriptomics data.
 
 ## R environment setup
-First, we need to make sure all required packages 
+First, install all required packages.
 ```{r setup, warning=FALSE, message=FALSE}
-# check if libraries are already installed > otherwise install it
+# check if BioCmanager libraries are already installed > otherwise install it
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
 if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"baySeq" %in% installed.packages()) BiocManager::install("baySeq")
@@ -23,6 +23,14 @@ if(!"bioDist" %in% installed.packages()) BiocManager::install("bioDist")
 if(!"biomaRt" %in% installed.packages()) BiocManager::install("biomaRt")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
 if(!"magrittr" %in% installed.packages()) BiocManager::install("magrittr")
+if(!"EnhancedVolcano" %in% installed.packages()) BiocManager::install("EnhancedVolcano")
+
+#Regular R packages:
+if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
+if(!"limma" %in% installed.packages()){install.packages("limma")}
+if(!"org.Hs.eg.db" %in% installed.packages()){install.packages("org.Hs.eg.db")}
+if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
+#if(!"org.Hs.eg.db" %in% installed.packages()) BiocManager::install("org.Hs.eg.db")
 
 #load packages
 library(rstudioapi)
@@ -32,15 +40,16 @@ library(edgeR)
 library(bioDist)
 library(biomaRt)
 library(dplyr)
-library(ggplot2)
-library(limma)
-library(gplots)
 library(magrittr)
 library(EnhancedVolcano)
+
+library(ggplot2)
+#library(gplots) ??needed?
+library(limma)
 library(org.Hs.eg.db)
 library(VennDiagram)
 
-# set your working environment to the location where your current source file is saved into.
+# set working environment to the location where current source file is saved into.
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #include some functions adapted from ArrayAnalysis.org scripts
 source("functions_ArrayAnalysis_v2.R")
@@ -48,10 +57,19 @@ WORK.DIR <- getwd()
 ```
 
 ## Data Preparations
-The following section will prepar input data to be used in the analysis
+The following section will prepare the input data to be used in the analysis
 ```{r read data,warning=FALSE, message=FALSE}
-#read  the input data file
-htxCount <- read.table(file = 'data/htxCount', sep = '\t', header = TRUE)
+#read the output data file from step 1.
+setwd('..')
+work_DIR <- getwd()
+
+#Obtain data from step 1
+htxCount <- read.csv("1-data_preprocessing/output/htxCount.csv")
+sampleLabels <- read.csv("1-data_preprocessing/output/sampleLabels.csv", header=FALSE)
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
 
 #checking which samples have all zero values across all genes
 #these sample should be removed otherwise there will be a problem when calculating estimate size factors
@@ -60,20 +78,22 @@ idx <- which(colSums(htxCount) == 0)
 htxCount <- htxCount[ , -idx]
 
 #read metadata file sample labels
-sampleLabels <- read.table(file = "data/sampleLabels", row.names=1,sep = '\t', stringsAsFactors = TRUE)
 #apply same filtering to the metadata remove samples from sample labels metadata
 sampleLabels <- sampleLabels[-idx , ]
+#Set column one as rownames.
+sampleLabels2 <- sampleLabels[,-1]
+rownames(sampleLabels2) <- sampleLabels[,1]
 
 #add column names to the metadata file
-colnames(sampleLabels) <- c( "sampleID", "biopsy_location","disease")
+colnames(sampleLabels2) <- c( "sampleID", "biopsy_location","disease")
 #check whether sample names are in same order
-#all(colnames(htxCount) == rownames(sampleLabels))
+#all(colnames(htxCount) == rownames(sampleLabels2))
 
 #select only biopsy_location and disease columns
-sampleLabels<-sampleLabels[, c(2,3)]
-sampleLabels$disease <- relevel(sampleLabels$disease,ref="nonIBD")
+sampleLabels2<-sampleLabels2[, c(2,3)]
+sampleLabels2$disease <- relevel(factor(sampleLabels2$disease),ref="nonIBD")
 #add an experimental group variable to sampleLabels
-sampleLabels$group <- as.factor(paste(sampleLabels$disease,sampleLabels$biopsy_location,sep="_"))
+sampleLabels2$group <- as.factor(paste(sampleLabels2$disease,sampleLabels2$biopsy_location,sep="_"))
 ```
 
 ## Filtering Steps
