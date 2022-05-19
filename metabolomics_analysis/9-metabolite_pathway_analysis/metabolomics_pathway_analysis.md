@@ -35,7 +35,7 @@ if (disorder == "CD") {
 
     ## [1] "Selected disorder is Crohn's disease"
 
-Find pathways based on relevant labels column
+Find pathways based on relevant IDs column
 
 ``` r
 if(!"SPARQL" %in% installed.packages()){
@@ -188,8 +188,48 @@ Print significantly changed metabolites which were not in a pathway, by
 ID and name:
 
 ``` r
-#TODO
+##Find Missing Biomarkers (not part of any Human pathway model)
+item1 = "PREFIX ch: <https://identifiers.org/hmdb/>
+SELECT DISTINCT ?HMDBMetabolite WHERE {
+  VALUES ?HMDBMetabolite {"
+item2 = "}
+  ?pathwayRes  a wp:Pathway ;
+                wp:organismName 'Homo sapiens' .
+  
+  ?metabolite   a wp:Metabolite ;
+                dcterms:identifier ?id ;
+                dcterms:isPartOf ?pathwayRes .
+  ?metabolite wp:bdbHmdb ?HMDBMetabolite.
+}"
+queryMissingBiomarkers <- paste(item1,string_HMDB,item2)
+remove(item1,item2)
+resultsMissingBiomarkers <- SPARQL(endpointwp,queryMissingBiomarkers,curl_args=list(useragent=R.version.string))
+listMissingBiomarkers <- c(resultsMissingBiomarkers$results) #safe results as list for comparison.
+remove(queryMissingBiomarkers,resultsMissingBiomarkers)
+HMDBs_inPWs <- gsub("[<https://identifiers.org/hmdb/>]", "", listMissingBiomarkers) #HMDB IDs IRI cleanup
+intersectingHMDB <- setdiff(vector_HMDB, HMDBs_inPWs)
+
+string_intersectingHMDB <- paste(c(intersectingHMDB), collapse=', ' )
+
+#Find names for missing Biomarkers based on HMDB ID (to help with data understanding and curation)
+missingNames <- list()
+for (j in 1:length(intersectingHMDB)){
+  for (i in 1:nrow(mSet)){
+    if(!is.na(mSet[i,5]) & mSet[i,5] == intersectingHMDB[j]){
+       missingNames[j] <- mSet[i,6]
+      }
+    else{next}
+  }
+}
+remove(i,j)
+#Save list on one string for reporting purposes
+string_missingNames <- do.call(paste, c(as.list(missingNames), sep = ", "))
+#Print relevant information:
+if(length(intersectingHMDB) == 0 ){print("All relevant biomarkers are in a pathway!")} else{
+  print(paste0("For the disorder ", disorder, ", ", length(intersectingHMDB), " biomarkers are not in a pathway; with the following HMDB IDs: " , string_intersectingHMDB, "; with the following Database names: ", string_missingNames))}
 ```
+
+    ## [1] "For the disorder CD, 53 biomarkers are not in a pathway; with the following HMDB IDs: HMDB0000479, HMDB0000610, HMDB0000779, HMDB0000792, HMDB0000848, HMDB0000885, HMDB0000932, HMDB0001906, HMDB0002064, HMDB0002250, HMDB0002815, HMDB0004159, HMDB0004161, HMDB0005015, HMDB0005060, HMDB0005065, HMDB0005066, HMDB0005462, HMDB0005476, HMDB0006726, HMDB0006731, HMDB0006733, HMDB0007199, HMDB0007871, HMDB0007970, HMDB0008006, HMDB0008038, HMDB0010169, HMDB0010370, HMDB0010379, HMDB0010383, HMDB0010384, HMDB0010391, HMDB0010393, HMDB0010395, HMDB0010404, HMDB0010407, HMDB0011208, HMDB0011212, HMDB0011241, HMDB0011243, HMDB0011252, HMDB0011310, HMDB0011503, HMDB0011507, HMDB0011520, HMDB0012097, HMDB0012104, HMDB0013122, HMDB0013287, HMDB0013325, HMDB0015070, HMDB0030180; with the following Database names: 3-methylhistidine, C18:2 CE, phenylalanine, sebacate, C18 carnitine, C16:0 CE, tauro-alpha-muricholate/tauro-beta-muricholate, aminoisobutyric acid/GABA, N-acetylputrescine, C12 carnitine, C18:1 LPC, urobilin, urobilin, gabapentin, eicosadienoate, C18:1 carnitine, C14 carnitine, C56:7 TAG, C58:10 TAG, C20:4 CE, C20:5 CE, C22:6 CE, C38:5 DAG, C32:0 PC, C34:0 PC, C34:3 PC, C36:1 PC, C16:0 SM, C18:3 CE, C16:0 LPC, C16:1 LPC, C18:0 LPC, C20:1 LPC, C20:3 LPC, C20:4 LPC, C22:6 LPC, C16:1 LPC plasmalogen, C34:1 PC plasmalogen, C34:4 PC plasmalogen, C36:1 PC plasmalogen, C36:2 PC plasmalogen, C38:4 PC plasmalogen, C36:4 PC plasmalogen, C16:0 LPE, C18:2 LPE, C22:0 LPE, C14:0 SM, C22:1 SM, C18:1 LPC plasmalogen, N6,N6-dimethyllysine, C10:2 carnitine, oxymetazoline, crustecdysone"
 
 ### Last, we create a Jupyter notebook and markdown file from this script
 
@@ -200,7 +240,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpIgYty7/remotes70f7468ca1a2/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpPyKkz2/remotes4fb71148f719/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
