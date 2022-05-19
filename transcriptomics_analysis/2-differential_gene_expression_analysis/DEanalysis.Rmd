@@ -99,16 +99,16 @@ sampleLabels2$group <- as.factor(paste(sampleLabels2$disease,sampleLabels2$biops
 ## Filtering Steps
 We will apply some filtering process to filter out genes in the input data
 ```{r filtering,warning=FALSE, message=FALSE}
-#remove genes which has all zero values for all samples then start DE analysis
+#remove genes which have all zero values for all samples then start DE analysis
 nonzero <- rowSums(htxCount) > 0
 htxCount %<>% .[nonzero,]
 
 #############################CPM FILTERING#############################################
-#aveLogCPM function compute average log2 counts-per-million for each row of counts.
+#aveLogCPM function computes average log2 counts-per-million for each row of counts.
 #the below function is similar to log2(rowMeans(cpm(y, ...)))
 mean_log_cpm = aveLogCPM(htxCount)
 
-# We plot the distribution of average log2 CPM values to verify that our chosen presence threshold is appropriate. The distribution is expected to be bimodal, with a low-abundance peak representing non-expressed genes and a high-abundance peak representing expressed genes. The chosen threshold should separate the two peaks of the bimodal distribution. 
+# We plot the distribution of average log2 CPM values to verify that our chosen presence threshold is appropriate. The distribution is expected to be bi modal, with a low-abundance peak representing non-expressed genes and a high-abundance peak representing expressed genes. The chosen threshold should separate the two peaks of the bi modal distribution. 
 filter_threshold <- -1# we can try different threshold values
 #jpeg(file="avgLogCpmDist.jpeg")#if you want to save the histogram uncomment the following command  
 ggplot() + aes(x=mean_log_cpm) +
@@ -122,13 +122,12 @@ htxCount <- htxCount[keep_genes,]
 #dim(htxCount)#to check dimension of the data
 ###############################################################################
 ```
-
 ## Differential Gene Expression Analysis
 In the following section differential gene expression analysis will be performed using DESeq2 package
 ```{r deg analysis,warning=FALSE, message=FALSE}
-#we wil firstly create a DESeqDataSet object
+# First create a DESeqDataSet object
 #(non-intercept) statistical model based on the disease and biopsy_location, group column represent both of them 
-dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=sampleLabels, design= ~0 + group)
+dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=sampleLabels2, design= ~0 + group)
 
 #estimate the size factors
 #To perform the median of ratios method of normalization, DESeq2 has a single estimateSizeFactors() function that will generate size factors for us.
@@ -150,22 +149,22 @@ setwd(paste(WORK.DIR,"QCraw",sep="/"))
 png("sizefactors.png")
 plot(sizeFactors(dds),type='h',lwd=5,ylim=c(0,max(sizeFactors(dds))),col="darkblue")
 dev.off()
-createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
+createQCPlots(datlogQC, factors, Table=sampleLabels2, normMeth="", postfix="")
 setwd("..")
 #create QC plots for normalized data coloured by different variables
 if(!dir.exists("QCnorm")) dir.create("QCnorm")
 setwd(paste(WORK.DIR,"QCnorm",sep="/"))
-createQCPlots(normlogQC, factors, Table=sampleLabels, normMeth="DESeq", postfix="")
+createQCPlots(normlogQC, factors, Table=sampleLabels2, normMeth="DESeq", postfix="")
 setwd("..")
 #sample MSM719M9 is an outlier remove it from dataset
 #sample HSM5FZAZ is an outlier remove it from dataset
 htxCount <- htxCount[,-match(c("MSM719M9","HSM5FZAZ"),colnames(htxCount))]
-sampleLabels <- sampleLabels[-match(c("MSM719M9","HSM5FZAZ"),rownames(sampleLabels)),]
+sampleLabels2 <- sampleLabels2[-match(c("MSM719M9","HSM5FZAZ"),rownames(sampleLabels2)),]
 #doublecheck whether the order of the samples in samplekey and dat still match
-#sum(rownames(sampleLabels) == colnames(htxCount))==dim(sampleLabels)[1]
+#sum(rownames(sampleLabels2) == colnames(htxCount))==dim(sampleLabels2)[1]
 
 ###REDO ALL STEPS AS ABOVE FOR THE NEW DATA SET
-dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=DataFrame(sampleLabels), design= ~0 + group)
+dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=DataFrame(sampleLabels2), design= ~0 + group)
 dds <- estimateSizeFactors(dds)
 norm <- counts(dds,normalize=TRUE)
 datlog <- log(htxCount+1,2)
@@ -178,12 +177,12 @@ setwd(paste(WORK.DIR,"QCraw2",sep="/"))
 png("sizefactors2.png")
 plot(sizeFactors(dds),type='h',lwd=5,ylim=c(0,max(sizeFactors(dds))),col="darkblue")
 dev.off()
-createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
+createQCPlots(datlogQC, factors, Table=sampleLabels2, normMeth="", postfix="")
 setwd("..")
 #create QC plots for normalized data coloured by different variables
 if(!dir.exists("QCnorm2")) dir.create("QCnorm2")
 setwd(paste(WORK.DIR,"QCnorm2",sep="/"))
-createQCPlots(normlogQC, factors, Table=sampleLabels, normMeth="DESeq", postfix="")
+createQCPlots(normlogQC, factors, Table=sampleLabels2, normMeth="DESeq", postfix="")
 setwd("..")
 
 ################################################################################
