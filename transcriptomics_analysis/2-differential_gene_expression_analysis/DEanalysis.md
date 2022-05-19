@@ -5,10 +5,10 @@ performed on host-transcriptomics data.
 
 ## R environment setup
 
-First, we need to make sure all required packages
+First, install all required packages.
 
 ``` r
-# check if libraries are already installed > otherwise install it
+# check if BioCmanager libraries are already installed > otherwise install it
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
 if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"baySeq" %in% installed.packages()) BiocManager::install("baySeq")
@@ -18,6 +18,14 @@ if(!"bioDist" %in% installed.packages()) BiocManager::install("bioDist")
 if(!"biomaRt" %in% installed.packages()) BiocManager::install("biomaRt")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
 if(!"magrittr" %in% installed.packages()) BiocManager::install("magrittr")
+if(!"EnhancedVolcano" %in% installed.packages()) BiocManager::install("EnhancedVolcano")
+
+#Regular R packages:
+if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
+if(!"limma" %in% installed.packages()){install.packages("limma")}
+if(!"org.Hs.eg.db" %in% installed.packages()){install.packages("org.Hs.eg.db")}
+if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
+if(!"R2HTML" %in% installed.packages()){install.packages("R2HTML")}
 
 #load packages
 library(rstudioapi)
@@ -27,15 +35,17 @@ library(edgeR)
 library(bioDist)
 library(biomaRt)
 library(dplyr)
-library(ggplot2)
-library(limma)
-library(gplots)
 library(magrittr)
 library(EnhancedVolcano)
+
+library(ggplot2)
+#library(gplots) ??needed?
+library(limma)
 library(org.Hs.eg.db)
 library(VennDiagram)
+library(R2HTML)
 
-# set your working environment to the location where your current source file is saved into.
+# set working environment to the location where current source file is saved into.
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #include some functions adapted from ArrayAnalysis.org scripts
 source("functions_ArrayAnalysis_v2.R")
@@ -44,11 +54,21 @@ WORK.DIR <- getwd()
 
 ## Data Preparations
 
-The following section will prepar input data to be used in the analysis
+The following section will prepare the input data to be used in the
+analysis
 
 ``` r
-#read  the input data file
-htxCount <- read.table(file = 'data/htxCount', sep = '\t', header = TRUE)
+#read the output data file from step 1.
+setwd('..')
+work_DIR <- getwd()
+
+#Obtain data from step 1
+htxCount <- read.csv("1-data_preprocessing/output/htxCount.csv")
+sampleLabels <- read.csv("1-data_preprocessing/output/sampleLabels.csv", header=FALSE)
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
 
 #checking which samples have all zero values across all genes
 #these sample should be removed otherwise there will be a problem when calculating estimate size factors
@@ -57,20 +77,22 @@ idx <- which(colSums(htxCount) == 0)
 htxCount <- htxCount[ , -idx]
 
 #read metadata file sample labels
-sampleLabels <- read.table(file = "data/sampleLabels", row.names=1,sep = '\t', stringsAsFactors = TRUE)
 #apply same filtering to the metadata remove samples from sample labels metadata
 sampleLabels <- sampleLabels[-idx , ]
+#Set column one as rownames.
+sampleLabels2 <- sampleLabels[,-1]
+rownames(sampleLabels2) <- sampleLabels[,1]
 
 #add column names to the metadata file
-colnames(sampleLabels) <- c( "sampleID", "biopsy_location","disease")
+colnames(sampleLabels2) <- c( "sampleID", "biopsy_location","disease")
 #check whether sample names are in same order
-#all(colnames(htxCount) == rownames(sampleLabels))
+#all(colnames(htxCount) == rownames(sampleLabels2))
 
 #select only biopsy_location and disease columns
-sampleLabels<-sampleLabels[, c(2,3)]
-sampleLabels$disease <- relevel(sampleLabels$disease,ref="nonIBD")
+sampleLabels2<-sampleLabels2[, c(2,3)]
+sampleLabels2$disease <- relevel(factor(sampleLabels2$disease),ref="nonIBD")
 #add an experimental group variable to sampleLabels
-sampleLabels$group <- as.factor(paste(sampleLabels$disease,sampleLabels$biopsy_location,sep="_"))
+sampleLabels2$group <- as.factor(paste(sampleLabels2$disease,sampleLabels2$biopsy_location,sep="_"))
 ```
 
 ## Filtering Steps
@@ -79,16 +101,16 @@ We will apply some filtering process to filter out genes in the input
 data
 
 ``` r
-#remove genes which has all zero values for all samples then start DE analysis
+#remove genes which have all zero values for all samples then start DE analysis
 nonzero <- rowSums(htxCount) > 0
 htxCount %<>% .[nonzero,]
 
 #############################CPM FILTERING#############################################
-#aveLogCPM function compute average log2 counts-per-million for each row of counts.
+#aveLogCPM function computes average log2 counts-per-million for each row of counts.
 #the below function is similar to log2(rowMeans(cpm(y, ...)))
 mean_log_cpm = aveLogCPM(htxCount)
 
-# We plot the distribution of average log2 CPM values to verify that our chosen presence threshold is appropriate. The distribution is expected to be bimodal, with a low-abundance peak representing non-expressed genes and a high-abundance peak representing expressed genes. The chosen threshold should separate the two peaks of the bimodal distribution. 
+# We plot the distribution of average log2 CPM values to verify that our chosen presence threshold is appropriate. The distribution is expected to be bi modal, with a low-abundance peak representing non-expressed genes and a high-abundance peak representing expressed genes. The chosen threshold should separate the two peaks of the bi modal distribution. 
 filter_threshold <- -1# we can try different threshold values
 #jpeg(file="avgLogCpmDist.jpeg")#if you want to save the histogram uncomment the following command  
 ggplot() + aes(x=mean_log_cpm) +
@@ -114,9 +136,9 @@ In the following section differential gene expression analysis will be
 performed using DESeq2 package
 
 ``` r
-#we wil firstly create a DESeqDataSet object
+# First create a DESeqDataSet object
 #(non-intercept) statistical model based on the disease and biopsy_location, group column represent both of them 
-dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=sampleLabels, design= ~0 + group)
+dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=sampleLabels2, design= ~0 + group)
 
 #estimate the size factors
 #To perform the median of ratios method of normalization, DESeq2 has a single estimateSizeFactors() function that will generate size factors for us.
@@ -144,22 +166,22 @@ dev.off()
     ##   2
 
 ``` r
-createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
+createQCPlots(datlogQC, factors, Table=sampleLabels2, normMeth="", postfix="")
 setwd("..")
 #create QC plots for normalized data coloured by different variables
 if(!dir.exists("QCnorm")) dir.create("QCnorm")
 setwd(paste(WORK.DIR,"QCnorm",sep="/"))
-createQCPlots(normlogQC, factors, Table=sampleLabels, normMeth="DESeq", postfix="")
+createQCPlots(normlogQC, factors, Table=sampleLabels2, normMeth="DESeq", postfix="")
 setwd("..")
 #sample MSM719M9 is an outlier remove it from dataset
 #sample HSM5FZAZ is an outlier remove it from dataset
 htxCount <- htxCount[,-match(c("MSM719M9","HSM5FZAZ"),colnames(htxCount))]
-sampleLabels <- sampleLabels[-match(c("MSM719M9","HSM5FZAZ"),rownames(sampleLabels)),]
+sampleLabels2 <- sampleLabels2[-match(c("MSM719M9","HSM5FZAZ"),rownames(sampleLabels2)),]
 #doublecheck whether the order of the samples in samplekey and dat still match
-#sum(rownames(sampleLabels) == colnames(htxCount))==dim(sampleLabels)[1]
+#sum(rownames(sampleLabels2) == colnames(htxCount))==dim(sampleLabels2)[1]
 
 ###REDO ALL STEPS AS ABOVE FOR THE NEW DATA SET
-dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=DataFrame(sampleLabels), design= ~0 + group)
+dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=DataFrame(sampleLabels2), design= ~0 + group)
 dds <- estimateSizeFactors(dds)
 norm <- counts(dds,normalize=TRUE)
 datlog <- log(htxCount+1,2)
@@ -178,12 +200,12 @@ dev.off()
     ##   2
 
 ``` r
-createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
+createQCPlots(datlogQC, factors, Table=sampleLabels2, normMeth="", postfix="")
 setwd("..")
 #create QC plots for normalized data coloured by different variables
 if(!dir.exists("QCnorm2")) dir.create("QCnorm2")
 setwd(paste(WORK.DIR,"QCnorm2",sep="/"))
-createQCPlots(normlogQC, factors, Table=sampleLabels, normMeth="DESeq", postfix="")
+createQCPlots(normlogQC, factors, Table=sampleLabels2, normMeth="DESeq", postfix="")
 setwd("..")
 
 ################################################################################
@@ -285,4 +307,28 @@ for(i in 1:length(files)) {
     print(plot_list[[i]])
     dev.off()
 }  
+```
+
+### Last, we create a Jupyter notebook from this script
+
+``` r
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+```
+
+    ## 
+    ## * checking for file ‘/tmp/RtmpEEZMnv/remotes15a467dc6036/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * preparing ‘rmd2jupyter’:
+    ## * checking DESCRIPTION meta-information ... OK
+    ## * checking for LF line-endings in source and make files and shell scripts
+    ## * checking for empty or unneeded directories
+    ## Omitted ‘LazyData’ from DESCRIPTION
+    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+
+``` r
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("DEanalysis.Rmd")
 ```

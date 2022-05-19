@@ -30,7 +30,7 @@ if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
 if(!"limma" %in% installed.packages()){install.packages("limma")}
 if(!"org.Hs.eg.db" %in% installed.packages()){install.packages("org.Hs.eg.db")}
 if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
-#if(!"org.Hs.eg.db" %in% installed.packages()) BiocManager::install("org.Hs.eg.db")
+if(!"R2HTML" %in% installed.packages()){install.packages("R2HTML")}
 
 #load packages
 library(rstudioapi)
@@ -48,6 +48,7 @@ library(ggplot2)
 library(limma)
 library(org.Hs.eg.db)
 library(VennDiagram)
+library(R2HTML)
 
 # set working environment to the location where current source file is saved into.
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -58,7 +59,7 @@ WORK.DIR <- getwd()
 
 ## Data Preparations
 The following section will prepare the input data to be used in the analysis
-```{r read data,warning=FALSE, message=FALSE}
+```{r read_data,warning=FALSE, message=FALSE}
 #read the output data file from step 1.
 setwd('..')
 work_DIR <- getwd()
@@ -124,7 +125,7 @@ htxCount <- htxCount[keep_genes,]
 ```
 ## Differential Gene Expression Analysis
 In the following section differential gene expression analysis will be performed using DESeq2 package
-```{r deg analysis,warning=FALSE, message=FALSE}
+```{r deg_analysis,warning=FALSE, message=FALSE}
 # First create a DESeqDataSet object
 #(non-intercept) statistical model based on the disease and biopsy_location, group column represent both of them 
 dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=sampleLabels2, design= ~0 + group)
@@ -221,7 +222,7 @@ setwd("..")
 
 ## Enhanced Volcano Plots Visualization
 Differential gene expression analysis results will be visualized by volcano plots
-```{r volcano plot visualization,warning=FALSE, message=FALSE}
+```{r volcano_plot_visualization,warning=FALSE, message=FALSE}
 #go to the result folder named statsmodel
 setwd(paste(WORK.DIR,"statsmodel",sep="/"))
 readFilePath <- paste(WORK.DIR,"statsmodel",sep="/")
@@ -251,4 +252,13 @@ for(i in 1:length(files)) {
 }  
 ```
 
-
+### Last, we create a Jupyter notebook from this script
+```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("DEanalysis.Rmd")
+```
