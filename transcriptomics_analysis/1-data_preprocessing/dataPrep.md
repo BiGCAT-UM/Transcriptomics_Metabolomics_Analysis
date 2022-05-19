@@ -52,7 +52,7 @@ htxMeta <-htxMeta  %>% filter(  (htxMeta$diagnosis == "CD" & htxMeta$biopsy_loca
 htxMeta <-htxMeta  %>% filter(htxMeta$visit_num == "1")
 
 #filter out unused columns
-htxMeta <- htxMeta %>% select(External.ID,Participant.ID,biopsy_location,diagnosis )
+htxMeta <- htxMeta %>% dplyr::select(External.ID,Participant.ID,biopsy_location,diagnosis)
 
 #Order htxMeta data based on external ID to match samples with htx count correctly
 htxMeta<- htxMeta[order(htxMeta$External.ID),]#order htxMeta by external ID
@@ -76,8 +76,8 @@ htxCount <- htxCount[,order(names(htxCount))]
 #check whether they are in same order
 #colnames(htxCount) == htxMeta[,"External.ID"]
 #Write all the generated data into the related output files 
-write.table(htxCount, "output/htxCount", sep="\t",quote=FALSE, row.names = TRUE )
-write.table(htxMeta, "output/sampleLabels", sep="\t",quote=FALSE,row.names = FALSE, col.names = FALSE)
+write.table(htxCount, "output/htxCount.csv", sep="\t",quote=FALSE, row.names = TRUE )
+write.table(htxMeta, "output/sampleLabels.csv", sep="\t",quote=FALSE,row.names = FALSE, col.names = FALSE)
 ```
 
 ### Last, we create a Jupyter notebook from this script
@@ -89,7 +89,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpnrJlmV/remotes66c45e2f4fe7/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpKwm5dh/remotes7ca0109cad0/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
