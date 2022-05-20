@@ -1,8 +1,15 @@
 Order of workflow
-1-Data preparation
-2-DEG analysis
-3-Extract overlapped genes
-4-Pathway Analysis
-5-Create heatmap
+Transcriptomics analysis
+1-Data preprocessing
+2-Differential gene expression analysis
+3-Pathway analysis
+4-Heatmap creation
+5-Overlapped genes extraction
 6-Network analysis
-7-Metabolomics analysis
+Metabolomics analysis
+7-Data preprocessing
+8-Significantly changed metabolites analysis
+9-Metabolite pathway analysis
+Multi-omics visualization
+10-Identifier mapping
+11-Visualization of multi-omics
