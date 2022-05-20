@@ -4,6 +4,7 @@ This workflow, developed in R markdown files as well as and Jupyter notebook fil
 
 Transcriptomic analysis:
 [1-Data preprocessing](https://github.com/BiGCAT-UM/Transcriptomics_Metabolomics_Analysis/tree/master/transcriptomics_analysis/1-data_preprocessing) 
+[2-Differential gene expression analysis](Transcriptomics_Metabolomics_Analysis/transcriptomics_analysis/2-differential_gene_expression_analysis/)
 
 The setup of this project has been tested with:
 - OS Windows 10, R-studio 2021.09.02, R 4.1.3.
