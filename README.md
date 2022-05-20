@@ -6,7 +6,7 @@ The setup of this project has been tested with:
 - OS Windows 10, R-studio 2021.09.02, R 4.1.3.
 - OS Linux (Debian), R-studio 2022.02.2, R 4.2.
 
-The automated workflows are examples of how to bring together different software tools and methods to analyze transcriptomics and metabolomics data to reveal the underlying mechanism behind IBD disease as a use case study.
+The workflow is an example of how to bring together different software tools and methods to analyze transcriptomics and metabolomics data to reveal the underlying mechanism behind IBD disease as a use case study.
 
 ![workflow](https://user-images.githubusercontent.com/65600609/169603139-1732ce3c-fd87-4c8e-9925-9ce7134653d8.png)
 
