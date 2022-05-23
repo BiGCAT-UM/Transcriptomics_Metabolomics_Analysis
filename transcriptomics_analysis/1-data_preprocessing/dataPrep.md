@@ -73,11 +73,22 @@ names.use <- names(htxOrj)[(names(htxOrj) %in% htxMeta$External.ID)]
 htxCount <- htxOrj[, names.use]
 #htxCount data are ordered based on column names to match samples between htxCount and sampleLabels
 htxCount <- htxCount[,order(names(htxCount))]
+
+#sample distribution based on biopsy locations
+ileum =nrow(htxMeta[htxMeta$biopsy_location=="Ileum",])
+rectum = nrow(htxMeta[htxMeta$biopsy_location=="Rectum",])
+cat ("Number of samples in ileum:", ileum ,"\nNumber of samples in rectum:",rectum)
+```
+
+    ## Number of samples in ileum: 84 
+    ## Number of samples in rectum: 91
+
+``` r
 #check whether they are in same order
 #colnames(htxCount) == htxMeta[,"External.ID"]
 #Write all the generated data into the related output files 
-write.table(htxCount, "output/htxCount.csv", sep="\t",quote=FALSE, row.names = TRUE )
-write.table(htxMeta, "output/sampleLabels.csv", sep="\t",quote=FALSE,row.names = FALSE, col.names = FALSE)
+write.table(htxCount, "output/htxCount.csv", sep=",",quote=FALSE, row.names = TRUE )
+write.table(htxMeta, "output/sampleLabels.csv", sep=",",quote=FALSE,row.names = FALSE, col.names = FALSE)
 ```
 
 ### Last, we create a Jupyter notebook from this script
@@ -89,13 +100,14 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpKwm5dh/remotes7ca0109cad0/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
+    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpAHBAmd\remotes3dd4146023e5\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
+    ## * preparing 'rmd2jupyter':
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ## Omitted 'LazyData' from DESCRIPTION
+    ## * building 'rmd2jupyter_0.1.0.tar.gz'
+    ## 
 
 ``` r
 library(devtools)
