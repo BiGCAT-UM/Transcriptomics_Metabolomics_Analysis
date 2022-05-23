@@ -72,6 +72,12 @@ names.use <- names(htxOrj)[(names(htxOrj) %in% htxMeta$External.ID)]
 htxCount <- htxOrj[, names.use]
 #htxCount data are ordered based on column names to match samples between htxCount and sampleLabels
 htxCount <- htxCount[,order(names(htxCount))]
+
+#sample distribution based on biopsy locations
+ileum =nrow(htxMeta[htxMeta$biopsy_location=="Ileum",])
+rectum = nrow(htxMeta[htxMeta$biopsy_location=="Rectum",])
+cat ("Number of samples in ileum:", ileum ,"\nNumber of samples in rectum:",rectum)
+
 #check whether they are in same order
 #colnames(htxCount) == htxMeta[,"External.ID"]
 #Write all the generated data into the related output files 
