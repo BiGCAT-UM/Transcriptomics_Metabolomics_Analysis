@@ -278,7 +278,7 @@ rmd2jupyter("metabolomics_statistical_analysis.Rmd")
 
 #markdown_file <- "metabolomics_statistical_analysis.md"
 #if (file.exists(markdown_file)) {
-#   unlink(markdown_file, recursive=TRUE)#firs delete the existing one
+#   unlink(markdown_file, recursive=TRUE)#first delete the existing one
 # }
 #If this next line trows an error, build the md file with knittr manual selection (file, Knit document, or ctrl+shift+k -keyboard shortcut).
 #rmarkdown::render("metabolomics_statistical_analysis.Rmd", "md_document")
