@@ -8,7 +8,9 @@ expression of transcripts in inflammatory bowel disease (CD and UC)
 biopsy locations (ileum and rectum) versus healthy people. Differential
 expression analysis has already been performed (see step 2 of this
 workflow), generating log2foldchange and (adjusted) p-values data for
-each gene. \## R environment setup
+each gene.
+
+## R environment setup
 
 ``` r
 # check if libraries are already installed > otherwise install it
@@ -16,23 +18,17 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocMana
 if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"org.Hs.eg.db" %in% installed.packages()) BiocManager::install("org.Hs.eg.db")  
 if(!"AnnotationDbi" %in% installed.packages()) BiocManager::install("AnnotationDbi")
-if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr") #for using %>% function
 if(!"rWikiPathways" %in% installed.packages()) BiocManager::install("rWikiPathways")
 if(!"clusterProfiler" %in% installed.packages()) BiocManager::install("clusterProfiler") 
-if(!"ggplot2" %in% installed.packages()) BiocManager::install("ggplot2") 
-if(!"pheatmap" %in% installed.packages()) BiocManager::install("pheatmap")
-if(!"RColorBrewer" %in% installed.packages()) BiocManager::install("RColorBrewer")
+if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
 
 #loading installed libraries
 library(rstudioapi) # interface for interacting with RStudio IDE with R code.
 library(org.Hs.eg.db) #This is the organism annotation package ("org") for Homo sapiens ("Hs"), organized as an AnnotationDbi   package ("db"), using Entrez Gene IDs ("eg") as primary key.
 library(AnnotationDbi) # for connecting and querying annotation databases
-library(dplyr)#for data manipulation
 library(rWikiPathways) # for programmatic access to WikiPathways content
 library(clusterProfiler) # for implementing methods to analyze and visualize functional profiles of genomic data
-library(ggplot2) # for creating graphics
-library (pheatmap) # for creating heatmap
-library (RColorBrewer) # for managing colors 
+library(dplyr)
 
 # set your working environment to the location where your current source file is saved into.
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -246,7 +242,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/Rtmp3Yanr9/remotes2d453300ff08/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpvtBeoe/remotes32dc19ca2afa/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
