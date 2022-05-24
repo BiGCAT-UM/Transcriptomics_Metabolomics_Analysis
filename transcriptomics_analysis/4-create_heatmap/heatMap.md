@@ -50,8 +50,8 @@ CD.rectum.f <- CD.rectum.f [,c(2,6)]
 UC.ileum.f  <- UC.ileum.f [,c(2,6)]
 UC.rectum.f <- UC.rectum.f [,c(2,6)]
 
-#first 20 max value of p.adjust pathways for each comparison
-#for uc ileum we can not apply row filtering since it has only one enriched pathway
+#first 20 enriched pathways that has minimum p.adjust values (more significant) for each comparison were selected to be visualization
+#for UC ileum we can not apply row filtering since it has only one enriched pathway
 #merge CD pathways
 all.pathways.1 <- merge(CD.ileum.f[c(1:20),], CD.rectum.f[c(1:20),],by.x="Description", by.y="Description",sort = TRUE, all.x = TRUE, all.y = TRUE)
 #merge UC pathways
@@ -59,7 +59,7 @@ all.pathways.2 <- merge(UC.ileum.f, UC.rectum.f[c(1:20),],by.x="Description", by
 #merge all of them
 all.pathways <- merge(all.pathways.1 , all.pathways.2 ,by.x="Description", by.y="Description",sort = TRUE, all.x = TRUE, all.y = TRUE)
 colnames(all.pathways) <- c("Description","CD.ileum.p.adjust","CD.rectum.p.adjust","UC.ileum.p.adjust","UC.rectum.p.adjust")
-#remove unused variables##
+#remove unused variables
 rm(all.pathways.1, all.pathways.2)
 ```
 
@@ -67,7 +67,6 @@ rm(all.pathways.1, all.pathways.2)
 
 ``` r
 #replace NA values with the values from the whole list
-
 #### for CD ileum
 #find pathways which does not occur in the filtered enriched pathway list of cd.ileum (p.adjust<0.05 & qvalue<0.02 )
 notExist.CDileum <- setdiff(all.pathways$Description,CD.ileum.f$Description)
@@ -141,3 +140,28 @@ save_pheatmap_png(my_heatmap, "output/heatmap_log10.png")
 
     ## png 
     ##   2
+
+## Last, we create a Jupyter notebook from this script
+
+``` r
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+```
+
+    ## 
+    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpAFE8Ji\remotes442430786f50\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
+    ## * preparing 'rmd2jupyter':
+    ## * checking DESCRIPTION meta-information ... OK
+    ## * checking for LF line-endings in source and make files and shell scripts
+    ## * checking for empty or unneeded directories
+    ## Omitted 'LazyData' from DESCRIPTION
+    ## * building 'rmd2jupyter_0.1.0.tar.gz'
+    ## 
+
+``` r
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("heatMap.Rmd")
+```
