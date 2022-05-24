@@ -43,7 +43,8 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 The data will be read for the disease on two biopsy locations
 
 ``` r
-##TODO: add script to include UC or CD disorder data, depending on User input.
+## Select a disorder to analyse (options; CD or UC)
+disorder <- "CD"
 
 ##Obtain data from step 2:
 setwd('..')
@@ -51,17 +52,31 @@ work_DIR <- getwd()
 #we have two datasets from different biopsy locations
 dataset1 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Ileum_vs_nonIBD_Ileum.tab")
 dataset2 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Rectum_vs_nonIBD_Rectum.tab")
+dataset3 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Ileum_vs_nonIBD_Ileum.tab")
+dataset4 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Rectum_vs_nonIBD_Rectum.tab")
 
 # Set Working Directory back to current folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 work_DIR <- getwd()
 
-#filter out  unused columns, we select geneSymbol, log2FC and pvalue
-dataset1<- subset( dataset1, select = c(1,3,7))
-dataset2<- subset( dataset2, select = c(1,3,7))
 
+if (disorder == "CD") {
+  #filter out  unused columns, we select geneSymbol, log2FC and pvalue
+  dataset_ileum<- subset( dataset3, select = c(1,3,7))
+  dataset_rectum<- subset( dataset4, select = c(1,3,7))
+    print("Selected disorder is Crohn's disease")}else if(disorder == "UC"){ 
+    #filter out  unused columns, we select geneSymbol, log2FC and pvalue
+    dataset_ileum<- subset( dataset1, select = c(1,3,7))
+    dataset_rectum<- subset( dataset2, select = c(1,3,7))
+    print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
+```
+
+    ## [1] "Selected disorder is Crohn's disease"
+
+``` r
 #merge two dataset into one data 
-dataset <- merge(dataset1, dataset2,by.x="X", by.y="X",sort = TRUE, all.x = TRUE, all.y = TRUE)
+dataset <- merge(dataset_ileum, dataset_rectum,by.x="X", by.y="X",sort = TRUE, all.x = TRUE, all.y = TRUE)
+
 #change column names
 colnames(dataset) <- c("GeneSymbol","log2FC_ileum","pvalue_ileum","log2FC_rectum","pvalue_rectum")
 ```
@@ -116,6 +131,7 @@ enrichment methods (GSEA / rSEA / etc).
 ``` r
 #below code should be performed first to handle the ssl certificate error while uploading pathways 
 options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
+
 #downloading latest pathway gmt files for human 
 wp.hs.gmt <- rWikiPathways::downloadPathwayArchive(organism="Homo sapiens", format = "gmt")
 
@@ -145,24 +161,34 @@ ewp.ileum.res <- as.data.frame(ewp.ileum)
 #     BgRatio   = (number of genes measured in the current pathway) / (number of genes measured in all pathways)
 #     geneRatio = (number of DEGs in the current pathway) / (total number of DEGs in all pathways)
 
-##TODO: print some next before numbers, so output is more user friendly.
-# number of genes measured in all pathways
-length(ewp.ileum@universe)
+##Print location:
+paste0("Pathways enrichment results for disorder: ", disorder , ", location: ILEUM")
 ```
 
-    ## [1] 6030
+    ## [1] "Pathways enrichment results for disorder: CD, location: ILEUM"
+
+``` r
+# number of genes measured in all pathways
+paste0("The number of genes measured in all pathways is: ", length(ewp.ileum@universe))
+```
+
+    ## [1] "The number of genes measured in all pathways is: 6030"
 
 ``` r
 # number of DEGs in all pathways
-length(deg.ileum$ENTREZ.ID[deg.ileum$ENTREZ.ID %in% unique(wp2gene$gene)])
+paste0("The number of DEGs measured in all pathways is: ", length(deg.ileum$ENTREZ.ID[deg.ileum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 ```
 
-    ## [1] 185
+    ## [1] "The number of DEGs measured in all pathways is: 679"
 
 ``` r
 #number of enriched pathways
-num.pathways.ileum <- dim(ewp.ileum.res)[1]
+paste0("The number of enriched pathways is: ", num.pathways.ileum <- dim(ewp.ileum.res)[1])
+```
 
+    ## [1] "The number of enriched pathways is: 472"
+
+``` r
 #exporting results to the file
 write.table(ewp.ileum.res, file=paste("results/enrichResults_","UC_ileum",sep = ""),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
@@ -178,23 +204,34 @@ ewp.rectum <- clusterProfiler::enricher(
   TERM2NAME = wpid2name)
 ewp.rectum.res <- as.data.frame(ewp.rectum) 
 
-# number of genes measured in all pathways
-length(ewp.rectum@universe)
+##Print location:
+paste0("Pathways enrichment results for disorder: ", disorder , ", location: RECTUM")
 ```
 
-    ## [1] 6030
+    ## [1] "Pathways enrichment results for disorder: CD, location: RECTUM"
+
+``` r
+# number of genes measured in all pathways
+paste0("The number of genes measured in all pathways is: ", length(ewp.rectum@universe))
+```
+
+    ## [1] "The number of genes measured in all pathways is: 6030"
 
 ``` r
 # number of DEGs in all pathways
-length(deg.rectum$ENTREZ.ID[deg.rectum$ENTREZ.ID %in% unique(wp2gene$gene)])
+paste0("The number of DEGs measured in all pathways is: ", length(deg.rectum$ENTREZ.ID[deg.rectum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 ```
 
-    ## [1] 1485
+    ## [1] "The number of DEGs measured in all pathways is: 643"
 
 ``` r
 #number of enriched pathways
-num.pathways.rectum <- dim(ewp.rectum.res)[1]
+paste0("The number of enriched pathways is: ", num.pathways.rectum <- dim(ewp.rectum.res)[1])
+```
 
+    ## [1] "The number of enriched pathways is: 484"
+
+``` r
 #exporting results to the file
 write.table(ewp.rectum.res, file=paste("results/enrichResults_","UC_rectum",sep = ""),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
@@ -209,7 +246,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/Rtmpqu2h1G/remotes17f352a4aa1f/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/Rtmp3Yanr9/remotes2d453300ff08/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
