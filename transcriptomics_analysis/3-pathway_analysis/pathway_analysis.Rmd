@@ -113,7 +113,7 @@ In this section, we will  perform pathway enrichment analysis.
 The clusterProfiler R-package is used to perform over-representation analysis (ORA). 
 The function can be easily replaced to use other enrichment methods (GSEA / rSEA / etc). 
 ```{r enrichment,warning=FALSE, message=FALSE}
-#below code should be performed first to handle the ssl certificate error while uploading pathways 
+#below code should be performed first to handle the ssl certificate error while downloading pathways 
 options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
 
 #downloading latest pathway gmt files for human 
