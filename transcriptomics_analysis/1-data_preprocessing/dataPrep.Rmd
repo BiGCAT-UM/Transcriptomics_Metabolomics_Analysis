@@ -57,18 +57,17 @@ htxMeta <- htxMeta %>% dplyr::select(External.ID,Participant.ID,biopsy_location,
 #Order htxMeta data based on external ID to match samples with htx count correctly
 htxMeta<- htxMeta[order(htxMeta$External.ID),]#order htxMeta by external ID
 ```
-
 # Filter out host transcriptomics (htx) count data based on sample names obtained from htx meta data, save data in output file.
 ```{r read_filter_count_data, warning=FALSE, message=FALSE}
 #transcript count (htx count) original file is read
-htxOrj <- read.csv("host_tx_counts.tsv",sep = "\t")
+htxOrj <- read.csv("data/host_tx_counts.tsv",sep = "\t")
 
 #Convert sample names to upper (some of them are in lower case)
 colnames(htxOrj)<-toupper(colnames(htxOrj))
 
-#htx count data are filtered based on col names in htxMeta
+#htx count data is filtered based on column names in htxMeta
 names.use <- names(htxOrj)[(names(htxOrj) %in% htxMeta$External.ID)]
-#filter out htxOrj based on names.use and create htxCount
+#filter out htxOrj based on names.use and create a new htxCount
 htxCount <- htxOrj[, names.use]
 #htxCount data are ordered based on column names to match samples between htxCount and sampleLabels
 htxCount <- htxCount[,order(names(htxCount))]

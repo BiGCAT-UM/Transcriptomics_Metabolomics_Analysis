@@ -62,14 +62,14 @@ htxMeta<- htxMeta[order(htxMeta$External.ID),]#order htxMeta by external ID
 
 ``` r
 #transcript count (htx count) original file is read
-htxOrj <- read.csv("host_tx_counts.tsv",sep = "\t")
+htxOrj <- read.csv("data/host_tx_counts.tsv",sep = "\t")
 
 #Convert sample names to upper (some of them are in lower case)
 colnames(htxOrj)<-toupper(colnames(htxOrj))
 
-#htx count data are filtered based on col names in htxMeta
+#htx count data is filtered based on column names in htxMeta
 names.use <- names(htxOrj)[(names(htxOrj) %in% htxMeta$External.ID)]
-#filter out htxOrj based on names.use and create htxCount
+#filter out htxOrj based on names.use and create a new htxCount
 htxCount <- htxOrj[, names.use]
 #htxCount data are ordered based on column names to match samples between htxCount and sampleLabels
 htxCount <- htxCount[,order(names(htxCount))]
@@ -100,7 +100,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpAHBAmd\remotes3dd4146023e5\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
+    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpodIl9L\remotes2de81be7bfc\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
     ## * preparing 'rmd2jupyter':
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
