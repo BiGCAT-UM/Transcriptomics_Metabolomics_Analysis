@@ -130,6 +130,27 @@ all.pathways[all.pathways$Description %in% df$Description,]$UC.rectum.p.adjust <
 #take only required columns
 row.names(all.pathways) <- all.pathways$Description
 all.pathways  <- all.pathways[,2:5]
+colnames(all.pathways) <- c("CD.ileum","CD.rectum","UC.ileum","UC.rectum")
+
+## Select a size to visualize the heatmap with (options; large or small)
+size_heatmap <- "small"
+
+if (size_heatmap == "large") {
+  ##Print labels large for paper, small for notebook:
+fontsize_row_l = 30 
+fontsize_col_l = 30 
+width_l =2000 
+height_l =2000 
+name_heatmap_file <- "output/heatmap_log10_large.png"
+}else if(size_heatmap == "small"){ 
+    ##Print labels large for paper, small for notebook:
+fontsize_row_l = 10 
+fontsize_col_l = 10 
+width_l =1500 
+height_l =1500 
+name_heatmap_file <- "output/heatmap_log10_small.png"
+}else{print("Size not Recognised")}
+
 
 #normally darker value represent higher values light color represent smaller values
 #when we use rev function higher ones represented by light color
@@ -137,21 +158,22 @@ colMain <- colorRampPalette(rev(brewer.pal(9, "Blues")))(30)
  
 my_heatmap <- pheatmap(as.matrix(log10(all.pathways)), 
                        scale = "none", color = colMain ,
-                       cellwidth = 80, treeheight_row = 200)
+                       cellwidth = 80, treeheight_row = 200, fontsize_row= fontsize_row_l, fontsize_col = fontsize_col_l)
 ```
 
 ![](heatMap_files/figure-markdown_github/heatmap-1.png)
 
 ``` r
 #save obtained heatmap
-save_pheatmap_png <- function(x, filename, width=1500, height=1500) {
+save_pheatmap_png <- function(x, filename, width = width_l, height = height_l) {
   png(filename, width = width, height = height)
   grid::grid.newpage()
   grid::grid.draw(x$gtable)
   dev.off()
 }
+
 ##p-values are visalized on a log10 scale, to make them more discriminatory.
-save_pheatmap_png(my_heatmap, "output/heatmap_log10.png")
+save_pheatmap_png(my_heatmap, name_heatmap_file)
 ```
 
     ## png 
@@ -166,7 +188,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmphmNERL/remotes4f4f7af8fff0/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpewQlyU/remotes56ce4170fad7/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
