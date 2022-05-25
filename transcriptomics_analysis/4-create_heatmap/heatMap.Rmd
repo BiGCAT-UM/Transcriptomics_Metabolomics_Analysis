@@ -137,30 +137,30 @@ colnames(all.pathways) <- c("CD.ileum","CD.rectum","UC.ileum","UC.rectum")
 ## Select a size to visualize the heatmap with (options; large or small)
 size_heatmap <- "small"
 
-if (size_heatmap == "large") {
-  ##Print labels large for paper, small for notebook:
+ ##Print labels large for paper, small for notebook:
 fontsize_row_l = 30 
+if (size_heatmap == "large") {
 fontsize_col_l = 30 
+fontsize_l = 30
 width_l =2000 
 height_l =2000 
 name_heatmap_file <- "output/heatmap_log10_large.png"
 }else if(size_heatmap == "small"){ 
-    ##Print labels large for paper, small for notebook:
 fontsize_row_l = 10 
 fontsize_col_l = 10 
 width_l =1500 
 height_l =1500 
+fontsize_l = 10
 name_heatmap_file <- "output/heatmap_log10_small.png"
 }else{print("Size not Recognised")}
-
 
 #normally darker value represent higher values light color represent smaller values
 #when we use rev function higher ones represented by light color
 colMain <- colorRampPalette(rev(brewer.pal(9, "Blues")))(30)
- 
-my_heatmap <- pheatmap(as.matrix(log10(all.pathways)), 
-                       scale = "none", color = colMain ,
-                       cellwidth = 80, treeheight_row = 200, fontsize_row= fontsize_row_l, fontsize_col = fontsize_col_l)
+
+my_heatmap <- pheatmap(as.matrix(log10(all.pathways)), scale = "none", color = colMain , 
+                       legend = TRUE , legend_breaks = c(0, -5, -10, -15, min(log10(all.pathways))), main = "", legend_labels = c("adj. p-values \n", " 5", " 10", " 15", ""),
+                       cellwidth = 80, treeheight_row = 200, fontsize = fontsize_l, fontsize_row= fontsize_row_l, fontsize_col = fontsize_col_l, cluster_rows = TRUE, cluster_cols = FALSE)
                       
 #save obtained heatmap
 save_pheatmap_png <- function(x, filename, width = width_l, height = height_l) {
