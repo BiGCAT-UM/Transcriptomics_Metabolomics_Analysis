@@ -24,7 +24,6 @@ if(!"EnhancedVolcano" %in% installed.packages()) BiocManager::install("EnhancedV
 if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
 if(!"limma" %in% installed.packages()){install.packages("limma")}
 if(!"org.Hs.eg.db" %in% installed.packages()){install.packages("org.Hs.eg.db")}
-if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
 if(!"R2HTML" %in% installed.packages()){install.packages("R2HTML")}
 
 #load packages
@@ -37,12 +36,9 @@ library(biomaRt)
 library(dplyr)
 library(magrittr)
 library(EnhancedVolcano)
-
 library(ggplot2)
-#library(gplots) ??needed?
 library(limma)
 library(org.Hs.eg.db)
-library(VennDiagram)
 library(R2HTML)
 
 # set working environment to the location where current source file is saved into.
@@ -58,9 +54,9 @@ The following section will prepare the input data to be used in the
 analysis
 
 ``` r
-#read the output data file from step 1.
+#set wd one directory below to reach the input data
 setwd('..')
-work_DIR <- getwd()
+WORK.DIR <- getwd()
 
 #Obtain data from step 1
 htxCount <- read.csv("1-data_preprocessing/output/htxCount.csv")
@@ -68,31 +64,29 @@ sampleLabels <- read.csv("1-data_preprocessing/output/sampleLabels.csv", header=
 
 # Set Working Directory back to current folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
+WORK.DIR<- getwd()
 
 #checking which samples have all zero values across all genes
 #these sample should be removed otherwise there will be a problem when calculating estimate size factors
 idx <- which(colSums(htxCount) == 0)
-#CSMDRVXI MSM719ME  are samples who has all zero values so we remove them
+#CSMDRVXI MSM719ME  are samples which has all zero values for all genes, so we remove them
 htxCount <- htxCount[ , -idx]
 
-#read metadata file sample labels
-#apply same filtering to the metadata remove samples from sample labels metadata
+#removing same samples from sample labels metadata
 sampleLabels <- sampleLabels[-idx , ]
-#Set column one as rownames.
-sampleLabels2 <- sampleLabels[,-1]
-rownames(sampleLabels2) <- sampleLabels[,1]
-
-#add column names to the metadata file
-colnames(sampleLabels2) <- c( "sampleID", "biopsy_location","disease")
+#Set column one as rownames
+rownames(sampleLabels) <- sampleLabels[,1]
+sampleLabels <- sampleLabels[,-1]
+#add column names 
+colnames(sampleLabels) <- c( "sampleID", "biopsy_location","disease")
 #check whether sample names are in same order
 #all(colnames(htxCount) == rownames(sampleLabels2))
 
 #select only biopsy_location and disease columns
-sampleLabels2<-sampleLabels2[, c(2,3)]
-sampleLabels2$disease <- relevel(factor(sampleLabels2$disease),ref="nonIBD")
+sampleLabels<-sampleLabels[, c(2,3)]
+sampleLabels$disease <- relevel(factor(sampleLabels$disease),ref="nonIBD")
 #add an experimental group variable to sampleLabels
-sampleLabels2$group <- as.factor(paste(sampleLabels2$disease,sampleLabels2$biopsy_location,sep="_"))
+sampleLabels$group <- as.factor(paste(sampleLabels$disease,sampleLabels$biopsy_location,sep="_"))
 ```
 
 ## Filtering Steps
@@ -101,7 +95,7 @@ We will apply some filtering process to filter out genes in the input
 data
 
 ``` r
-#remove genes which have all zero values for all samples then start DE analysis
+#remove genes which have all zero values across all samples then start DE analysis
 nonzero <- rowSums(htxCount) > 0
 htxCount %<>% .[nonzero,]
 
@@ -138,12 +132,12 @@ performed using DESeq2 package
 ``` r
 # First create a DESeqDataSet object
 #(non-intercept) statistical model based on the disease and biopsy_location, group column represent both of them 
-dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=sampleLabels2, design= ~0 + group)
+dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=sampleLabels, design= ~0 + group)
 
 #estimate the size factors
 #To perform the median of ratios method of normalization, DESeq2 has a single estimateSizeFactors() function that will generate size factors for us.
 dds <- estimateSizeFactors(dds)
-#normalise the data (here for Quality Control(QC) plotting)
+#normalize the data (here for Quality Control(QC) plotting)
 #QC plotting is optional
 norm <- counts(dds,normalize=TRUE)
 #create a 2logged data for original object (here for QC plotting)
@@ -166,22 +160,22 @@ dev.off()
     ##   2
 
 ``` r
-createQCPlots(datlogQC, factors, Table=sampleLabels2, normMeth="", postfix="")
+createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
 setwd("..")
 #create QC plots for normalized data coloured by different variables
 if(!dir.exists("QCnorm")) dir.create("QCnorm")
 setwd(paste(WORK.DIR,"QCnorm",sep="/"))
-createQCPlots(normlogQC, factors, Table=sampleLabels2, normMeth="DESeq", postfix="")
+createQCPlots(normlogQC, factors, Table=sampleLabels, normMeth="DESeq", postfix="")
 setwd("..")
 #sample MSM719M9 is an outlier remove it from dataset
 #sample HSM5FZAZ is an outlier remove it from dataset
 htxCount <- htxCount[,-match(c("MSM719M9","HSM5FZAZ"),colnames(htxCount))]
-sampleLabels2 <- sampleLabels2[-match(c("MSM719M9","HSM5FZAZ"),rownames(sampleLabels2)),]
-#doublecheck whether the order of the samples in samplekey and dat still match
-#sum(rownames(sampleLabels2) == colnames(htxCount))==dim(sampleLabels2)[1]
+sampleLabels <- sampleLabels[-match(c("MSM719M9","HSM5FZAZ"),rownames(sampleLabels)),]
+#doublecheck whether the order of the samples in sampleLabels and htxCount data still match
+#sum(rownames(sampleLabels) == colnames(htxCount))==dim(sampleLabels)[1]
 
-###REDO ALL STEPS AS ABOVE FOR THE NEW DATA SET
-dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=DataFrame(sampleLabels2), design= ~0 + group)
+###REDO ALL STEPS AS ABOVE FOR FILTERED OUT DATASET
+dds <- DESeqDataSetFromMatrix(countData = htxCount, colData=DataFrame(sampleLabels), design= ~0 + group)
 dds <- estimateSizeFactors(dds)
 norm <- counts(dds,normalize=TRUE)
 datlog <- log(htxCount+1,2)
@@ -200,12 +194,12 @@ dev.off()
     ##   2
 
 ``` r
-createQCPlots(datlogQC, factors, Table=sampleLabels2, normMeth="", postfix="")
+createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
 setwd("..")
 #create QC plots for normalized data coloured by different variables
 if(!dir.exists("QCnorm2")) dir.create("QCnorm2")
 setwd(paste(WORK.DIR,"QCnorm2",sep="/"))
-createQCPlots(normlogQC, factors, Table=sampleLabels2, normMeth="DESeq", postfix="")
+createQCPlots(normlogQC, factors, Table=sampleLabels, normMeth="DESeq", postfix="")
 setwd("..")
 
 ################################################################################
@@ -263,7 +257,7 @@ files <- saveStatOutputDESeq2(cont.matrix,dds,postfix="",annotation=NULL)
 
 ``` r
 #create summary table of the contrast results
-#up and down for p-val and adj p-val are decided by for example log2fc>=0.58 and  log2fc<0.58
+#up and down for p-val and adj p-val are decided by log2FC>=0.58 and  log2FC<0.58
 createPvalTab(files,postfix="",namePVal="pvalue",nameAdjPVal="padj",nameFC="FoldChange",nameLogFC="log2FoldChange",html=TRUE)
 ```
 
@@ -280,7 +274,7 @@ Differential gene expression analysis results will be visualized by
 volcano plots
 
 ``` r
-#go to the result folder named statsmodel
+#set the wd to the result folder statsmodel
 setwd(paste(WORK.DIR,"statsmodel",sep="/"))
 readFilePath <- paste(WORK.DIR,"statsmodel",sep="/")
 # create an empty list
@@ -299,6 +293,7 @@ for(i in 1:length(files))
 }
 #path of the outout folder
 outFolder <- paste(WORK.DIR,"volcano_plots",sep="/")
+#create folder if doesnt exist
 if(!dir.exists(outFolder)) dir.create(outFolder)
 
 for(i in 1:length(files)) {
@@ -318,13 +313,14 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpEEZMnv/remotes15a467dc6036/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
+    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpWAQbE9\remotes475c4fb7e34\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
+    ## * preparing 'rmd2jupyter':
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ## Omitted 'LazyData' from DESCRIPTION
+    ## * building 'rmd2jupyter_0.1.0.tar.gz'
+    ## 
 
 ``` r
 library(devtools)
