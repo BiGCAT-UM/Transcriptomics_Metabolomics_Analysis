@@ -29,7 +29,6 @@ if(!"EnhancedVolcano" %in% installed.packages()) BiocManager::install("EnhancedV
 if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
 if(!"limma" %in% installed.packages()){install.packages("limma")}
 if(!"org.Hs.eg.db" %in% installed.packages()){install.packages("org.Hs.eg.db")}
-if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
 if(!"R2HTML" %in% installed.packages()){install.packages("R2HTML")}
 
 #load packages
@@ -42,12 +41,9 @@ library(biomaRt)
 library(dplyr)
 library(magrittr)
 library(EnhancedVolcano)
-
 library(ggplot2)
-#library(gplots) ??needed?
 library(limma)
 library(org.Hs.eg.db)
-library(VennDiagram)
 library(R2HTML)
 
 # set working environment to the location where current source file is saved into.
