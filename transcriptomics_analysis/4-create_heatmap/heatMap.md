@@ -58,12 +58,11 @@ CD.rectum.f <- CD.rectum.f [,c(2,6)]
 UC.ileum.f  <- UC.ileum.f [,c(2,6)]
 UC.rectum.f <- UC.rectum.f [,c(2,6)]
 
-
 #first 20 max value of p.adjust pathways for each comparison: Note that if a dataset has less then 20 sign. changed PWs, less rows need to be selected (e.g. adapt c(1:20))
 #merge CD pathways
 all.pathways.1 <- merge(CD.ileum.f[c(1:20),], CD.rectum.f[c(1:20),],by.x="Description", by.y="Description",sort = TRUE, all.x = TRUE, all.y = TRUE)
 #merge UC pathways
-all.pathways.2 <- merge(UC.ileum.f[c(1:20),], UC.rectum.f[c(1:20),],by.x="Description", by.y="Description",sort = TRUE, all.x = TRUE, all.y = TRUE)
+all.pathways.2 <- merge(UC.ileum.f, UC.rectum.f[c(1:20),],by.x="Description", by.y="Description",sort = TRUE, all.x = TRUE, all.y = TRUE)
 #merge all of them
 all.pathways <- merge(all.pathways.1 , all.pathways.2 ,by.x="Description", by.y="Description",sort = TRUE, all.x = TRUE, all.y = TRUE)
 colnames(all.pathways) <- c("Description","CD.ileum.p.adjust","CD.rectum.p.adjust","UC.ileum.p.adjust","UC.rectum.p.adjust")
@@ -77,10 +76,12 @@ rm(all.pathways.1, all.pathways.2)
 #replace NA values with the values from the whole list
 #### for CD ileum
 #find pathways which does not occur in the filtered enriched pathway list of cd.ileum (p.adjust<0.05 & qvalue<0.02 )
+#because we will not take into account not sig. enriched pathways, we will assign value of 1 for their p.adjust
 notExist.CDileum <- setdiff(all.pathways$Description,CD.ileum.f$Description)
 all.pathways[all.pathways$Description %in% notExist.CDileum,]$CD.ileum.p.adjust <- 1
 
-#replacing NA values with the values from the significant list
+#the rest NA values correspond to the sig.enriched pathways but not in the first 20 list.
+#so we will replace NA values with the p.adjust values from the whole list
 NA.indices <- which(is.na(all.pathways$CD.ileum.p.adjust), arr.ind = TRUE)
 allIDs <- all.pathways[NA.indices,]$Description
 df <- CD.ileum.f[CD.ileum.f$Description %in% allIDs,]
@@ -104,13 +105,6 @@ all.pathways[all.pathways$Description %in% df$Description,]$CD.rectum.p.adjust <
 notExist.UCileum <- setdiff(all.pathways$Description,UC.ileum.f$Description)
 all.pathways[all.pathways$Description %in% notExist.UCileum,]$UC.ileum.p.adjust <- 1
 
-#replacing NA values with the values from the whole list
-NA.indices <- which(is.na(all.pathways$UC.ileum.p.adjust), arr.ind = TRUE)
-allIDs <- all.pathways[NA.indices,]$Description
-df <- UC.ileum.f[UC.ileum.f$Description %in% allIDs,]
-df <- df[order(df$Description),]
-all.pathways[all.pathways$Description %in% df$Description,]$UC.ileum.p.adjust <- df$p.adjust
-
 #### for UC rectum
 #find pathways which does not occur in the filtered enriched pathway list of UC rectum (p.adjust<0.05 & qvalue<0.02 )
 notExist.UCrectum<- setdiff(all.pathways$Description,UC.rectum.f$Description)
@@ -132,33 +126,40 @@ row.names(all.pathways) <- all.pathways$Description
 all.pathways  <- all.pathways[,2:5]
 colnames(all.pathways) <- c("CD.ileum","CD.rectum","UC.ileum","UC.rectum")
 
-## Select a size to visualize the heatmap with (options; large or small)
-size_heatmap <- "small"
+#create output folder if not exist
+if(!dir.exists("output")) dir.create("output")
 
-if (size_heatmap == "large") {
-  ##Print labels large for paper, small for notebook:
+## Select a size to visualize the heatmap with (options; large or small)
+#size_heatmap <- "small"
+size_heatmap <- "large"
+
+##Print labels large for paper, small for notebook:
 fontsize_row_l = 30 
+if (size_heatmap == "large") {
 fontsize_col_l = 30 
+fontsize_l = 30
 width_l =2000 
 height_l =2000 
 name_heatmap_file <- "output/heatmap_log10_large.png"
 }else if(size_heatmap == "small"){ 
-    ##Print labels large for paper, small for notebook:
 fontsize_row_l = 10 
 fontsize_col_l = 10 
 width_l =1500 
 height_l =1500 
+fontsize_l = 10
 name_heatmap_file <- "output/heatmap_log10_small.png"
 }else{print("Size not Recognised")}
 
-
 #normally darker value represent higher values light color represent smaller values
-#when we use rev function higher ones represented by light color
+#when we use rev function higher ones are represented by light color
 colMain <- colorRampPalette(rev(brewer.pal(9, "Blues")))(30)
- 
-my_heatmap <- pheatmap(as.matrix(log10(all.pathways)), 
-                       scale = "none", color = colMain ,
-                       cellwidth = 80, treeheight_row = 200, fontsize_row= fontsize_row_l, fontsize_col = fontsize_col_l)
+
+my_heatmap <- pheatmap(as.matrix(log10(all.pathways)), scale = "none", color = colMain , 
+                       legend = TRUE , legend_breaks = c(0, -5, -10, -15, min(log10(all.pathways))), 
+                       main = "", 
+                       legend_labels = c("adj. p-values \n", " -5", " -10", " -15", ""),
+                       cellwidth = 80, treeheight_row = 200, fontsize = fontsize_l, fontsize_row= fontsize_row_l, 
+                       fontsize_col = fontsize_col_l, cluster_rows = TRUE, cluster_cols = FALSE)
 ```
 
 ![](heatMap_files/figure-markdown_github/heatmap-1.png)
@@ -171,7 +172,6 @@ save_pheatmap_png <- function(x, filename, width = width_l, height = height_l) {
   grid::grid.draw(x$gtable)
   dev.off()
 }
-
 ##p-values are visalized on a log10 scale, to make them more discriminatory.
 save_pheatmap_png(my_heatmap, name_heatmap_file)
 ```
@@ -188,13 +188,14 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpewQlyU/remotes56ce4170fad7/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
+    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpM54jcR\remotes13cc3b4e6dc7\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
+    ## * preparing 'rmd2jupyter':
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ## Omitted 'LazyData' from DESCRIPTION
+    ## * building 'rmd2jupyter_0.1.0.tar.gz'
+    ## 
 
 ``` r
 library(devtools)
