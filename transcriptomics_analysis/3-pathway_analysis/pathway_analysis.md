@@ -103,14 +103,13 @@ if(!dir.exists("results")) dir.create("results")
 #for ileum location
 up.genes.ileum   <- dataset[dataset$log2FC_ileum >= 0.58 & dataset$pvalue_ileum < 0.05, 1] 
 down.genes.ileum <- dataset[dataset$log2FC_ileum <= -0.58 & dataset$pvalue_ileum < 0.05, 1] 
-deg.ileum <- unique(dataset[!is.na(dataset$pvalue_ileum) & dataset$pvalue_ileum < 0.05 
-                            & abs(dataset$log2FC_ileum) > 0.58,])
+deg.ileum <- unique(dataset[!is.na(dataset$pvalue_ileum) & dataset$pvalue_ileum < 0.05 & abs(dataset$log2FC_ileum) > 0.58,c(1:4)])
 write.table(deg.ileum,file = paste0("results/DEGs_",disorder,"_ileum"),sep="\t", quote=FALSE, row.names = FALSE)
 
 #for rectum location
 up.genes.rectum   <- dataset[dataset$log2FC_rectum >= 0.58 & dataset$pvalue_rectum < 0.05, 1] 
 down.genes.rectum <- dataset[dataset$log2FC_rectum <= -0.58 & dataset$pvalue_rectum < 0.05, 1] 
-deg.rectum <- unique(dataset[!is.na(dataset$pvalue_rectum) & dataset$pvalue_rectum < 0.05 & abs(dataset$log2FC_rectum) > 0.58,])
+deg.rectum <- unique(dataset[!is.na(dataset$pvalue_rectum) & dataset$pvalue_rectum < 0.05 & abs(dataset$log2FC_rectum) > 0.58,c(1,2,5,6)])
 write.table(deg.rectum, file=paste0("results/DEGs_",disorder,"_rectum"),sep="\t", quote=FALSE, row.names = FALSE)
 
 #background genes to be used in enrichment analysis
@@ -241,7 +240,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpETD2q5\remotes3fe86f83b6c\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
+    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\Rtmps3rVdw\remotes3d603bc110e8\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
     ## * preparing 'rmd2jupyter':
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
