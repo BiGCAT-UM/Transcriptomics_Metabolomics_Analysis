@@ -40,8 +40,7 @@ The data will be read for the disease on two biopsy locations
 
 ``` r
 ## Select a disorder to analyse (options; CD or UC)
-disorder <- "CD"
-
+disorder <- "UC"
 ##Obtain data from step 2:
 setwd('..')
 work_DIR <- getwd()
@@ -55,24 +54,24 @@ dataset4 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 work_DIR <- getwd()
 
-
 if (disorder == "CD") {
   #filter out  unused columns, we select geneSymbol, log2FC and pvalue
   dataset_ileum<- subset( dataset3, select = c(1,3,7))
   dataset_rectum<- subset( dataset4, select = c(1,3,7))
-    print("Selected disorder is Crohn's disease")}else if(disorder == "UC"){ 
-    #filter out  unused columns, we select geneSymbol, log2FC and pvalue
-    dataset_ileum<- subset( dataset1, select = c(1,3,7))
-    dataset_rectum<- subset( dataset2, select = c(1,3,7))
-    print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
+  print("Selected disorder is Crohn's disease")
+}else if(disorder == "UC"){ 
+  #filter out  unused columns, we select geneSymbol, log2FC and pvalue
+  dataset_ileum<- subset( dataset1, select = c(1,3,7))
+  dataset_rectum<- subset( dataset2, select = c(1,3,7))
+  print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")
+}
 ```
 
-    ## [1] "Selected disorder is Crohn's disease"
+    ## [1] "Selected disorder is Ulcerative Colitis"
 
 ``` r
-#merge two dataset into one data 
+#merge two dataset of two locations into one data 
 dataset <- merge(dataset_ileum, dataset_rectum,by.x="X", by.y="X",sort = TRUE, all.x = TRUE, all.y = TRUE)
-
 #change column names
 colnames(dataset) <- c("GeneSymbol","log2FC_ileum","pvalue_ileum","log2FC_rectum","pvalue_rectum")
 ```
@@ -98,20 +97,21 @@ dataset<- dataset %>% tidyr::drop_na(ENTREZ.ID)
 ## Getting differentially expressed genes including up-regulated and down-regulated genes using the criteria
 
 ``` r
+#if the results folder does not exist create it 
+if(!dir.exists("results")) dir.create("results")
 #we will use selection criteria as Fold change=1.5,log2FC=0.58 and p.value < 0.05
 #for ileum location
 up.genes.ileum   <- dataset[dataset$log2FC_ileum >= 0.58 & dataset$pvalue_ileum < 0.05, 1] 
 down.genes.ileum <- dataset[dataset$log2FC_ileum <= -0.58 & dataset$pvalue_ileum < 0.05, 1] 
 deg.ileum <- unique(dataset[!is.na(dataset$pvalue_ileum) & dataset$pvalue_ileum < 0.05 
                             & abs(dataset$log2FC_ileum) > 0.58,])
-if(!dir.exists("results")) dir.create("results")
-write.table(deg.ileum, file="results/DEGs_UC_ileum",sep="\t", quote=FALSE, row.names = FALSE)
+write.table(deg.ileum,file = paste0("results/DEGs_",disorder,"_ileum"),sep="\t", quote=FALSE, row.names = FALSE)
 
 #for rectum location
 up.genes.rectum   <- dataset[dataset$log2FC_rectum >= 0.58 & dataset$pvalue_rectum < 0.05, 1] 
 down.genes.rectum <- dataset[dataset$log2FC_rectum <= -0.58 & dataset$pvalue_rectum < 0.05, 1] 
 deg.rectum <- unique(dataset[!is.na(dataset$pvalue_rectum) & dataset$pvalue_rectum < 0.05 & abs(dataset$log2FC_rectum) > 0.58,])
-write.table(deg.rectum, file="results/DEGs_UC_rectum",sep="\t", quote=FALSE, row.names = FALSE)
+write.table(deg.rectum, file=paste0("results/DEGs_",disorder,"_rectum"),sep="\t", quote=FALSE, row.names = FALSE)
 
 #background genes to be used in enrichment analysis
 bkgd.genes <- unique(dataset[,c(1,2)])
@@ -119,15 +119,14 @@ bkgd.genes <- unique(dataset[,c(1,2)])
 
 ## Pathway Enrichment Analysis
 
-In this section, we will perform pathway enrichment analysis. The
+In this section, we will perform pathway enrichment analysis.The
 clusterProfiler R-package is used to perform over-representation
 analysis (ORA). The function can be easily replaced to use other
 enrichment methods (GSEA / rSEA / etc).
 
 ``` r
-#below code should be performed first to handle the ssl certificate error while uploading pathways 
+#below code should be performed first to handle the ssl certificate error while downloading pathways 
 options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
-
 #downloading latest pathway gmt files for human 
 wp.hs.gmt <- rWikiPathways::downloadPathwayArchive(organism="Homo sapiens", format = "gmt")
 
@@ -147,7 +146,7 @@ ewp.ileum <- clusterProfiler::enricher(
   pvalueCutoff = 1, #adjusted pvalue cutoff on enrichment tests to report, we set it a wider criteria then we will filter out
   #results based on padjust and qvalue in next section which is enrichment result visualization
   qvalueCutoff = 1, #qvalue cutoff on enrichment tests to report as significant, 
-                       # multiple hypothesis testing
+                    #multiple hypothesis testing
   TERM2GENE = wpid2gene, #user input annotation of TERM TO GENE mapping
   TERM2NAME = wpid2name) #user input of TERM TO NAME mapping
 
@@ -161,32 +160,32 @@ ewp.ileum.res <- as.data.frame(ewp.ileum)
 paste0("Pathways enrichment results for disorder: ", disorder , ", location: ILEUM")
 ```
 
-    ## [1] "Pathways enrichment results for disorder: CD, location: ILEUM"
+    ## [1] "Pathways enrichment results for disorder: UC, location: ILEUM"
 
 ``` r
 # number of genes measured in all pathways
 paste0("The number of genes measured in all pathways is: ", length(ewp.ileum@universe))
 ```
 
-    ## [1] "The number of genes measured in all pathways is: 6030"
+    ## [1] "The number of genes measured in all pathways is: 6033"
 
 ``` r
 # number of DEGs in all pathways
 paste0("The number of DEGs measured in all pathways is: ", length(deg.ileum$ENTREZ.ID[deg.ileum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 ```
 
-    ## [1] "The number of DEGs measured in all pathways is: 679"
+    ## [1] "The number of DEGs measured in all pathways is: 185"
 
 ``` r
 #number of enriched pathways
 paste0("The number of enriched pathways is: ", num.pathways.ileum <- dim(ewp.ileum.res)[1])
 ```
 
-    ## [1] "The number of enriched pathways is: 472"
+    ## [1] "The number of enriched pathways is: 260"
 
 ``` r
 #exporting results to the file
-write.table(ewp.ileum.res, file=paste("results/enrichResults_","UC_ileum",sep = ""),
+write.table(ewp.ileum.res, file=paste0("results/enrichResults_",disorder,"_ileum"),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
 
 ##################RECTUM location#######################
@@ -204,32 +203,32 @@ ewp.rectum.res <- as.data.frame(ewp.rectum)
 paste0("Pathways enrichment results for disorder: ", disorder , ", location: RECTUM")
 ```
 
-    ## [1] "Pathways enrichment results for disorder: CD, location: RECTUM"
+    ## [1] "Pathways enrichment results for disorder: UC, location: RECTUM"
 
 ``` r
 # number of genes measured in all pathways
 paste0("The number of genes measured in all pathways is: ", length(ewp.rectum@universe))
 ```
 
-    ## [1] "The number of genes measured in all pathways is: 6030"
+    ## [1] "The number of genes measured in all pathways is: 6033"
 
 ``` r
 # number of DEGs in all pathways
 paste0("The number of DEGs measured in all pathways is: ", length(deg.rectum$ENTREZ.ID[deg.rectum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 ```
 
-    ## [1] "The number of DEGs measured in all pathways is: 643"
+    ## [1] "The number of DEGs measured in all pathways is: 1485"
 
 ``` r
 #number of enriched pathways
 paste0("The number of enriched pathways is: ", num.pathways.rectum <- dim(ewp.rectum.res)[1])
 ```
 
-    ## [1] "The number of enriched pathways is: 484"
+    ## [1] "The number of enriched pathways is: 547"
 
 ``` r
 #exporting results to the file
-write.table(ewp.rectum.res, file=paste("results/enrichResults_","UC_rectum",sep = ""),
+write.table(ewp.rectum.res, file=paste0("results/enrichResults_",disorder,"_rectum"),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
 ```
 
@@ -242,13 +241,14 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpvtBeoe/remotes32dc19ca2afa/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
+    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpETD2q5\remotes3fe86f83b6c\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
+    ## * preparing 'rmd2jupyter':
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ## Omitted 'LazyData' from DESCRIPTION
+    ## * building 'rmd2jupyter_0.1.0.tar.gz'
+    ## 
 
 ``` r
 library(devtools)
