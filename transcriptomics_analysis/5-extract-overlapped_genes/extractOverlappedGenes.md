@@ -26,7 +26,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ``` r
 #Obtain data from step 2:
 setwd('..')
-## Select a disorder to analyse (options; CD or UC)
+## Select a location to analyse (options; ileum or rectum)\n",
 location <- "rectum"
 
 #we will first perform process for ileum and then rectum 
