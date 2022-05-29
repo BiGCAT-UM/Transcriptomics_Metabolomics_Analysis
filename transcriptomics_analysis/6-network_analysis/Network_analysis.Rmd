@@ -41,7 +41,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #Obtain data from step 5:
 setwd('..')
 ## Select a location to create network (options; ileum or rectum)
-location <- "rectum"
+location <- "ileum"
 
 #read dataset to be processed for ileum or rectum biopsy location
 if (location == "ileum") {
@@ -57,7 +57,7 @@ deg <- deg %>% tidyr:: drop_na(ENTREZ)
 #check that cytoscape is connected
 cytoscapePing()
 #close session before starting
-#closeSession(FALSE)
+closeSession(FALSE)
 networkName = paste0("PPI_network_",location)
 #create a PPI network using overlapped DEGs between CD and UC
 #first take the deg input list as a query
@@ -87,13 +87,12 @@ proteins$type <- "protein"
 
 ###############get all pathways from WIKIPATHWAYS #################
 #below code should be performed first to handle the ssl certificate error uploading pathways 
-#options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
-#wp.hs.gmt <- rWikiPathways::downloadPathwayArchive(organism="Homo sapiens", format = "gmt")
-wp.hs.gmt <- "wikipathways-20220210-gmt-Homo_sapiens.gmt"
+options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
+wp.hs.gmt <- rWikiPathways::downloadPathwayArchive(organism="Homo sapiens", format = "gmt")
+#wp.hs.gmt <- "wikipathways-20220210-gmt-Homo_sapiens.gmt"
 #Now that we have the latest GMT file for human pathways, 
 #all wp and gene information stored in wp2gene object
 wp2gene   <- rWikiPathways::readPathwayGMT(wp.hs.gmt)
-
 #filter out  pathways that does not consist of any differentially expressed genes 
 wp2gene.filtered <- wp2gene [wp2gene$gene %in% deg$ENTREZ,]
 
@@ -178,7 +177,17 @@ png.file <- file.path(getwd(), outputName)
 exportImage(png.file,'PNG', zoom = 500)
 
 #save session
-cys.file <- file.path(getwd(), "output/PPI_Pathway_Network_",location,"_clustered",".cys")
-saveSession(cys.file) 
+#cys.file <- file.path(getwd(), "output/PPI_Pathway_Network_",location,"_clustered",".cys")
+#saveSession(cys.file) 
 ```
 
+## Last, we create a Jupyter notebook from this script
+```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("Network_analysis.Rmd")
+```
