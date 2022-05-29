@@ -43,6 +43,12 @@ RCy3::commandsRun(paste0('wikipathways import-as-pathway id=',pathway.id ))
 ```
 ## Data upload
 ```{r data_upload, warning=FALSE, message=FALSE}
+# to read data as input we need go back to previous branch
+setwd('..')
+combined.data <- read.delim("10-identifier_mapping/output/combinedData")
+#set wd back to the main folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
 #get node table from imported pathway in cytoscape
 ID.cols <- getTableColumns(table ="node", columns = c("XrefId","Ensembl", "ChEBI"))
 #filter out rows which contain NA value for columns Ensembl and ChEBI
@@ -53,8 +59,7 @@ ID.cols$Ensembl <- ifelse(is.na(ID.cols$Ensembl), ID.cols$ChEBI, ID.cols$Ensembl
 ID.cols <- data.frame(ID.cols[,c(1,2)])
 #change column name
 colnames(ID.cols)[2] <- "omics.ID"
-#read data file from the file
-combined.data <- read.delim("data/combinedData",sep = "\t")
+
 #merge two data frames for adding xrefid to the combined data frame
 data <- merge(combined.data, ID.cols, by.x = "Identifier", by.y = "omics.ID" )
 #remove duplicate rows
@@ -104,5 +109,14 @@ RCy3::setNodeBorderColorBypass(nonsign.nodes$name, new.colors = "#D3D3D3")
 #save output 
 png.file <- file.path(getwd(), "output/omics_visualization.png")
 exportImage(png.file,'PNG', zoom = 500)
+```
+```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("visualization.Rmd")
 ```
 
