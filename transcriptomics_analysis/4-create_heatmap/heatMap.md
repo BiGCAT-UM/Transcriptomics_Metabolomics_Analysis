@@ -130,8 +130,7 @@ colnames(all.pathways) <- c("CD.ileum","CD.rectum","UC.ileum","UC.rectum")
 if(!dir.exists("output")) dir.create("output")
 
 ## Select a size to visualize the heatmap with (options; large or small)
-#size_heatmap <- "small"
-size_heatmap <- "large"
+size_heatmap <- "small"
 
 ##Print labels large for paper, small for notebook:
 fontsize_row_l = 30 
@@ -179,6 +178,55 @@ save_pheatmap_png(my_heatmap, name_heatmap_file)
     ## png 
     ##   2
 
+##Print session info and remove large datasets:
+
+``` r
+##Print session info:
+sessionInfo()
+```
+
+    ## R version 4.2.0 (2022-04-22)
+    ## Platform: x86_64-pc-linux-gnu (64-bit)
+    ## Running under: Ubuntu 18.04.6 LTS
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
+    ## 
+    ## locale:
+    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+    ##  [3] LC_TIME=nl_NL.UTF-8        LC_COLLATE=en_US.UTF-8    
+    ##  [5] LC_MONETARY=nl_NL.UTF-8    LC_MESSAGES=en_US.UTF-8   
+    ##  [7] LC_PAPER=nl_NL.UTF-8       LC_NAME=C                 
+    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+    ## [11] LC_MEASUREMENT=nl_NL.UTF-8 LC_IDENTIFICATION=C       
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ## [1] pheatmap_1.0.12    dplyr_1.0.9        RColorBrewer_1.1-3
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] highr_0.9           pillar_1.7.0        compiler_4.2.0     
+    ##  [4] BiocManager_1.30.17 tools_4.2.0         digest_0.6.29      
+    ##  [7] evaluate_0.15       lifecycle_1.0.1     tibble_3.1.7       
+    ## [10] gtable_0.3.0        pkgconfig_2.0.3     rlang_1.0.2        
+    ## [13] cli_3.3.0           DBI_1.1.2           rstudioapi_0.13    
+    ## [16] yaml_2.3.5          xfun_0.31           fastmap_1.1.0      
+    ## [19] stringr_1.4.0       knitr_1.39          generics_0.1.2     
+    ## [22] vctrs_0.4.1         grid_4.2.0          tidyselect_1.1.2   
+    ## [25] glue_1.6.2          R6_2.5.1            fansi_1.0.3        
+    ## [28] rmarkdown_2.14      purrr_0.3.4         magrittr_2.0.3     
+    ## [31] scales_1.2.0        ellipsis_0.3.2      htmltools_0.5.2    
+    ## [34] assertthat_0.2.1    colorspace_2.0-3    utf8_1.2.2         
+    ## [37] stringi_1.7.6       munsell_0.5.0       crayon_1.5.1
+
+``` r
+##Remove data objects which are not needed for further processing:
+rm(list=setdiff(ls(), "all.pathways"))
+```
+
 ## Last, we create a Jupyter notebook from this script
 
 ``` r
@@ -188,14 +236,13 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpM54jcR\remotes13cc3b4e6dc7\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
-    ## * preparing 'rmd2jupyter':
+    ## * checking for file ‘/tmp/Rtmplys531/remotes65fb43cd9727/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted 'LazyData' from DESCRIPTION
-    ## * building 'rmd2jupyter_0.1.0.tar.gz'
-    ## 
+    ## Omitted ‘LazyData’ from DESCRIPTION
+    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
 
 ``` r
 library(devtools)
