@@ -38,7 +38,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 The data will be read for the disease on two biopsy locations
 ```{r dataset, warning=FALSE, message=FALSE}
 ## Select a disorder to analyse (options; CD or UC)
-disorder <- "UC"
+disorder <- "CD"
 ##Obtain data from step 2:
 setwd('..')
 work_DIR <- getwd()

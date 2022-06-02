@@ -40,7 +40,7 @@ The data will be read for the disease on two biopsy locations
 
 ``` r
 ## Select a disorder to analyse (options; CD or UC)
-disorder <- "UC"
+disorder <- "CD"
 ##Obtain data from step 2:
 setwd('..')
 work_DIR <- getwd()
@@ -67,7 +67,7 @@ if (disorder == "CD") {
 }
 ```
 
-    ## [1] "Selected disorder is Ulcerative Colitis"
+    ## [1] "Selected disorder is Crohn's disease"
 
 ``` r
 #merge two dataset of two locations into one data 
@@ -159,7 +159,7 @@ ewp.ileum.res <- as.data.frame(ewp.ileum)
 paste0("Pathways enrichment results for disorder: ", disorder , ", location: ILEUM")
 ```
 
-    ## [1] "Pathways enrichment results for disorder: UC, location: ILEUM"
+    ## [1] "Pathways enrichment results for disorder: CD, location: ILEUM"
 
 ``` r
 # number of genes measured in all pathways
@@ -173,14 +173,14 @@ paste0("The number of genes measured in all pathways is: ", length(ewp.ileum@uni
 paste0("The number of DEGs measured in all pathways is: ", length(deg.ileum$ENTREZ.ID[deg.ileum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 ```
 
-    ## [1] "The number of DEGs measured in all pathways is: 185"
+    ## [1] "The number of DEGs measured in all pathways is: 679"
 
 ``` r
 #number of enriched pathways
 paste0("The number of enriched pathways is: ", num.pathways.ileum <- dim(ewp.ileum.res)[1])
 ```
 
-    ## [1] "The number of enriched pathways is: 260"
+    ## [1] "The number of enriched pathways is: 472"
 
 ``` r
 #exporting results to the file
@@ -202,7 +202,7 @@ ewp.rectum.res <- as.data.frame(ewp.rectum)
 paste0("Pathways enrichment results for disorder: ", disorder , ", location: RECTUM")
 ```
 
-    ## [1] "Pathways enrichment results for disorder: UC, location: RECTUM"
+    ## [1] "Pathways enrichment results for disorder: CD, location: RECTUM"
 
 ``` r
 # number of genes measured in all pathways
@@ -216,14 +216,14 @@ paste0("The number of genes measured in all pathways is: ", length(ewp.rectum@un
 paste0("The number of DEGs measured in all pathways is: ", length(deg.rectum$ENTREZ.ID[deg.rectum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 ```
 
-    ## [1] "The number of DEGs measured in all pathways is: 1485"
+    ## [1] "The number of DEGs measured in all pathways is: 643"
 
 ``` r
 #number of enriched pathways
 paste0("The number of enriched pathways is: ", num.pathways.rectum <- dim(ewp.rectum.res)[1])
 ```
 
-    ## [1] "The number of enriched pathways is: 547"
+    ## [1] "The number of enriched pathways is: 484"
 
 ``` r
 #exporting results to the file
@@ -315,7 +315,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/Rtmpw0OaDX/remotes66f9b6734d3/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/Rtmp0H6yTy/remotes69a87699efbb/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
