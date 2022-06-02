@@ -84,6 +84,12 @@ write.table(htxCount, "output/htxCount.csv", sep=",",quote=FALSE, row.names = TR
 write.table(htxMeta, "output/sampleLabels.csv", sep=",",quote=FALSE,row.names = FALSE, col.names = FALSE)
 ```
 
+##Print session info:
+```{r print_session_info}
+##Print session info:
+sessionInfo()
+```
+
 ### Last, we create a Jupyter notebook from this script
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
