@@ -176,6 +176,15 @@ write.table(ewp.rectum.res, file=paste0("results/enrichResults_",disorder,"_rect
             sep = "\t" ,quote = FALSE, row.names = FALSE)
 ```
 
+##Print session info and remove large datasets:
+```{r print_session_info}
+##Print session info:
+sessionInfo()
+
+##Remove data objects which are not needed for further processing:
+rm(list=setdiff(ls(), c("ewp.rectum.res", "ewp.ileum.res")))
+```
+
 ### Last, we create a Jupyter notebook from this script
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
