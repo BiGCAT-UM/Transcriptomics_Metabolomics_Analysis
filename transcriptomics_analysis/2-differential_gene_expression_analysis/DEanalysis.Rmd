@@ -28,8 +28,7 @@ if(!"EnhancedVolcano" %in% installed.packages()) BiocManager::install("EnhancedV
 #Regular R packages:
 if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
 if(!"limma" %in% installed.packages()){install.packages("limma")}
-if(!"org.Hs.eg.db" %in% installed.packages()){install.packages("org.Hs.eg.db")}
-if(!"R2HTML" %in% installed.packages()){install.packages("R2HTML")}
+#if(!"R2HTML" %in% installed.packages()){install.packages("R2HTML")}
 
 #load packages
 library(rstudioapi)
@@ -43,8 +42,7 @@ library(magrittr)
 library(EnhancedVolcano)
 library(ggplot2)
 library(limma)
-library(org.Hs.eg.db)
-library(R2HTML)
+#library(R2HTML)
 
 # set working environment to the location where current source file is saved into.
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -212,8 +210,9 @@ files <- saveStatOutputDESeq2(cont.matrix,dds,postfix="",annotation=NULL)
 createPvalTab(files,postfix="",namePVal="pvalue",nameAdjPVal="padj",nameFC="FoldChange",nameLogFC="log2FoldChange",html=TRUE)
 setwd("..")
 ```
+
 ## Enhanced Volcano Plots Visualization
-Differential gene expression analysis results will be visualized by volcano plots
+Differential gene expression analysis results is visualized by volcano plots
 ```{r volcano_plot_visualization,warning=FALSE, message=FALSE}
 #set the wd to the result folder statsmodel
 setwd(paste(WORK.DIR,"statsmodel",sep="/"))
@@ -232,7 +231,7 @@ for(i in 1:length(files))
                      x = 'log2FoldChange', y = 'pvalue', pCutoff = 0.05, FCcutoff = 0.58)
   plot_list[[i]] = p
 }
-#path of the outout folder
+#path of the output folder
 outFolder <- paste(WORK.DIR,"volcano_plots",sep="/")
 #create folder if doesnt exist
 if(!dir.exists(outFolder)) dir.create(outFolder)
@@ -243,6 +242,15 @@ for(i in 1:length(files)) {
     print(plot_list[[i]])
     dev.off()
 }  
+```
+
+##Print session info and remove large datasets:
+```{r print_session_info}
+##Print session info:
+sessionInfo()
+
+##Remove data objects which are not needed for further processing:
+rm(list=setdiff(ls(), "tab"))
 ```
 
 ### Last, we create a Jupyter notebook from this script
