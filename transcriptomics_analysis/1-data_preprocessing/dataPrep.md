@@ -100,7 +100,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpodIl9L\remotes2de81be7bfc\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
+    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpuQSM0d\remotes542013bf27ce\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
     ## * preparing 'rmd2jupyter':
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
