@@ -91,6 +91,48 @@ write.table(htxCount, "output/htxCount.csv", sep=",",quote=FALSE, row.names = TR
 write.table(htxMeta, "output/sampleLabels.csv", sep=",",quote=FALSE,row.names = FALSE, col.names = FALSE)
 ```
 
+##Print session info:
+
+``` r
+##Print session info:
+sessionInfo()
+```
+
+    ## R version 4.2.0 (2022-04-22)
+    ## Platform: x86_64-pc-linux-gnu (64-bit)
+    ## Running under: Ubuntu 18.04.6 LTS
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
+    ## 
+    ## locale:
+    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+    ##  [3] LC_TIME=nl_NL.UTF-8        LC_COLLATE=en_US.UTF-8    
+    ##  [5] LC_MONETARY=nl_NL.UTF-8    LC_MESSAGES=en_US.UTF-8   
+    ##  [7] LC_PAPER=nl_NL.UTF-8       LC_NAME=C                 
+    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+    ## [11] LC_MEASUREMENT=nl_NL.UTF-8 LC_IDENTIFICATION=C       
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ## [1] dplyr_1.0.9     readxl_1.4.0    rstudioapi_0.13
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] knitr_1.39          magrittr_2.0.3      tidyselect_1.1.2   
+    ##  [4] R6_2.5.1            rlang_1.0.2         fastmap_1.1.0      
+    ##  [7] fansi_1.0.3         stringr_1.4.0       tools_4.2.0        
+    ## [10] xfun_0.31           utf8_1.2.2          DBI_1.1.2          
+    ## [13] cli_3.3.0           htmltools_0.5.2     ellipsis_0.3.2     
+    ## [16] assertthat_0.2.1    yaml_2.3.5          digest_0.6.29      
+    ## [19] tibble_3.1.7        lifecycle_1.0.1     crayon_1.5.1       
+    ## [22] purrr_0.3.4         BiocManager_1.30.17 vctrs_0.4.1        
+    ## [25] glue_1.6.2          evaluate_0.15       rmarkdown_2.14     
+    ## [28] stringi_1.7.6       compiler_4.2.0      pillar_1.7.0       
+    ## [31] cellranger_1.1.0    generics_0.1.2      pkgconfig_2.0.3
+
 ### Last, we create a Jupyter notebook from this script
 
 ``` r
@@ -100,14 +142,13 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpuQSM0d\remotes542013bf27ce\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
-    ## * preparing 'rmd2jupyter':
+    ## * checking for file ‘/tmp/Rtmpv6npOb/remotes3d433037c5b0/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted 'LazyData' from DESCRIPTION
-    ## * building 'rmd2jupyter_0.1.0.tar.gz'
-    ## 
+    ## Omitted ‘LazyData’ from DESCRIPTION
+    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
 
 ``` r
 library(devtools)

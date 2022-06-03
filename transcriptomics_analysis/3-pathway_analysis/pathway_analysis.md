@@ -40,7 +40,7 @@ The data will be read for the disease on two biopsy locations
 
 ``` r
 ## Select a disorder to analyse (options; CD or UC)
-disorder <- "UC"
+disorder <- "CD"
 ##Obtain data from step 2:
 setwd('..')
 work_DIR <- getwd()
@@ -67,7 +67,7 @@ if (disorder == "CD") {
 }
 ```
 
-    ## [1] "Selected disorder is Ulcerative Colitis"
+    ## [1] "Selected disorder is Crohn's disease"
 
 ``` r
 #merge two dataset of two locations into one data 
@@ -159,28 +159,28 @@ ewp.ileum.res <- as.data.frame(ewp.ileum)
 paste0("Pathways enrichment results for disorder: ", disorder , ", location: ILEUM")
 ```
 
-    ## [1] "Pathways enrichment results for disorder: UC, location: ILEUM"
+    ## [1] "Pathways enrichment results for disorder: CD, location: ILEUM"
 
 ``` r
 # number of genes measured in all pathways
 paste0("The number of genes measured in all pathways is: ", length(ewp.ileum@universe))
 ```
 
-    ## [1] "The number of genes measured in all pathways is: 6033"
+    ## [1] "The number of genes measured in all pathways is: 6030"
 
 ``` r
 # number of DEGs in all pathways
 paste0("The number of DEGs measured in all pathways is: ", length(deg.ileum$ENTREZ.ID[deg.ileum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 ```
 
-    ## [1] "The number of DEGs measured in all pathways is: 185"
+    ## [1] "The number of DEGs measured in all pathways is: 679"
 
 ``` r
 #number of enriched pathways
 paste0("The number of enriched pathways is: ", num.pathways.ileum <- dim(ewp.ileum.res)[1])
 ```
 
-    ## [1] "The number of enriched pathways is: 260"
+    ## [1] "The number of enriched pathways is: 472"
 
 ``` r
 #exporting results to the file
@@ -202,33 +202,108 @@ ewp.rectum.res <- as.data.frame(ewp.rectum)
 paste0("Pathways enrichment results for disorder: ", disorder , ", location: RECTUM")
 ```
 
-    ## [1] "Pathways enrichment results for disorder: UC, location: RECTUM"
+    ## [1] "Pathways enrichment results for disorder: CD, location: RECTUM"
 
 ``` r
 # number of genes measured in all pathways
 paste0("The number of genes measured in all pathways is: ", length(ewp.rectum@universe))
 ```
 
-    ## [1] "The number of genes measured in all pathways is: 6033"
+    ## [1] "The number of genes measured in all pathways is: 6030"
 
 ``` r
 # number of DEGs in all pathways
 paste0("The number of DEGs measured in all pathways is: ", length(deg.rectum$ENTREZ.ID[deg.rectum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 ```
 
-    ## [1] "The number of DEGs measured in all pathways is: 1485"
+    ## [1] "The number of DEGs measured in all pathways is: 643"
 
 ``` r
 #number of enriched pathways
 paste0("The number of enriched pathways is: ", num.pathways.rectum <- dim(ewp.rectum.res)[1])
 ```
 
-    ## [1] "The number of enriched pathways is: 547"
+    ## [1] "The number of enriched pathways is: 484"
 
 ``` r
 #exporting results to the file
 write.table(ewp.rectum.res, file=paste0("results/enrichResults_",disorder,"_rectum"),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
+```
+
+##Print session info and remove large datasets:
+
+``` r
+##Print session info:
+sessionInfo()
+```
+
+    ## R version 4.2.0 (2022-04-22)
+    ## Platform: x86_64-pc-linux-gnu (64-bit)
+    ## Running under: Ubuntu 18.04.6 LTS
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
+    ## 
+    ## locale:
+    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+    ##  [3] LC_TIME=nl_NL.UTF-8        LC_COLLATE=en_US.UTF-8    
+    ##  [5] LC_MONETARY=nl_NL.UTF-8    LC_MESSAGES=en_US.UTF-8   
+    ##  [7] LC_PAPER=nl_NL.UTF-8       LC_NAME=C                 
+    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+    ## [11] LC_MEASUREMENT=nl_NL.UTF-8 LC_IDENTIFICATION=C       
+    ## 
+    ## attached base packages:
+    ## [1] stats4    stats     graphics  grDevices utils     datasets  methods  
+    ## [8] base     
+    ## 
+    ## other attached packages:
+    ##  [1] dplyr_1.0.9           clusterProfiler_4.4.1 rWikiPathways_1.16.0 
+    ##  [4] org.Hs.eg.db_3.15.0   AnnotationDbi_1.58.0  IRanges_2.30.0       
+    ##  [7] S4Vectors_0.34.0      Biobase_2.56.0        BiocGenerics_0.42.0  
+    ## [10] rstudioapi_0.13      
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##   [1] fgsea_1.22.0           colorspace_2.0-3       ggtree_3.4.0          
+    ##   [4] rjson_0.2.21           ellipsis_0.3.2         qvalue_2.28.0         
+    ##   [7] XVector_0.36.0         aplot_0.1.4            farver_2.1.0          
+    ##  [10] graphlayouts_0.8.0     ggrepel_0.9.1          bit64_4.0.5           
+    ##  [13] fansi_1.0.3            scatterpie_0.1.7       splines_4.2.0         
+    ##  [16] cachem_1.0.6           GOSemSim_2.22.0        knitr_1.39            
+    ##  [19] polyclip_1.10-0        jsonlite_1.8.0         GO.db_3.15.0          
+    ##  [22] png_0.1-7              ggforce_0.3.3          BiocManager_1.30.17   
+    ##  [25] compiler_4.2.0         httr_1.4.3             assertthat_0.2.1      
+    ##  [28] Matrix_1.4-1           fastmap_1.1.0          lazyeval_0.2.2        
+    ##  [31] cli_3.3.0              tweenr_1.0.2           htmltools_0.5.2       
+    ##  [34] tools_4.2.0            igraph_1.3.1           gtable_0.3.0          
+    ##  [37] glue_1.6.2             GenomeInfoDbData_1.2.8 reshape2_1.4.4        
+    ##  [40] DO.db_2.9              fastmatch_1.1-3        Rcpp_1.0.8.3          
+    ##  [43] enrichplot_1.16.1      vctrs_0.4.1            Biostrings_2.64.0     
+    ##  [46] ape_5.6-2              nlme_3.1-157           ggraph_2.0.5          
+    ##  [49] xfun_0.31              stringr_1.4.0          lifecycle_1.0.1       
+    ##  [52] XML_3.99-0.9           DOSE_3.22.0            zlibbioc_1.42.0       
+    ##  [55] MASS_7.3-57            scales_1.2.0           tidygraph_1.2.1       
+    ##  [58] parallel_4.2.0         RColorBrewer_1.1-3     curl_4.3.2            
+    ##  [61] yaml_2.3.5             memoise_2.0.1          gridExtra_2.3         
+    ##  [64] ggplot2_3.3.6          downloader_0.4         ggfun_0.0.6           
+    ##  [67] yulab.utils_0.0.4      stringi_1.7.6          RSQLite_2.2.13        
+    ##  [70] tidytree_0.3.9         BiocParallel_1.30.0    GenomeInfoDb_1.32.2   
+    ##  [73] rlang_1.0.2            pkgconfig_2.0.3        bitops_1.0-7          
+    ##  [76] evaluate_0.15          lattice_0.20-45        purrr_0.3.4           
+    ##  [79] treeio_1.20.0          patchwork_1.1.1        shadowtext_0.1.2      
+    ##  [82] bit_4.0.4              tidyselect_1.1.2       plyr_1.8.7            
+    ##  [85] magrittr_2.0.3         R6_2.5.1               generics_0.1.2        
+    ##  [88] DBI_1.1.2              pillar_1.7.0           KEGGREST_1.36.0       
+    ##  [91] RCurl_1.98-1.6         tibble_3.1.7           crayon_1.5.1          
+    ##  [94] utf8_1.2.2             rmarkdown_2.14         viridis_0.6.2         
+    ##  [97] grid_4.2.0             data.table_1.14.2      blob_1.2.3            
+    ## [100] digest_0.6.29          tidyr_1.2.0            gridGraphics_0.5-1    
+    ## [103] munsell_0.5.0          viridisLite_0.4.0      ggplotify_0.1.0
+
+``` r
+##Remove data objects which are not needed for further processing:
+rm(list=setdiff(ls(), c("ewp.rectum.res", "ewp.ileum.res")))
 ```
 
 ### Last, we create a Jupyter notebook from this script
@@ -240,14 +315,13 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\Rtmps3rVdw\remotes3d603bc110e8\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
-    ## * preparing 'rmd2jupyter':
+    ## * checking for file ‘/tmp/Rtmp0H6yTy/remotes69a87699efbb/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted 'LazyData' from DESCRIPTION
-    ## * building 'rmd2jupyter_0.1.0.tar.gz'
-    ## 
+    ## Omitted ‘LazyData’ from DESCRIPTION
+    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
 
 ``` r
 library(devtools)
