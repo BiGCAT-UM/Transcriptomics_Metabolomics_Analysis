@@ -135,6 +135,7 @@ normlog <- log(norm+1,2)
 #for QC remove genes that have not been measured in any sample in the experiment
 datlogQC <- datlog[rowSums(datlog)!=0,]
 normlogQC <- normlog[rowSums(normlog)!=0,]
+
 #create QC plots for raw data, colored by different variables
 factors <- c("disease","biopsy_location","group")
 if(!dir.exists("QCraw")) dir.create("QCraw")
@@ -144,11 +145,13 @@ plot(sizeFactors(dds),type='h',lwd=5,ylim=c(0,max(sizeFactors(dds))),col="darkbl
 dev.off()
 createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
 setwd("..")
-#create QC plots for normalized data coloured by different variables
+
+#create QC plots for normalized data colored by different variables
 if(!dir.exists("QCnorm")) dir.create("QCnorm")
 setwd(paste(WORK.DIR,"QCnorm",sep="/"))
 createQCPlots(normlogQC, factors, Table=sampleLabels, normMeth="DESeq", postfix="")
 setwd("..")
+
 #sample MSM719M9 is an outlier remove it from dataset
 #sample HSM5FZAZ is an outlier remove it from dataset
 htxCount <- htxCount[,-match(c("MSM719M9","HSM5FZAZ"),colnames(htxCount))]
@@ -172,6 +175,7 @@ plot(sizeFactors(dds),type='h',lwd=5,ylim=c(0,max(sizeFactors(dds))),col="darkbl
 dev.off()
 createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
 setwd("..")
+
 #create QC plots for normalized data coloured by different variables
 if(!dir.exists("QCnorm2")) dir.create("QCnorm2")
 setwd(paste(WORK.DIR,"QCnorm2",sep="/"))
@@ -186,7 +190,6 @@ if(!dir.exists("statsmodel")) dir.create("statsmodel")
 setwd(paste(WORK.DIR,"statsmodel",sep="/"))
 #run differential analysis
 dds <- DESeq(dds)
-#results(dds) #runs the default DESeq2 comparison    (last factor level versus first factor level)
 cont.matrix <- makeContrasts(
   #CD disease on ileum and rectum 
   CD_Ileum_vs_nonIBD_Ileum   = groupCD_Ileum - groupnonIBD_Ileum,
@@ -206,7 +209,6 @@ cont.matrix <- makeContrasts(
 #the function results() is called from within the saveStatOutputDESeq2 function to compute the contrasts
 files <- saveStatOutputDESeq2(cont.matrix,dds,postfix="",annotation=NULL)
 #create summary table of the contrast results
-#up and down for p-val and adj p-val are decided by log2FC>=0.58 and  log2FC<0.58
 createPvalTab(files,postfix="",namePVal="pvalue",nameAdjPVal="padj",nameFC="FoldChange",nameLogFC="log2FoldChange",html=TRUE)
 setwd("..")
 ```
@@ -243,7 +245,6 @@ for(i in 1:length(files)) {
     dev.off()
 }  
 ```
-
 ##Print session info and remove large datasets:
 ```{r print_session_info}
 ##Print session info:
@@ -252,7 +253,6 @@ sessionInfo()
 ##Remove data objects which are not needed for further processing:
 rm(list=setdiff(ls(), "tab"))
 ```
-
 ### Last, we create a Jupyter notebook from this script
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
