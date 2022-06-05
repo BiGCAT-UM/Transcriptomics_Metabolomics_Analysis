@@ -52,7 +52,7 @@ metaDataMBX<- subset(metaDataMBX, metaDataMBX$visit_num == 4)
 #we should match transcriptomics (htx) samples and metabolomics (mbx) samples with participantID
 #but samples are given by their externalID in mbx file so we should keep them both
 #select columns which will be used
-metaDataMBX <- metaDataMBX %>% select(External.ID,Participant.ID,diagnosis)
+metaDataMBX <- metaDataMBX %>% dplyr::select(External.ID,Participant.ID,diagnosis)
 #rename columns of metaDataMBX
 colnames(metaDataMBX) <- c("ExternalID","ParticipantID","disease" )
 
