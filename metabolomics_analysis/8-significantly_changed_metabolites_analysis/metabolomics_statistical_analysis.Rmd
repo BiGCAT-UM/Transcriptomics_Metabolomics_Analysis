@@ -172,7 +172,7 @@ remove(mSet_transformed, columns_disorders, columnNumber, end_Disorders, foldcha
 
 ## Volcano plot
 The next step will visualize relevant metabolites in a Volcano plot, with thresholds defined for the log2FCs and p-values.
-Since we are dealing with non-targeted LC_MS data, we are applying stringent criteria here (p-value below 0.01, and |log2FC| >= 1.5)
+Since we are dealing with non-targeted LC_MS data, we are applying stringent criteria here (p-value below 0.05, and |log2FC| >= 1.5)
 ```{r volcano_plot,warning=FALSE, message=FALSE}
 ##Inspired by: https://biocorecrg.github.io/CRG_RIntroduction/volcano-plots.html
 if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
