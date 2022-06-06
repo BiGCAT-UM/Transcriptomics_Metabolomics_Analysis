@@ -54,6 +54,8 @@ WHERE {
    dcterms:license ?license ;
    pav:createdOn ?date .
  }"
+ #below code should be performed first to handle the ssl certificate error
+options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
 resultsMetadata <- SPARQL(endpointwp,queryMetadata,curl_args=list(useragent=R.version.string))
 showresultsMetadata <- resultsMetadata$results
 remove(queryMetadata, resultsMetadata)
