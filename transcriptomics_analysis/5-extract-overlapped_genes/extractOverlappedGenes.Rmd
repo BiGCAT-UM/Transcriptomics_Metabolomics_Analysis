@@ -30,7 +30,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 ## Importing dataset and filtering
 ```{r data,warning=FALSE, message=FALSE}
-#Obtain data from step 2:
+#Obtain data from step 2
 setwd('..')
 ## Select a location to analyse (options; rectum or ileum)
 location <- "rectum"
