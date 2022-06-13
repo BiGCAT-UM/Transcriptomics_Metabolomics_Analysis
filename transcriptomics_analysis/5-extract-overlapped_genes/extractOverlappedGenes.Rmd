@@ -24,7 +24,7 @@ library(rstudioapi)
 library(org.Hs.eg.db) 
 library (dplyr)
 
-# setting your working environment to the location where your current source file is saved into.
+# set your working environment to the location where your current source file is saved into.
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
