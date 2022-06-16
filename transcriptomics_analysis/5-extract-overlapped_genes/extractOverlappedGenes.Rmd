@@ -35,8 +35,7 @@ setwd('..')
 ## Select a location to analyse (options; rectum or ileum)
 location <- "rectum"
 
-#we will first perform process for ileum and then rectum 
-#read dataset to be processed for ileum biopsy location
+#read dataset to be processed for biopsy location
 if (location == "ileum") {
 dataset.CD <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Ileum_vs_nonIBD_Ileum.tab")
 dataset.UC <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Ileum_vs_nonIBD_Ileum.tab")
@@ -57,7 +56,7 @@ colnames(dataset.UC)[1] = "gene_symbol"
 #return back to root folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
-## Getting ENTREZ IDs gor gene symbols
+## Getting ENTREZ IDs for gene symbols
 ```{r entrezID, warning=FALSE, message=FALSE}
 hs <- org.Hs.eg.db
 entrezID <- AnnotationDbi::select(hs, 
@@ -121,7 +120,7 @@ write.table(DEG.overlapped ,"output/DEG.overlapped_ileum",row.names=FALSE,col.na
 ##############################################################################################
 ```
 
-## Finding overlapped genes between diseases on rectum bioopsy location
+## Finding overlapped genes between diseases on bioopsy location
 ```{r}
 ######################################FOR RECTUM biopsy location#######################################
 # overlap genes between CD down and UC down
