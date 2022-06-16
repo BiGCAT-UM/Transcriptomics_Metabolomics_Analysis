@@ -1,0 +1,131 @@
+---
+title: "identifier_mapping_transcriptomics"
+author: "ddedesener"
+date: "14/02/2022"
+output:
+ md_document:
+    variant: markdown_github
+always_allow_html: true
+---
+## Introduction
+In this section, identifier (IDs) mapping is performed from the original data annotation (HGNC symbols) to Entrez Gene and Ensembl IDs, since tools downstream of this step require different input formats for the IDs.
+
+## R environment setup
+```{r setup, warning=FALSE, message=FALSE}
+# check if libraries are already installed > otherwise install it
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
+if(!"org.Hs.eg.db" %in% installed.packages()) BiocManager::install("org.Hs.eg.db")  
+if(!"AnnotationDbi" %in% installed.packages()) BiocManager::install("AnnotationDbi")
+#if(!"rWikiPathways" %in% installed.packages()) BiocManager::install("rWikiPathways")
+#if(!"clusterProfiler" %in% installed.packages()) BiocManager::install("clusterProfiler") 
+if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
+
+#loading installed libraries
+library(rstudioapi) # interface for interacting with RStudio IDE with R code.
+library(org.Hs.eg.db) #This is the organism annotation package ("org") for Homo sapiens ("Hs"), organized as an AnnotationDbi   package ("db"), using Entrez Gene IDs ("eg") as primary key.
+library(AnnotationDbi) # for connecting and querying annotation databases
+#library(rWikiPathways) # for programmatic access to WikiPathways content
+#library(clusterProfiler) # for implementing methods to analyze and visualize functional profiles of genomic data
+library(dplyr)
+
+# set your working environment to the location where your current source file is saved into.
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+```
+
+## Importing dataset
+The data will be read for the disease on two biopsy locations
+```{r dataset, warning=FALSE, message=FALSE}
+## Select a disorder to analyse (options; CD or UC)
+disorder <- "CD"
+##Obtain data from step 2:
+setwd('..')
+work_DIR <- getwd()
+#we have two datasets from different biopsy locations
+dataset1 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Ileum_vs_nonIBD_Ileum.tab")
+dataset2 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Rectum_vs_nonIBD_Rectum.tab")
+dataset3 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Ileum_vs_nonIBD_Ileum.tab")
+dataset4 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Rectum_vs_nonIBD_Rectum.tab")
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
+if (disorder == "CD") {
+  #filter out  unused columns, we select geneSymbol, log2FC and pvalue
+  dataset_ileum<- subset( dataset3, select = c(1,3,7))
+  dataset_rectum<- subset( dataset4, select = c(1,3,7))
+  print("Selected disorder is Crohn's disease")
+}else if(disorder == "UC"){ 
+  #filter out  unused columns, we select geneSymbol, log2FC and pvalue
+  dataset_ileum<- subset( dataset1, select = c(1,3,7))
+  dataset_rectum<- subset( dataset2, select = c(1,3,7))
+  print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")
+}
+#merge two dataset of two locations into one data 
+dataset <- merge(dataset_ileum, dataset_rectum,by.x="X", by.y="X",sort = TRUE, all.x = TRUE, all.y = TRUE)
+#change column names
+colnames(dataset) <- c("GeneSymbol","log2FC_ileum","pvalue_ileum","log2FC_rectum","pvalue_rectum")
+```
+
+## Converting hgnc gene symbols to the corresponding Entrez (NCBI) gene IDs
+```{r converting_entrez,warning=FALSE, message=FALSE}
+#converting gene symbols to entrez ID since these are required for the enrichR function
+hs <- org.Hs.eg.db #This object is a simple mapping of Entrez Gene identifier
+entrezID <- AnnotationDbi::select(hs, keys = dataset$GeneSymbol,
+            columns = c("ENTREZID", "SYMBOL"),
+            keytype = "SYMBOL")
+#filter out double gene symbols
+entrezID <- entrezID %>% distinct (entrezID$SYMBOL, .keep_all = TRUE)
+# add entrezIDs for each gene symbol in the dataset
+dataset <- cbind(entrezID$ENTREZID,dataset)
+#change column name
+colnames(dataset)[1] = "ENTREZ.ID"
+#filter out genes that has NA value for entrezID
+#dataset<- dataset %>% tidyr::drop_na(ENTREZ.ID)
+```
+
+## Converting hgnc gene symbols to the corresponding Ensembl IDs
+```{r converting_ensembl,warning=FALSE, message=FALSE}
+#converting gene symbols to Ensembl ID since these are required for the Cytoscape multiomics visualization
+hs <- org.Hs.eg.db #This object is a simple mapping of Entrez Gene identifier
+ensemblID <- AnnotationDbi::select(hs, keys = dataset$GeneSymbol,
+            columns = c("ENSEMBL", "SYMBOL"),
+            keytype = "SYMBOL")
+#filter out double gene symbols
+ensemblID <- ensemblID %>% distinct (ensemblID$SYMBOL, .keep_all = TRUE)
+# add entrezIDs for each gene symbol in the dataset
+dataset <- cbind(ensemblID$ENSEMBL,dataset)
+#change column name
+colnames(dataset)[1] = "Ensembl.ID"
+#filter out genes that has NA value for entrezID
+#dataset<- dataset %>% tidyr::drop_na(Ensembl.ID)
+
+
+##TODO: add NA removal before PW analysis (and network analysis?)
+##TODO: print some stats on mapping (issues)
+```
+##Save data, print session info and remove large datasets:
+```{r print_session_info}
+##Save data:
+#exporting results to the file
+write.table(dataset, file=paste0("results/IDMapping_",disorder),
+            sep = "\t" ,quote = FALSE, row.names = FALSE)
+
+##Print session info:
+sessionInfo()
+
+##Remove data objects which are not needed for further processing:
+rm(list=setdiff(ls(), c("dataset", "disorder", "work_DIR")))
+```
+
+### Last, we create a Jupyter notebook from this script
+```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("identifier_mapping.Rmd")
+```
