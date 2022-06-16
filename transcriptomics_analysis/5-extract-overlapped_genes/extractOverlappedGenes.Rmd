@@ -8,7 +8,7 @@ output:
 always_allow_html: true
 ---
 ## Introduction
-In this workflow, extracting overlapped differential expressed genes between Crohn`s disease and ulcerative colitis will be performed. 
+This section extracts the overlapping differentially expressed genes between Crohn`s disease and Ulcerative Colitis. 
 
 ## R environment setup
 ```{r setup, warning=FALSE, message=FALSE}
