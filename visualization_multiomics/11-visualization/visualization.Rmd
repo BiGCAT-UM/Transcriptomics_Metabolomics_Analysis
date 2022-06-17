@@ -92,17 +92,19 @@ setNodeColorMapping("log2FC", c(-1,0,1), node.colors, default.color = "#D3D3D3",
 
 #set node border width and color based on p-value
 #first we need to get all p-values from node table
-pvalues = getTableColumns(table = 'node',columns = c('name','pvalue'))  
+pvalues  = getTableColumns(table = 'node',columns = c('name','pvalue'))  
 min.pval = min(pvalues[,2],na.rm=TRUE)
 #get non-significant nodes (p-value>0.05)
 nonsign.nodes <- pvalues  %>% filter(pvalue > 0.05, na.rm = TRUE)
+#filter out duplicated rows
+nonsign.nodes <- unique(nonsign.nodes)
 
 #set node border width for all nodes which has a p-value
-setNodeBorderWidthMapping('pvalue', c(min.pval,0.05), c(10,10) , mapping.type = "c", style.name = "pathwayStyle")
+setNodeBorderWidthMapping('pvalue', c(min.pval,0.05), c(6,6) , mapping.type = "c", style.name = "pathwayStyle")
 #set node border color for all nodes which has a p-value
-setNodeBorderColorMapping('pvalue', c(min.pval,0.05), c('#00FF00','#00FF00'), style.name = "pathwayStyle")
+setNodeBorderColorMapping('pvalue', c(min.pval,0.05), c('#00C400','#00C400'), style.name = "pathwayStyle")
 
-#filter our non-sign nodes from the visualization
+#filter out non-sign nodes from the visualization
 RCy3::setNodeBorderWidthBypass(nonsign.nodes$name, new.sizes = 2)
 RCy3::setNodeBorderColorBypass(nonsign.nodes$name, new.colors = "#D3D3D3")
 
@@ -110,6 +112,8 @@ RCy3::setNodeBorderColorBypass(nonsign.nodes$name, new.colors = "#D3D3D3")
 png.file <- file.path(getwd(), "output/omics_visualization.png")
 exportImage(png.file,'PNG', zoom = 500)
 ```
+
+## Creating jupyter files
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
 if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
@@ -119,4 +123,5 @@ library(rmd2jupyter)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("visualization.Rmd")
 ```
+
 
