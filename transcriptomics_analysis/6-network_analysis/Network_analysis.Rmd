@@ -56,8 +56,8 @@ if (location == "ileum") {
 deg <- deg %>% tidyr:: drop_na(ENTREZ)
 #check that cytoscape is connected
 cytoscapePing()
-#close session before starting
-closeSession(FALSE)
+#close session before starting --> this overwrites existing networks!
+#closeSession(FALSE)
 networkName = paste0("PPI_network_",location)
 #create a PPI network using overlapped DEGs between CD and UC
 #first take the deg input list as a query

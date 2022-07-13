@@ -37,6 +37,7 @@ if (disorder == "CD") {
     mSet = mSet_UC
     print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
 ```
+
 Find pathways based on relevant IDs column
 ```{r pathway_retrieval,warning=FALSE, message=FALSE}
 if(!"SPARQL" %in% installed.packages()){
@@ -111,6 +112,7 @@ print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:5)])
 
 remove(cleaned_string_HMDB, list_Relevant_HMDB_IDs, query_HMDBs)
 ```
+
 Calculate the ORA score for each pathway, using the Fishers exact test.
 ```{r pathway_analysis, warning=FALSE, message=FALSE}
 ##Based on: https://www.pathwaycommons.org/guide/primers/statistics/fishers_exact_test/
