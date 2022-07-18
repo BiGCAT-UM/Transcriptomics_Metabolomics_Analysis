@@ -1,6 +1,8 @@
 ---
 title: "identifier_mapping_transcriptomics"
-author: "ddedesener"
+author: 
+- "ddedesener"
+- "DeniseSl22"
 date: "14/02/2022"
 output:
  md_document:
