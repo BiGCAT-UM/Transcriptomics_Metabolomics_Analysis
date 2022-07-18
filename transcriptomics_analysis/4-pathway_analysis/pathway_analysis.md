@@ -41,19 +41,19 @@ The data will be read for the disease on two biopsy locations
 ``` r
 ## Select a disorder to analyse (options; CD or UC)
 disorder <- "CD"
-##Obtain data from step 2:
+##Obtain data from step 3:
 setwd('..')
 work_DIR <- getwd()
 
 if (disorder == "CD") {
   dataset_CD <- read.delim("3-identifier_mapping/output/IDMapping_CD.tsv")
   #filter out  unused columns, we select Entrez.ID, log2FC and pvalue, remove NA values: #background genes to be used in enrichment analysis
-  dataset <- na.omit(subset( dataset_CD, select = c(2,4:7)))
+  dataset <- na.omit(subset( dataset_CD, select = c(3,2,4:7)))
   print("Selected disorder is Crohn's disease")
 }else if(disorder == "UC"){ 
   dataset_UC <- read.delim("3-identifier_mapping/output/IDMapping_UC.tsv")
   #filter out  unused columns, we select Entrez.ID, log2FC and pvalue
-  dataset <- na.omit(subset( dataset_UC, select = c(2,4:7)))
+  dataset <- na.omit(subset( dataset_UC, select = c(3,2,4:7)))
   print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")
   }
 ```
@@ -73,15 +73,15 @@ work_DIR <- getwd()
 if(!dir.exists("output")) dir.create("output")
 #we will use selection criteria as Fold change=1.5,log2FC=0.58 and p.value < 0.05
 #for ileum location
-up.genes.ileum   <- dataset[dataset$log2FC_ileum >= 0.58 & dataset$pvalue_ileum < 0.05, 1] 
-down.genes.ileum <- dataset[dataset$log2FC_ileum <= -0.58 & dataset$pvalue_ileum < 0.05, 1] 
-deg.ileum <- unique(dataset[!is.na(dataset$ENTREZ.ID) & !is.na(dataset$pvalue_ileum) & dataset$pvalue_ileum < 0.05 & abs(dataset$log2FC_ileum) > 0.58,c(1:3)])
+up.genes.ileum   <- dataset[dataset$log2FC_ileum >= 0.58 & dataset$pvalue_ileum < 0.05, 2] 
+down.genes.ileum <- dataset[dataset$log2FC_ileum <= -0.58 & dataset$pvalue_ileum < 0.05, 2] 
+deg.ileum <- unique(dataset[!is.na(dataset$ENTREZ.ID) & !is.na(dataset$pvalue_ileum) & dataset$pvalue_ileum < 0.05 & abs(dataset$log2FC_ileum) > 0.58,c(1:4)])
 write.table(deg.ileum,file = paste0("output/DEGs_",disorder,"_ileum"),sep="\t", quote=FALSE, row.names = FALSE)
 
 #for rectum location
-up.genes.rectum   <- dataset[dataset$log2FC_rectum >= 0.58 & dataset$pvalue_rectum < 0.05, 1] 
-down.genes.rectum <- dataset[dataset$log2FC_rectum <= -0.58 & dataset$pvalue_rectum < 0.05, 1] 
-deg.rectum <- unique(dataset[!is.na(dataset$ENTREZ.ID) & !is.na(dataset$pvalue_rectum) & dataset$pvalue_rectum < 0.05 & abs(dataset$log2FC_rectum) > 0.58,c(1,4:5)])
+up.genes.rectum   <- dataset[dataset$log2FC_rectum >= 0.58 & dataset$pvalue_rectum < 0.05, 2] 
+down.genes.rectum <- dataset[dataset$log2FC_rectum <= -0.58 & dataset$pvalue_rectum < 0.05, 2] 
+deg.rectum <- unique(dataset[!is.na(dataset$ENTREZ.ID) & !is.na(dataset$pvalue_rectum) & dataset$pvalue_rectum < 0.05 & abs(dataset$log2FC_rectum) > 0.58,c(1,2,5,6)])
 write.table(deg.rectum, file=paste0("output/DEGs_",disorder,"_rectum"),sep="\t", quote=FALSE, row.names = FALSE)
 ```
 
@@ -299,7 +299,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpV4lWq4/remotes6aef20db5eeb/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpqSBuBp/remotes1949453a9e7f/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
