@@ -32,10 +32,10 @@ setwd('..')
 work_DIR <- getwd()
 #we have four datasets in total
 #read all pathway lists
-CD.ileum <- read.delim("3-pathway_analysis/results/enrichResults_CD_ileum",sep = "\t", header = TRUE)
-CD.rectum <- read.delim("3-pathway_analysis/results/enrichResults_CD_rectum", sep = "\t",header = TRUE)
-UC.ileum <- read.delim("3-pathway_analysis/results/enrichResults_UC_ileum",sep = "\t", header = TRUE)
-UC.rectum <- read.delim("3-pathway_analysis/results/enrichResults_UC_rectum", sep = "\t",header = TRUE)
+CD.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_ileum",sep = "\t", header = TRUE)
+CD.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_rectum", sep = "\t",header = TRUE)
+UC.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_ileum",sep = "\t", header = TRUE)
+UC.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_rectum", sep = "\t",header = TRUE)
 
 # Set Working Directory back to current folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -236,7 +236,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/Rtmplys531/remotes65fb43cd9727/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpfrNVPL/remotes6e282b26e5e7/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts

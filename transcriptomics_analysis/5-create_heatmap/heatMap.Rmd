@@ -36,10 +36,10 @@ setwd('..')
 work_DIR <- getwd()
 #we have four datasets in total
 #read all pathway lists
-CD.ileum <- read.delim("3-pathway_analysis/results/enrichResults_CD_ileum",sep = "\t", header = TRUE)
-CD.rectum <- read.delim("3-pathway_analysis/results/enrichResults_CD_rectum", sep = "\t",header = TRUE)
-UC.ileum <- read.delim("3-pathway_analysis/results/enrichResults_UC_ileum",sep = "\t", header = TRUE)
-UC.rectum <- read.delim("3-pathway_analysis/results/enrichResults_UC_rectum", sep = "\t",header = TRUE)
+CD.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_ileum",sep = "\t", header = TRUE)
+CD.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_rectum", sep = "\t",header = TRUE)
+UC.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_ileum",sep = "\t", header = TRUE)
+UC.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_rectum", sep = "\t",header = TRUE)
 
 # Set Working Directory back to current folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
