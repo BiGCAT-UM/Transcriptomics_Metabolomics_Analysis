@@ -42,11 +42,9 @@ disorder <- "CD"
 ##Obtain data from step 2:
 setwd('..')
 work_DIR <- getwd()
-#we have two datasets from different biopsy locations
-dataset1 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Ileum_vs_nonIBD_Ileum.tab")
-dataset2 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Rectum_vs_nonIBD_Rectum.tab")
-dataset3 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Ileum_vs_nonIBD_Ileum.tab")
-dataset4 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Rectum_vs_nonIBD_Rectum.tab")
+#we have two datasets for different diseases
+dataset1 <- read.delim("3-identifier_mapping/output/IDMapping_CD.tsv")
+dataset2 <- read.delim("3-identifier_mapping/output/IDMapping_UC.tsv")
 
 # Set Working Directory back to current folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
