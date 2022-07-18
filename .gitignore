@@ -2,3 +2,5 @@
 .Rproj.user
 .Rhistory
 *.csv
+*.bridge
+*.log
