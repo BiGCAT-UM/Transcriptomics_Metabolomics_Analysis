@@ -10,32 +10,104 @@ clustering algorithm will be applied to get clusters within the network.
 
 Installing and loading required libraries
 
-## PPI network for selected biopsy location
+## Importing dataset
+
+The data will be read for the disease on two biopsy locations
 
 ``` r
-#Obtain data from step 5:
+##Obtain all Differentially Expressed Gene data from step 3:
 setwd('..')
-## Select a location to create network (options; ileum or rectum)
-location <- "ileum"
+work_DIR <- getwd()
 
-#read dataset to be processed for ileum or rectum biopsy location
-if (location == "ileum") {
-  deg <- read.delim("5-extract-overlapped_genes/output/DEG.overlapped_ileum")
-  print("Selected location is ileum")
-}else if(location == "rectum"){ 
-  deg <- read.delim("5-extract-overlapped_genes/output/DEG.overlapped_rectum")
-  print("Selected location is rectum")
-}
+#read all DEG data
+CD.ileum <- read.delim("4-pathway_analysis/output/DEGs_CD_ileum",sep = "\t", header = TRUE)
+CD.rectum <- read.delim("4-pathway_analysis/output/DEGs_CD_rectum", sep = "\t",header = TRUE)
+UC.ileum <- read.delim("4-pathway_analysis/output/DEGs_UC_ileum",sep = "\t", header = TRUE)
+UC.rectum <- read.delim("4-pathway_analysis/output/DEGs_UC_rectum", sep = "\t",header = TRUE)
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
+#Listing all up and down regulated genes separately for CD:
+CD.up.ileum   <-unique(CD.ileum[CD.ileum$log2FC_ileum > 0.58,])
+colnames(CD.up.ileum) <- c ("HGNC_symbol", "ENTREZ", "log2FC_CD", "pvalue_CD")
+CD.down.ileum <-unique(CD.ileum[CD.ileum$log2FC_ileum < -0.58,])
+colnames(CD.down.ileum) <- c ("HGNC_symbol", "ENTREZ", "log2FC_CD", "pvalue_CD")
+CD.up.rectum   <-unique(CD.rectum[CD.rectum$log2FC_rectum > 0.58,])
+colnames(CD.up.rectum) <- c ("HGNC_symbol", "ENTREZ", "log2FC_CD", "pvalue_CD")
+CD.down.rectum <-unique(CD.rectum[CD.rectum$log2FC_rectum < -0.58,])
+colnames(CD.down.rectum) <- c ("HGNC_symbol", "ENTREZ", "log2FC_CD", "pvalue_CD")
+#Listing all up and down regulated genes separately for UC:
+UC.up.ileum   <-unique(UC.ileum[UC.ileum$log2FC_ileum > 0.58,])
+colnames(UC.up.ileum) <- c ("HGNC_symbol", "ENTREZ", "log2FC_UC", "pvalue_UC")
+UC.down.ileum <-unique(UC.ileum[UC.ileum$log2FC_ileum < -0.58,])
+colnames(UC.down.ileum) <- c ("HGNC_symbol", "ENTREZ", "log2FC_UC", "pvalue_UC")
+UC.up.rectum   <-unique(UC.rectum[UC.rectum$log2FC_rectum > 0.58,])
+colnames(UC.up.rectum) <- c ("HGNC_symbol", "ENTREZ", "log2FC_UC", "pvalue_UC")
+UC.down.rectum <-unique(UC.rectum[UC.rectum$log2FC_rectum < -0.58,])
+colnames(UC.down.rectum) <- c ("HGNC_symbol", "ENTREZ", "log2FC_UC", "pvalue_UC")
 ```
 
-    ## [1] "Selected location is ileum"
+## Finding overlapping genes between diseases on ileum biopsy location
 
 ``` r
-#filter out genes that does not have ENTREZ ID 
-deg <- deg %>% tidyr:: drop_na(ENTREZ)
+######################################FOR ILEUM biopsy location#######################################
+# overlap genes between CD down and UC down
+merged.ileum.downCDdownUC <- merge(x=CD.down.ileum, y=UC.down.ileum, by=c('ENTREZ', 'HGNC_symbol'), all.x=FALSE, all.y=FALSE)
+
+# overlap genes between CD up and UC down
+merged.ileum.upCDdownUC <- merge(x=CD.up.ileum,y=UC.down.ileum, by=c('ENTREZ', 'HGNC_symbol'),all.x=FALSE, all.y=FALSE)
+
+# overlap genes between CD up and UC up
+merged.ileum.upCDupUC <- merge(x=CD.up.ileum,y=UC.up.ileum,by=c('ENTREZ', 'HGNC_symbol'), all.x=FALSE, all.y=FALSE)
+
+# overlap genes between CD down and UC up
+merged.ileum.downCDupUC <- merge(x=CD.down.ileum,y=UC.up.ileum,by=c('ENTREZ', 'HGNC_symbol'),all.x=FALSE, all.y=FALSE)
+
+#merge all DEG with corresponding logFC for both diseases
+DEG.overlapped_ileum <- rbind(merged.ileum.downCDdownUC, merged.ileum.upCDdownUC, merged.ileum.upCDupUC, merged.ileum.downCDupUC)
+if(!dir.exists("output")) dir.create("output")
+write.table(DEG.overlapped_ileum ,"output/DEG.overlapped_ileum",row.names=FALSE,col.names = TRUE,quote= FALSE, sep = "\t")
+##############################################################################################
+```
+
+## Finding overlapped genes between diseases on rectum biopsy location
+
+``` r
+######################################FOR RECTUM biopsy location#######################################
+# overlap genes between CD down and UC down
+merged.rectum.downCDdownUC <- merge(x=CD.down.rectum,y=UC.down.rectum,by=c('ENTREZ', 'HGNC_symbol'),all.x=FALSE, all.y=FALSE)
+
+# overlap genes between CD up and UC down
+merged.rectum.upCDdownUC <- merge(x=CD.up.rectum,y=UC.down.rectum,by=c('ENTREZ', 'HGNC_symbol'),all.x=FALSE, all.y=FALSE)
+
+# overlap genes between CD up and UC up
+merged.rectum.upCDupUC <- merge(x=CD.up.rectum,y=UC.up.rectum,by=c('ENTREZ', 'HGNC_symbol'),all.x=FALSE, all.y=FALSE)
+
+# overlap genes between CD down and UC up
+merged.rectum.downCDupUC <- merge(x=CD.down.rectum,y=UC.up.rectum,by=c('ENTREZ', 'HGNC_symbol'),all.x=FALSE, all.y=FALSE)
+
+#merge all DEG with corresponding logFC for both diseases
+DEG.overlapped_rectum <- rbind(merged.rectum.downCDdownUC, merged.rectum.upCDdownUC, merged.rectum.upCDupUC, merged.rectum.downCDupUC)
+write.table(DEG.overlapped_rectum ,"output/DEG.overlapped_rectum",row.names=FALSE,col.names = TRUE,quote= FALSE, sep = "\t")
+##############################################################################################
+```
+
+## Create Protein-Protein Interaction (PPI) network for selected biopsy location
+
+``` r
+##Remove data objects which are not needed for further processing:
+rm(list=setdiff(ls(), c("DEG.overlapped_ileum", "DEG.overlapped_rectum")))
+
+## Select a location to analyse (options; ileum or rectum)
+location <- "ileum"
+
+if (location == "ileum"){deg <- DEG.overlapped_ileum}else if(location == "rectum"){deg <- DEG.overlapped_rectum}else{print("Location not recognized")}
+
 #check that cytoscape is connected
 cytoscapePing()
-#close session before starting
+#close session before starting --> this overwrites existing networks!
 closeSession(FALSE)
 networkName = paste0("PPI_network_",location)
 #create a PPI network using overlapped DEGs between CD and UC
@@ -46,10 +118,10 @@ x <- readr::format_csv(as.data.frame(deg$ENTREZ), col_names=F, escape = "double"
 commandsRun(paste0('string protein query cutoff=0.7', ' newNetName=',networkName, ' query=',x,' limit=0'))
 ```
 
-    ## [1] "Loaded network 'STRING network - PPI_network_ileum' with 189 nodes and 32 edges"
+    ## [1] "Loaded network 'STRING network - PPI_network_ileum' with 188 nodes and 32 edges"
 
 ``` r
-#get proteins (nodes) from the constructed network
+#get proteins (nodes) from the constructed network: #Query term: entrez IDs, display name: HGNC symbols.
 proteins <- RCy3::getTableColumns(columns=c("query term", "display name"))
 #get edges from the network
 ppis     <- RCy3::getTableColumns(table="edge", columns=c("name"))
@@ -69,11 +141,24 @@ colnames(proteins) <- c("id","label")
 proteins$type <- "protein"
 
 ###############get all pathways from WIKIPATHWAYS #################
-#below code should be performed first to handle the ssl certificate error uploading pathways 
+##Work with local file (for publication), or new download:
+work_DIR <- getwd()
+pathway_data <- "local" #Options: local, new
+if (pathway_data == "local") {
+  wp.hs.gmt <-list.files(work_DIR, pattern="wikipathways", full.names=FALSE)
+  paste0("Using local file, from: ", wp.hs.gmt )
+}else if(pathway_data == "new"){ 
+#below code should be performed first to handle the ssl certificate error while downloading pathways 
 options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
+#downloading latest pathway gmt files for human 
 wp.hs.gmt <- rWikiPathways::downloadPathwayArchive(organism="Homo sapiens", format = "gmt")
-#wp.hs.gmt <- "wikipathways-20220210-gmt-Homo_sapiens.gmt"
-#Now that we have the latest GMT file for human pathways, 
+  paste0("Using new data, from: ", wp.hs.gmt)}else{print("Pathway data type not recognized")
+  }
+```
+
+    ## [1] "Using local file, from: wikipathways-20220210-gmt-Homo_sapiens.gmt"
+
+``` r
 #all wp and gene information stored in wp2gene object
 wp2gene   <- rWikiPathways::readPathwayGMT(wp.hs.gmt)
 #filter out  pathways that does not consist of any differentially expressed genes 
@@ -92,7 +177,7 @@ pwy.filtered$type <- "pathway"
 colnames(pwy.filtered) <- c("label","id", "type")
 
 #get genes 
-genes <- unique(deg[,c(1,2)])
+genes <- unique(deg[,c(1,2), drop=FALSE])
 genes$type <- "gene"
 colnames(genes) <- c("id","label","type")
 genes$id <- as.character(genes$id)
@@ -103,7 +188,7 @@ edges.ppi <- unique(dplyr::bind_rows(ppis.3[,c(3,4,5)], wp2gene.filtered[,c(3,5,
 rownames(edges.ppi) <- NULL
 ```
 
-## Create PPI-pathway network for selected biopsy location
+## Create Protein-Protein-pathway-interaction (PPPI) network for selected biopsy location
 
 ``` r
 #create a network name 
@@ -114,7 +199,7 @@ RCy3::createNetworkFromDataFrames(nodes= nodes.ppi, edges = edges.ppi, title=net
 ```
 
     ## networkSUID 
-    ##      172820
+    ##      140391
 
 ``` r
 RCy3::loadTableData(nodes.ppi, data.key.column = "label", table="node", table.key.column = "label")
@@ -154,23 +239,39 @@ RCy3::setVisualStyle("ppi")
 ``` r
 # Saving output
 if(!dir.exists("output")) dir.create("output")
-outputName = paste0 ("output/PPI_Pathway_Network_",location,".png")
+outputName = paste0 ("output/PPI_Pathway_Network_", wp.hs.gmt, location,".png")
 png.file <- file.path(getwd(), outputName)
 exportImage(png.file,'PNG', zoom = 500)
 ```
 
-    ##                                                                                                                                                                              file 
-    ## "C:\\Users\\dedePC\\Desktop\\FNS_CLOUD\\GITHUB_codes\\Transcriptomics_Metabolomics_Analysis\\transcriptomics_analysis\\6-network_analysis\\output\\PPI_Pathway_Network_ileum.png"
+    ##                                                                                                                                                                                                    file 
+    ## "/home/deniseslenter/Documents/GitHub/Transcriptomics_Metabolomics_Analysis/transcriptomics_analysis/6-network_analysis/output/PPI_Pathway_Network_wikipathways-20220210-gmt-Homo_sapiens.gmtileum.png"
 
 ## Clustering obtained networks
 
 ``` r
-#we will continue with the same session used for ppi-pathway networks
+#we will continue with the same session used for pppi networks
 #to check cytoscape is connected
 cytoscapePing()
 
+#Install the Clustermaker2 app (if not available already)
+if("Clustermaker2" %in% commandsHelp("")) print("Success: the Clustermaker2 app is installed") else print("Warning: Clustermaker2 app is not installed. Please install the Clustermaker2 app before proceeding.")
+```
+
+    ## [1] "Available namespaces:"
+    ## [1] "Warning: Clustermaker2 app is not installed. Please install the Clustermaker2 app before proceeding."
+
+``` r
+if(!"Clustermaker2" %in% commandsHelp("")){
+  installApp("Clustermaker2")
+}
+```
+
+    ## [1] "Available namespaces:"
+
+``` r
 networkName = paste0 ("PPI_Pathway_Network_",location)
-#to get network name of the rectum 
+#to get network name of the location 
 networkSuid = getNetworkSuid(networkName)
 setCurrentNetwork(network=networkSuid)
 #create cluster command
@@ -181,7 +282,7 @@ res <- commandsGET(clustermaker)
 cat("Total number of clusters for",location, as.numeric(gsub("Clusters: ", "", res[1])))
 ```
 
-    ## Total number of clusters for ileum 68
+    ## Total number of clusters for ileum 65
 
 ``` r
 #change pathway node visualization
@@ -190,18 +291,21 @@ RCy3::setNodeColorBypass(node.names = pathways$nodes, "#D3D3D3")
 RCy3::setNodeBorderWidthBypass(node.names = pathways$nodes, 10)
 
 #export image
-outputName = paste0 ("output/PPI_Pathway_Network_",location,"_clustered",".png")
+outputName = paste0 ("output/PPI_Pathway_Network_",location, wp.hs.gmt,"_clustered",".png")
 png.file <- file.path(getwd(), outputName)
 exportImage(png.file,'PNG', zoom = 500)
 ```
 
-    ##                                                                                                                                                                                        file 
-    ## "C:\\Users\\dedePC\\Desktop\\FNS_CLOUD\\GITHUB_codes\\Transcriptomics_Metabolomics_Analysis\\transcriptomics_analysis\\6-network_analysis\\output\\PPI_Pathway_Network_ileum_clustered.png"
+    ##                                                                                                                                                                                                              file 
+    ## "/home/deniseslenter/Documents/GitHub/Transcriptomics_Metabolomics_Analysis/transcriptomics_analysis/6-network_analysis/output/PPI_Pathway_Network_ileumwikipathways-20220210-gmt-Homo_sapiens.gmt_clustered.png"
 
 ``` r
 #save session
-#cys.file <- file.path(getwd(), "output/PPI_Pathway_Network_",location,"_clustered",".cys")
+cys.file <- file.path(getwd(), "output/PPI_Pathway_Network_",wp.hs.gmt, location,"_clustered",".cys")
 #saveSession(cys.file) 
+
+#if the new data file exist, remove it (so it does not conflict with running the code against the local file) 
+if(pathway_data == "new") file.remove(wp.hs.gmt)
 ```
 
 ## Last, we create a Jupyter notebook from this script
@@ -213,14 +317,13 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpgLo4e5\remotes4e1419657980\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
-    ## * preparing 'rmd2jupyter':
+    ## * checking for file ‘/tmp/RtmpmgrBJU/remotes3ce51f260d90/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted 'LazyData' from DESCRIPTION
-    ## * building 'rmd2jupyter_0.1.0.tar.gz'
-    ## 
+    ## Omitted ‘LazyData’ from DESCRIPTION
+    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
 
 ``` r
 library(devtools)
