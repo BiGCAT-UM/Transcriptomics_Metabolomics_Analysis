@@ -1,0 +1,116 @@
+---
+title: "identifier_mapping"
+author: 
+- "ddedesener"
+- "DeniseSl22"
+date: "03/05/22"
+output:
+ md_document:
+    variant: markdown_github
+always_allow_html: true
+---
+## Introduction
+Before we can visualize the multi-omics data in CytoScape, we need to prepare data to be imported according to the unified database identifiers available.
+Therefor, metabolite data is mapped to ChEBI IDS.
+
+## Setup
+```{r setup, warning=FALSE, message=FALSE}
+# check if libraries are already installed > otherwise install it
+#if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
+if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
+if(!"BridgeDbR" %in% installed.packages()) BiocManager::install("BridgeDbR")
+install.packages("rJava",repos = "http://cran.us.r-project.org" )
+ ## See https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/ if you have issues with this package on Ubuntu.
+
+#load libraries
+library(rstudioapi)
+library(dplyr)
+library(BridgeDbR)
+library(rJava)
+
+# set your working environment to the location where your current source file is saved into.
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+```
+
+## Process metabolite data
+```{r metabolite_data, warning=FALSE, message=FALSE}
+setwd('..')
+
+#Obtain data from step 8
+mSet_CD <- read.csv("8-significantly_changed_metabolites_analysis/output/mbxData_CD.csv", na.strings=c("", "NA"))
+mSet_UC <- read.csv("8-significantly_changed_metabolites_analysis/output/mbxData_UC.csv", na.strings=c("", "NA"))
+#filter out unused columns
+mSet_CD <- mSet_CD [,c(1:4)]
+mSet_UC <- mSet_UC [,c(1:4)]
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
+##Retain all metabolite IDs from CD and UC for identifier mapping:
+mSet_total <- unique(rbind(mSet_CD[,c(1,2)], mSet_UC[,c(1,2)]))
+
+#Download the Metabolite mapping file (if it doesn't exist locally yet):
+checkfile <- paste0(getwd(), '/' ,"data/metabolites.bridge")
+if (!file.exists(checkfile)) {
+  download.file("https://figshare.com/ndownloader/files/36197283", checkfile)
+}
+##Load the metabolite mapping file:
+mapper <- BridgeDbR ::loadDatabase(checkfile)
+
+## Obtain the System codes for the databases HMDB (source database of dataset) and ChEBI (intended output database)
+code <- getOrganismCode("Homo sapiens")
+code_mappingFrom <- getSystemCode("HMDB")
+code_mappingTo   <- getSystemCode("ChEBI")
+
+## Create a data frame with the mappings and the correct SystemCode
+input = data.frame(
+    source = rep(code_mappingFrom, length(mSet_total$HMDB_ID)),
+    identifier = mSet_total$HMDB_ID)
+#Obtain all mappings from HMDB to ChEBI
+MultiMappings = BridgeDbR::maps(mapper, input, code_mappingTo)
+#remove all rows in the mapped data which do not include the prefix "CHEBI"
+MultiMappings <- MultiMappings %>% filter(grepl("CHEBI",mapping, fixed = TRUE))
+#filter out double identifiers because there are one-to-many relationship between hmdb and chebi IDs
+MultiMappings <- MultiMappings %>% distinct (MultiMappings$identifier, .keep_all = TRUE)
+MultiMappings <- MultiMappings [,c(2,4)]
+
+merged.data_CD<- merge(MultiMappings, mSet_CD,by.x="identifier", by.y="HMDB_ID",sort = TRUE, all.x = TRUE, all.y = TRUE)
+merged.data_UC<- merge(MultiMappings, mSet_UC,by.x="identifier", by.y="HMDB_ID",sort = TRUE, all.x = TRUE, all.y = TRUE)
+#filter out metabolites that has NA value for CHEBI
+merged.data_CD<- merged.data_CD %>% tidyr::drop_na(mapping)
+merged.data_UC<- merged.data_UC %>% tidyr::drop_na(mapping)
+#filter out metabolites that has NA value for foldchange_disorder
+merged.data_CD<- merged.data_CD %>% tidyr::drop_na(foldchange_disorder)
+merged.data_UC<- merged.data_UC %>% tidyr::drop_na(foldchange_disorder)
+#change column names
+colnames(merged.data_CD) <- c("HMDBID","CHEBI", "label", "log2FC_met", "pvalue_met")
+colnames(merged.data_UC) <- c("HMDBID","CHEBI", "label", "log2FC_met", "pvalue_met")
+```
+
+## Export the mapped metabolomics data:
+```{r data_export, warning=FALSE, message=FALSE}
+##Save the data file
+write.table(merged.data_CD, 'output/mbxPWdata_CD.tsv', sep ="\t", row.names = FALSE)
+write.table(merged.data_UC, 'output/mbxPWdata_UC.tsv', sep ="\t", row.names = FALSE)
+```
+
+##Print session info:
+```{r print_session_info}
+##Print session info:
+sessionInfo()
+```
+
+### Last, we create a Jupyter notebook and markdown file from this script
+```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("metabolomics_identifier_mapping.Rmd")
+```
+
+
