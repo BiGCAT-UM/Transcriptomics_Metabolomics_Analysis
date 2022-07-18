@@ -276,6 +276,12 @@ cys.file <- file.path(getwd(), "output/PPI_Pathway_Network_",wp.hs.gmt, location
 if(pathway_data == "new") file.remove(wp.hs.gmt)
 ```
 
+##Print session info and remove large datasets:
+```{r print_session_info}
+##Print session info:
+sessionInfo()
+```
+
 ## Last, we create a Jupyter notebook from this script
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
