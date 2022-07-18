@@ -109,7 +109,7 @@ colnames(dataset)[1] = "Ensembl.ID"
 ```{r print_session_info}
 ##Save data:
 #exporting results to the file
-write.table(dataset, file=paste0("results/IDMapping_",disorder),
+write.table(dataset, file=paste0("output/IDMapping_",disorder),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
 
 ##Print session info:

@@ -116,7 +116,7 @@ colnames(dataset)[1] = "Ensembl.ID"
 ``` r
 ##Save data:
 #exporting results to the file
-write.table(dataset, file=paste0("results/IDMapping_",disorder),
+write.table(dataset, file=paste0("output/IDMapping_",disorder),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
 
 ##Print session info:
@@ -149,7 +149,7 @@ sessionInfo()
     ## [7] BiocGenerics_0.42.0  rstudioapi_0.13     
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] KEGGREST_1.36.0        tidyselect_1.1.2       xfun_0.31             
+    ##  [1] KEGGREST_1.36.2        tidyselect_1.1.2       xfun_0.31             
     ##  [4] purrr_0.3.4            vctrs_0.4.1            generics_0.1.2        
     ##  [7] htmltools_0.5.2        yaml_2.3.5             utf8_1.2.2            
     ## [10] blob_1.2.3             rlang_1.0.2            pillar_1.7.0          
@@ -181,7 +181,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpbQI76x/remotes6f8332765025/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpRCEeFx/remotes47da424a42f8/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
