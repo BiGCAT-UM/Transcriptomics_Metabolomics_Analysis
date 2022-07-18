@@ -276,7 +276,7 @@ cys.file <- file.path(getwd(), "output/PPI_Pathway_Network_",wp.hs.gmt, location
 if(pathway_data == "new") file.remove(wp.hs.gmt)
 ```
 
-##Print session info and remove large datasets:
+##Print session info:
 ```{r print_session_info}
 ##Print session info:
 sessionInfo()

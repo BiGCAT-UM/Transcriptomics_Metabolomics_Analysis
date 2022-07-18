@@ -193,7 +193,14 @@ string_missingNames <- do.call(paste, c(as.list(missingNames), sep = ", "))
 if(length(intersectingHMDB) == 0 ){print("All relevant biomarkers are in a pathway!")} else{
   print(paste0("For the disorder ", disorder, ", ", length(intersectingHMDB), " biomarkers are not in a pathway; with the following HMDB IDs: " , string_intersectingHMDB, "; with the following Database names: ", string_missingNames))}
 ```
-### Last, we create a Jupyter notebook and markdown file from this script
+
+##Print session info:
+```{r print_session_info}
+##Print session info:
+sessionInfo()
+```
+
+### Last, we create a Jupyter notebook file from this script:
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
 if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
