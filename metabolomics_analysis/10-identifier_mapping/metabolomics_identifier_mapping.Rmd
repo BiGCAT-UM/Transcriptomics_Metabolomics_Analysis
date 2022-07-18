@@ -92,8 +92,8 @@ colnames(merged.data_UC) <- c("HMDBID","CHEBI", "label", "log2FC_met", "pvalue_m
 ## Export the mapped metabolomics data:
 ```{r data_export, warning=FALSE, message=FALSE}
 ##Save the data file
-write.table(merged.data_CD, 'output/mbxPWdata_CD.tsv', sep ="\t", row.names = FALSE)
-write.table(merged.data_UC, 'output/mbxPWdata_UC.tsv', sep ="\t", row.names = FALSE)
+write.table(merged.data_CD, 'output/mbx_mapped_data_CD.tsv', sep ="\t", row.names = FALSE)
+write.table(merged.data_UC, 'output/mbx_mapped_data_UC.tsv', sep ="\t", row.names = FALSE)
 ```
 
 ##Print session info:
