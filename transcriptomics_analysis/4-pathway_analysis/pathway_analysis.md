@@ -44,91 +44,72 @@ disorder <- "CD"
 ##Obtain data from step 2:
 setwd('..')
 work_DIR <- getwd()
-#we have two datasets from different biopsy locations
-dataset1 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Ileum_vs_nonIBD_Ileum.tab")
-dataset2 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Rectum_vs_nonIBD_Rectum.tab")
-dataset3 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Ileum_vs_nonIBD_Ileum.tab")
-dataset4 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Rectum_vs_nonIBD_Rectum.tab")
-
-# Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
 
 if (disorder == "CD") {
-  #filter out  unused columns, we select geneSymbol, log2FC and pvalue
-  dataset_ileum<- subset( dataset3, select = c(1,3,7))
-  dataset_rectum<- subset( dataset4, select = c(1,3,7))
+  dataset_CD <- read.delim("3-identifier_mapping/output/IDMapping_CD.tsv")
+  #filter out  unused columns, we select Entrez.ID, log2FC and pvalue, remove NA values: #background genes to be used in enrichment analysis
+  dataset <- na.omit(subset( dataset_CD, select = c(2,4:7)))
   print("Selected disorder is Crohn's disease")
 }else if(disorder == "UC"){ 
-  #filter out  unused columns, we select geneSymbol, log2FC and pvalue
-  dataset_ileum<- subset( dataset1, select = c(1,3,7))
-  dataset_rectum<- subset( dataset2, select = c(1,3,7))
+  dataset_UC <- read.delim("3-identifier_mapping/output/IDMapping_UC.tsv")
+  #filter out  unused columns, we select Entrez.ID, log2FC and pvalue
+  dataset <- na.omit(subset( dataset_UC, select = c(2,4:7)))
   print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")
-}
+  }
 ```
 
     ## [1] "Selected disorder is Crohn's disease"
 
 ``` r
-#merge two dataset of two locations into one data 
-dataset <- merge(dataset_ileum, dataset_rectum,by.x="X", by.y="X",sort = TRUE, all.x = TRUE, all.y = TRUE)
-#change column names
-colnames(dataset) <- c("GeneSymbol","log2FC_ileum","pvalue_ileum","log2FC_rectum","pvalue_rectum")
-```
-
-## Converting gene symbols to the corresponding entrez IDs
-
-``` r
-#converting gene symbols to entrez ID since the enrichR function needs entrez IDs for each gene symbol
-hs <- org.Hs.eg.db #This object is a simple mapping of Entrez Gene identifier
-entrezID <- AnnotationDbi::select(hs, keys = dataset$GeneSymbol,
-            columns = c("ENTREZID", "SYMBOL"),
-            keytype = "SYMBOL")
-#filter out double gene symbols
-entrezID <- entrezID %>% distinct (entrezID$SYMBOL, .keep_all = TRUE)
-# add entrezIDs for each gene symbol in the dataset
-dataset <- cbind(entrezID$ENTREZID,dataset)
-#change column name
-colnames(dataset)[1] = "ENTREZ.ID"
-#filter out genes that has NA value for entrezID
-dataset<- dataset %>% tidyr::drop_na(ENTREZ.ID)
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
 ```
 
 ## Getting differentially expressed genes including up-regulated and down-regulated genes using the criteria
 
 ``` r
 #if the results folder does not exist create it 
-if(!dir.exists("results")) dir.create("results")
+if(!dir.exists("output")) dir.create("output")
 #we will use selection criteria as Fold change=1.5,log2FC=0.58 and p.value < 0.05
 #for ileum location
 up.genes.ileum   <- dataset[dataset$log2FC_ileum >= 0.58 & dataset$pvalue_ileum < 0.05, 1] 
 down.genes.ileum <- dataset[dataset$log2FC_ileum <= -0.58 & dataset$pvalue_ileum < 0.05, 1] 
-deg.ileum <- unique(dataset[!is.na(dataset$pvalue_ileum) & dataset$pvalue_ileum < 0.05 & abs(dataset$log2FC_ileum) > 0.58,c(1:4)])
-write.table(deg.ileum,file = paste0("results/DEGs_",disorder,"_ileum"),sep="\t", quote=FALSE, row.names = FALSE)
+deg.ileum <- unique(dataset[!is.na(dataset$ENTREZ.ID) & !is.na(dataset$pvalue_ileum) & dataset$pvalue_ileum < 0.05 & abs(dataset$log2FC_ileum) > 0.58,c(1:3)])
+write.table(deg.ileum,file = paste0("output/DEGs_",disorder,"_ileum"),sep="\t", quote=FALSE, row.names = FALSE)
 
 #for rectum location
 up.genes.rectum   <- dataset[dataset$log2FC_rectum >= 0.58 & dataset$pvalue_rectum < 0.05, 1] 
 down.genes.rectum <- dataset[dataset$log2FC_rectum <= -0.58 & dataset$pvalue_rectum < 0.05, 1] 
-deg.rectum <- unique(dataset[!is.na(dataset$pvalue_rectum) & dataset$pvalue_rectum < 0.05 & abs(dataset$log2FC_rectum) > 0.58,c(1,2,5,6)])
-write.table(deg.rectum, file=paste0("results/DEGs_",disorder,"_rectum"),sep="\t", quote=FALSE, row.names = FALSE)
-
-#background genes to be used in enrichment analysis
-bkgd.genes <- unique(dataset[,c(1,2)])
+deg.rectum <- unique(dataset[!is.na(dataset$ENTREZ.ID) & !is.na(dataset$pvalue_rectum) & dataset$pvalue_rectum < 0.05 & abs(dataset$log2FC_rectum) > 0.58,c(1,4:5)])
+write.table(deg.rectum, file=paste0("output/DEGs_",disorder,"_rectum"),sep="\t", quote=FALSE, row.names = FALSE)
 ```
 
 ## Pathway Enrichment Analysis
 
-In this section, we will perform pathway enrichment analysis.The
+In this section, we will perform pathway enrichment analysis. The
 clusterProfiler R-package is used to perform over-representation
 analysis (ORA). The function can be easily replaced to use other
 enrichment methods (GSEA / rSEA / etc).
 
 ``` r
+##Work with local file (for publication), or new download:
+pathway_data <- "local" #Options: local, new
+if (pathway_data == "local") {
+  wp.hs.gmt <-list.files(work_DIR, pattern="wikipathways", full.names=FALSE)
+  paste0("Using local file, from: ", wp.hs.gmt )
+}else if(pathway_data == "new"){ 
 #below code should be performed first to handle the ssl certificate error while downloading pathways 
 options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
 #downloading latest pathway gmt files for human 
 wp.hs.gmt <- rWikiPathways::downloadPathwayArchive(organism="Homo sapiens", format = "gmt")
+  paste0("Using new data, from: ", wp.hs.gmt)}else{print("Pathway data type not recognized")
+  }
+```
 
+    ## [1] "Using local file, from: wikipathways-20220510-gmt-Homo_sapiens.gmt"
+
+``` r
 #Now that we have got the latest GMT file for human pathways, 
 #we can process it to generate the two dataframes we need for enricher
 wp2gene   <- rWikiPathways::readPathwayGMT(wp.hs.gmt)
@@ -140,7 +121,7 @@ wpid2name <- wp2gene %>% dplyr::select(wpid,name) #TERM2NAME
 # The function can be easily replaced to use other enrichment methods (GSEA / rSEA / etc). 
 ewp.ileum <- clusterProfiler::enricher(
   deg.ileum$ENTREZ.ID,# a vector of gene IDs
-  universe = bkgd.genes$ENTREZ.ID,
+  universe = as.character(dataset$ENTREZ.ID), #background genes to be used in enrichment analysis
   pAdjustMethod = "fdr",#you can change this to hochberg, bonferronni or none etc.
   pvalueCutoff = 1, #adjusted pvalue cutoff on enrichment tests to report, we set it a wider criteria then we will filter out
   #results based on padjust and qvalue in next section which is enrichment result visualization
@@ -184,13 +165,13 @@ paste0("The number of enriched pathways is: ", num.pathways.ileum <- dim(ewp.ile
 
 ``` r
 #exporting results to the file
-write.table(ewp.ileum.res, file=paste0("results/enrichResults_",disorder,"_ileum"),
+write.table(ewp.ileum.res, file=paste0("output/enrichResults_ORA_",disorder,"_ileum"),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
 
 ##################RECTUM location#######################
 ewp.rectum <- clusterProfiler::enricher(
   deg.rectum$ENTREZ.ID,
-  universe = bkgd.genes$ENTREZ.ID,
+  universe = as.character(dataset$ENTREZ.ID), #background genes to be used in enrichment analysis
   pAdjustMethod = "fdr",#you can change it as BH, bonferronni etc.
   pvalueCutoff = 1, #padjust cutoff
   qvalueCutoff = 1, #q value cutoff 
@@ -227,8 +208,11 @@ paste0("The number of enriched pathways is: ", num.pathways.rectum <- dim(ewp.re
 
 ``` r
 #exporting results to the file
-write.table(ewp.rectum.res, file=paste0("results/enrichResults_",disorder,"_rectum"),
+write.table(ewp.rectum.res, file=paste0("output/enrichResults_ORA_",disorder,"_rectum"),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
+
+#if the new data file exist, remove it (so it does not conflict with running the code against the local file) 
+if(pathway_data == "new") file.remove(wp.hs.gmt)
 ```
 
 ##Print session info and remove large datasets:
@@ -259,7 +243,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] dplyr_1.0.9           clusterProfiler_4.4.1 rWikiPathways_1.16.0 
+    ##  [1] dplyr_1.0.9           clusterProfiler_4.4.3 rWikiPathways_1.16.0 
     ##  [4] org.Hs.eg.db_3.15.0   AnnotationDbi_1.58.0  IRanges_2.30.0       
     ##  [7] S4Vectors_0.34.0      Biobase_2.56.0        BiocGenerics_0.42.0  
     ## [10] rstudioapi_0.13      
@@ -267,7 +251,7 @@ sessionInfo()
     ## loaded via a namespace (and not attached):
     ##   [1] fgsea_1.22.0           colorspace_2.0-3       ggtree_3.4.0          
     ##   [4] rjson_0.2.21           ellipsis_0.3.2         qvalue_2.28.0         
-    ##   [7] XVector_0.36.0         aplot_0.1.4            farver_2.1.0          
+    ##   [7] XVector_0.36.0         aplot_0.1.6            farver_2.1.0          
     ##  [10] graphlayouts_0.8.0     ggrepel_0.9.1          bit64_4.0.5           
     ##  [13] fansi_1.0.3            scatterpie_0.1.7       splines_4.2.0         
     ##  [16] cachem_1.0.6           GOSemSim_2.22.0        knitr_1.39            
@@ -284,22 +268,22 @@ sessionInfo()
     ##  [49] xfun_0.31              stringr_1.4.0          lifecycle_1.0.1       
     ##  [52] XML_3.99-0.9           DOSE_3.22.0            zlibbioc_1.42.0       
     ##  [55] MASS_7.3-57            scales_1.2.0           tidygraph_1.2.1       
-    ##  [58] parallel_4.2.0         RColorBrewer_1.1-3     curl_4.3.2            
-    ##  [61] yaml_2.3.5             memoise_2.0.1          gridExtra_2.3         
-    ##  [64] ggplot2_3.3.6          downloader_0.4         ggfun_0.0.6           
-    ##  [67] yulab.utils_0.0.4      stringi_1.7.6          RSQLite_2.2.13        
-    ##  [70] tidytree_0.3.9         BiocParallel_1.30.0    GenomeInfoDb_1.32.2   
-    ##  [73] rlang_1.0.2            pkgconfig_2.0.3        bitops_1.0-7          
-    ##  [76] evaluate_0.15          lattice_0.20-45        purrr_0.3.4           
-    ##  [79] treeio_1.20.0          patchwork_1.1.1        shadowtext_0.1.2      
-    ##  [82] bit_4.0.4              tidyselect_1.1.2       plyr_1.8.7            
-    ##  [85] magrittr_2.0.3         R6_2.5.1               generics_0.1.2        
-    ##  [88] DBI_1.1.2              pillar_1.7.0           KEGGREST_1.36.0       
-    ##  [91] RCurl_1.98-1.6         tibble_3.1.7           crayon_1.5.1          
-    ##  [94] utf8_1.2.2             rmarkdown_2.14         viridis_0.6.2         
-    ##  [97] grid_4.2.0             data.table_1.14.2      blob_1.2.3            
-    ## [100] digest_0.6.29          tidyr_1.2.0            gridGraphics_0.5-1    
-    ## [103] munsell_0.5.0          viridisLite_0.4.0      ggplotify_0.1.0
+    ##  [58] parallel_4.2.0         RColorBrewer_1.1-3     yaml_2.3.5            
+    ##  [61] memoise_2.0.1          gridExtra_2.3          ggplot2_3.3.6         
+    ##  [64] downloader_0.4         ggfun_0.0.6            yulab.utils_0.0.4     
+    ##  [67] stringi_1.7.6          RSQLite_2.2.13         tidytree_0.3.9        
+    ##  [70] BiocParallel_1.30.0    GenomeInfoDb_1.32.2    rlang_1.0.2           
+    ##  [73] pkgconfig_2.0.3        bitops_1.0-7           evaluate_0.15         
+    ##  [76] lattice_0.20-45        purrr_0.3.4            treeio_1.20.0         
+    ##  [79] patchwork_1.1.1        shadowtext_0.1.2       bit_4.0.4             
+    ##  [82] tidyselect_1.1.2       plyr_1.8.7             magrittr_2.0.3        
+    ##  [85] R6_2.5.1               generics_0.1.2         DBI_1.1.2             
+    ##  [88] pillar_1.7.0           KEGGREST_1.36.2        RCurl_1.98-1.6        
+    ##  [91] tibble_3.1.7           crayon_1.5.1           utf8_1.2.2            
+    ##  [94] rmarkdown_2.14         viridis_0.6.2          grid_4.2.0            
+    ##  [97] data.table_1.14.2      blob_1.2.3             digest_0.6.29         
+    ## [100] tidyr_1.2.0            gridGraphics_0.5-1     munsell_0.5.0         
+    ## [103] viridisLite_0.4.0      ggplotify_0.1.0
 
 ``` r
 ##Remove data objects which are not needed for further processing:
@@ -315,7 +299,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/Rtmp0H6yTy/remotes69a87699efbb/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpV4lWq4/remotes6aef20db5eeb/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
