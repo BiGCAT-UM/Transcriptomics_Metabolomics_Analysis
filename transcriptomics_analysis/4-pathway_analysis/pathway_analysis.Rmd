@@ -71,13 +71,13 @@ if(!dir.exists("output")) dir.create("output")
 up.genes.ileum   <- dataset[dataset$log2FC_ileum >= 0.58 & dataset$pvalue_ileum < 0.05, 2] 
 down.genes.ileum <- dataset[dataset$log2FC_ileum <= -0.58 & dataset$pvalue_ileum < 0.05, 2] 
 deg.ileum <- unique(dataset[!is.na(dataset$ENTREZ.ID) & !is.na(dataset$pvalue_ileum) & dataset$pvalue_ileum < 0.05 & abs(dataset$log2FC_ileum) > 0.58,c(1:4)])
-write.table(deg.ileum,file = paste0("output/DEGs_",disorder,"_ileum"),sep="\t", quote=FALSE, row.names = FALSE)
+write.table(deg.ileum,file = paste0("output/DEGs_",disorder,"_ileum.tsv"),sep="\t", quote=FALSE, row.names = FALSE)
 
 #for rectum location
 up.genes.rectum   <- dataset[dataset$log2FC_rectum >= 0.58 & dataset$pvalue_rectum < 0.05, 2] 
 down.genes.rectum <- dataset[dataset$log2FC_rectum <= -0.58 & dataset$pvalue_rectum < 0.05, 2] 
 deg.rectum <- unique(dataset[!is.na(dataset$ENTREZ.ID) & !is.na(dataset$pvalue_rectum) & dataset$pvalue_rectum < 0.05 & abs(dataset$log2FC_rectum) > 0.58,c(1,2,5,6)])
-write.table(deg.rectum, file=paste0("output/DEGs_",disorder,"_rectum"),sep="\t", quote=FALSE, row.names = FALSE)
+write.table(deg.rectum, file=paste0("output/DEGs_",disorder,"_rectum.tsv"),sep="\t", quote=FALSE, row.names = FALSE)
 
 ```
 
@@ -133,7 +133,7 @@ paste0("The number of DEGs measured in all pathways is: ", length(deg.ileum$ENTR
 paste0("The number of enriched pathways is: ", num.pathways.ileum <- dim(ewp.ileum.res)[1])
 
 #exporting results to the file
-write.table(ewp.ileum.res, file=paste0("output/enrichResults_ORA_",disorder,"_ileum"),
+write.table(ewp.ileum.res, file=paste0("output/enrichResults_ORA_",disorder,"_ileum.tsv"),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
 
 ##################RECTUM location#######################
@@ -157,7 +157,7 @@ paste0("The number of DEGs measured in all pathways is: ", length(deg.rectum$ENT
 paste0("The number of enriched pathways is: ", num.pathways.rectum <- dim(ewp.rectum.res)[1])
 
 #exporting results to the file
-write.table(ewp.rectum.res, file=paste0("output/enrichResults_ORA_",disorder,"_rectum"),
+write.table(ewp.rectum.res, file=paste0("output/enrichResults_ORA_",disorder,"_rectum.tsv"),
             sep = "\t" ,quote = FALSE, row.names = FALSE)
 
 #if the new data file exist, remove it (so it does not conflict with running the code against the local file) 
