@@ -1,0 +1,293 @@
+---
+title: "multi-omics_pathway_selection"
+author: 
+- "DeniseSl22"
+- "ddedesener"
+date: "03/05/22"
+output:
+ md_document:
+    variant: markdown_github
+always_allow_html: true
+---
+## Introduction
+In this script, we select relevant pathways for both transcriptomics and metabolomics data.
+
+## Setup
+```{r setup, warning=FALSE, message=FALSE}
+# check if libraries are already installed > otherwise install it
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
+if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
+#Regular R packages:
+if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
+if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
+if(!"RColorBrewer" %in% installed.packages()){install.packages("RColorBrewer")}
+#load libraries
+library(rstudioapi)
+library(dplyr)
+library(ggplot2)
+library(VennDiagram)
+library(RColorBrewer)
+# set your working environment to the location where your current source file is saved into.
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd('../..')
+work_DIR <- getwd()
+```
+
+##Obtain PW data for transcriptomics and metabolomics
+```{r}
+#Set location to download data for transcriptomics pathway analysis:
+filelocation_t <- paste0(work_DIR, "/transcriptomics_analysis/4-pathway_analysis/output/")
+#Obtain data from step 4 (transcript PWs)
+tPWs_CD_ileum <- read.delim(paste0(filelocation_t, 'enrichResults_ORA_CD_ileum.tsv'), sep = "\t", header = TRUE)
+tPWs_CD_rectum <- read.delim(paste0(filelocation_t, 'enrichResults_ORA_CD_rectum.tsv'), sep = "\t",header = TRUE)
+tPWs_UC_ileum <- read.delim(paste0(filelocation_t, 'enrichResults_ORA_UC_ileum.tsv'), sep = "\t", header = TRUE)
+tPWs_UC_rectum <- read.delim(paste0(filelocation_t, 'enrichResults_ORA_UC_rectum.tsv'), sep = "\t",header = TRUE)
+
+#Set location to download data for metabolomics pathway analysis:
+filelocation_m <- paste0(work_DIR, "/metabolomics_analysis/9-metabolite_pathway_analysis/output/")
+#Obtain data from step 9 (metabolite PWs)
+mPWs_CD <- read.delim(paste0(filelocation_m, 'mbxPWdata_CD.csv'), sep = ",", na.strings=c("", "NA"))
+mPWs_UC <- read.delim(paste0(filelocation_m, 'mbxPWdata_UC.csv'), sep = ",", na.strings=c("", "NA"))
+#filter out unused columns
+#mSet_CD <- mSet_CD [,c(1:4)]
+#mSet_UC <- mSet_UC [,c(1:4)]
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+```
+
+##Compare PWs from transcriptomics and metabolomics to find overlap
+```{r}
+##Select a disorder:
+disorder <- "CD" ##Options CD or UC
+
+#First compare for significant PWs:
+tPWs_CD_ileum_sign <- tPWs_CD_ileum[(tPWs_CD_ileum$p.adjust<0.05)&(tPWs_CD_ileum$qvalue<0.02),]
+tPWs_CD_rectum_sign <- tPWs_CD_rectum[(tPWs_CD_rectum$p.adjust<0.05)&(tPWs_CD_rectum$qvalue<0.02),]
+tPWs_UC_ileum_sign <- tPWs_UC_ileum[(tPWs_UC_ileum$p.adjust<0.05)&(tPWs_UC_ileum$qvalue<0.02),]
+tPWs_UC_rectum_sign <- tPWs_UC_rectum[(tPWs_UC_rectum$p.adjust<0.05)&(tPWs_UC_rectum$qvalue<0.02),]
+
+#Cutoff values for significant metabolomics PWs:
+##p-value smaller than 0.05
+mPWs_CD_sign <- mPWs_CD[(mPWs_CD$probabilities<0.05),]
+mPWs_UC_sign <- mPWs_UC[(mPWs_UC$probabilities<0.05),]
+
+#Cutoff values for other interesting metabolomics PWs:
+## 3 or more metabolites in the PW, and 5 or more proteins.
+mPWs_CD_interest <- mPWs_CD[(mPWs_CD$HMDBsInPWs>3)&(mPWs_CD$ProteinsInPWs>5),]
+mPWs_UC_interest <- mPWs_UC[(mPWs_UC$HMDBsInPWs>3)&(mPWs_UC$ProteinsInPWs>5),]
+
+#Cutoff values for significant && interesting metabolomics PWs:
+##p-value smaller than 0.05, 3 or more metabolites in the PW, and 5 or more proteins.
+mPWs_CD_sign_interest <- mPWs_CD[(mPWs_CD$probabilities<0.05)&(mPWs_CD$HMDBsInPWs>3)&(mPWs_CD$ProteinsInPWs>5),]
+mPWs_UC_sign_interest <- mPWs_UC[(mPWs_UC$probabilities<0.05)&(mPWs_UC$HMDBsInPWs>3)&(mPWs_UC$ProteinsInPWs>5),]
+
+set3 <- paste(mPWs_CD_sign_interest[,1] , sep="")
+set4 <- paste(mPWs_UC_sign_interest[,1] , sep="")
+##Compare both disorders with one another on metabolomics level:
+mset_WP_IDs_overlap_sign_interest <- Reduce(intersect, list(set3, set4))
+
+# Prepare a palette of 3 colors with R colorbrewer:
+library(RColorBrewer)
+myCol <- brewer.pal(3, "Pastel2")
+##Ignore log messages:
+futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+
+##Check significant PWs only:
+if(disorder == "CD"){# Generate 3 sets for comparison:
+set1 <- paste(tPWs_CD_ileum_sign[,1] , sep="")
+set2 <- paste(tPWs_CD_rectum_sign[,1], sep="")
+set3 <- paste(mPWs_CD_sign[,1] , sep="")
+set4 <- paste(mPWs_UC_sign[,1] , sep="")
+namesDiagram <- c("CD ileum sign" , "CD rectum sign" , "CD metabolites sign")
+filenameDiagram <- 'output/CD_comparison_sign.png'}else if(disorder == "UC"){# Generate 3 sets for comparison:
+set1 <- paste(tPWs_UC_ileum_sign[,1] , sep="")
+set2 <- paste(tPWs_UC_rectum_sign[,1], sep="")
+set3 <- paste(mPWs_UC_sign[,1] , sep="")
+set4 <- paste(mPWs_CD_sign[,1] , sep="")
+namesDiagram <- c("UC ileum sign" , "UC rectum sign" , "UC metabolites sign")
+filenameDiagram <- 'output/UC_comparison_sign.png'}else{print("Disorder not recognised.")}
+
+# Chart
+venn.diagram(
+        x = list(set1, set2, set3),
+        category.names = namesDiagram,
+        filename = filenameDiagram,
+        output=TRUE,
+        
+        # Output features
+        imagetype="png" ,
+        height = 480 , 
+        width = 480 , 
+        resolution = 300,
+        compression = "lzw",
+        
+        # Circles
+        lwd = 2,
+        lty = 'blank',
+        fill = myCol,
+        
+        # Numbers
+        cex = .6,
+        fontface = "bold",
+        fontfamily = "sans",
+        
+        # Set names
+        cat.cex = 0.6,
+        cat.fontface = "bold",
+        cat.default.pos = "outer",
+        cat.pos = c(-27, 27, 135),
+        cat.dist = c(0.055, 0.055, 0.085),
+        cat.fontfamily = "sans",
+        rotation = 1
+)
+
+##Print overlapping PW IDs:
+WP_IDs_overlap_sign <- Reduce(intersect, list(set1,set2,set3))
+##Compare both disorders with one another on metabolomics level:
+mset_WP_IDs_overlap_sign <- Reduce(intersect, list(set3, set4))
+
+#Check interesting PWs only:
+if(disorder == "CD"){# Generate 3 sets for comparison:
+set1 <- paste(tPWs_CD_ileum_sign[,1] , sep="")
+set2 <- paste(tPWs_CD_rectum_sign[,1], sep="")
+set3 <- paste(mPWs_CD_interest[,1] , sep="")
+set4 <- paste(mPWs_UC_interest[,1] , sep="")
+namesDiagram <- c("CD ileum sign" , "CD rectum sign" , "CD metabolites interest")
+filenameDiagram <- 'output/CD_comparison_interest.png'}else if(disorder == "UC"){# Generate 3 sets for comparison:
+set1 <- paste(tPWs_UC_ileum_sign[,1] , sep="")
+set2 <- paste(tPWs_UC_rectum_sign[,1], sep="")
+set3 <- paste(mPWs_UC_interest[,1] , sep="")
+set4 <- paste(mPWs_CD_interest[,1] , sep="")
+namesDiagram <- c("UC ileum sign" , "UC rectum sign" , "UC metabolites interest")
+filenameDiagram <- 'output/UC_comparison_interest.png'}else{print("Disorder not recognised.")}
+
+# Chart
+venn.diagram(
+        x = list(set1, set2, set3),
+        category.names = namesDiagram,
+        filename = filenameDiagram,
+        output=TRUE,
+        
+        # Output features
+        imagetype="png" ,
+        height = 480 , 
+        width = 480 , 
+        resolution = 300,
+        compression = "lzw",
+        
+        # Circles
+        lwd = 2,
+        lty = 'blank',
+        fill = myCol,
+        
+        # Numbers
+        cex = .6,
+        fontface = "bold",
+        fontfamily = "sans",
+        
+        # Set names
+        cat.cex = 0.6,
+        cat.fontface = "bold",
+        cat.default.pos = "outer",
+        cat.pos = c(-27, 27, 135),
+        cat.dist = c(0.055, 0.055, 0.085),
+        cat.fontfamily = "sans",
+        rotation = 1
+)
+
+##Print overlapping PW IDs:
+WP_IDs_overlap_interest <- Reduce(intersect, list(set1,set2,set3))
+##Compare both disorders with one another on metabolomics level:
+mset_WP_IDs_overlap_interest <- Reduce(intersect, list(set3, set4))
+
+##Also compare all pathways:
+if(disorder == "CD"){# Generate 3 sets for comparison:
+set1 <- paste(tPWs_CD_ileum[,1] , sep="")
+set2 <- paste(tPWs_CD_rectum[,1], sep="")
+set3 <- paste(mPWs_CD[,1] , sep="")
+set4 <- paste(mPWs_UC[,1] , sep="")
+namesDiagram <- c("CD ileum" , "CD rectum " , "CD metabolites")
+filenameDiagram <- 'output/CD_comparison_All.png'}else if(disorder == "UC"){# Generate 3 sets for comparison:
+set1 <- paste(tPWs_UC_ileum[,1] , sep="")
+set2 <- paste(tPWs_UC_rectum[,1], sep="")
+set3 <- paste(mPWs_UC[,1] , sep="")
+set4 <- paste(mPWs_CD[,1] , sep="")
+namesDiagram <- c("UC ileum" , "UC rectum " , "UC metabolites")
+filenameDiagram <- 'output/UC_comparison_All.png'}else{print("Disorder not recognised.")}
+
+# Chart
+venn.diagram(
+        x = list(set1, set2, set3),
+        category.names = namesDiagram,
+        filename = filenameDiagram,
+        output=TRUE,
+        
+        # Output features
+        imagetype="png" ,
+        height = 480 , 
+        width = 480 , 
+        resolution = 300,
+        compression = "lzw",
+        
+        # Circles
+        lwd = 2,
+        lty = 'blank',
+        fill = myCol,
+        
+        # Numbers
+        cex = .6,
+        fontface = "bold",
+        fontfamily = "sans",
+        
+        # Set names
+        cat.cex = 0.6,
+        cat.fontface = "bold",
+        cat.default.pos = "outer",
+        cat.pos = c(-27, 27, 135),
+        cat.dist = c(0.055, 0.055, 0.085),
+        cat.fontfamily = "sans",
+        rotation = 1
+)
+
+##Print overlapping PW IDs:
+WP_IDs_overlap_all <- Reduce(intersect, list(set1,set2,set3))
+##Compare both disorders with one another on metabolomics level:
+mset_WP_IDs_overlap_all <- Reduce(intersect, list(set3, set4))
+
+##Paste comparison in as string for printing results to notebook.
+string_WP_IDs_overlap_sign_interest_mset <- paste0(mset_WP_IDs_overlap_sign_interest, collapse = ', ')
+string_WP_IDs_overlap_sign <- paste0(WP_IDs_overlap_sign, collapse = ', ')
+string_WP_IDs_overlap_sign_mset <- paste0(mset_WP_IDs_overlap_sign, collapse = ', ')
+string_WP_IDs_overlap_interest <- paste0(WP_IDs_overlap_interest, collapse = ', ')
+string_WP_IDs_overlap_interest_mset <- paste0(mset_WP_IDs_overlap_interest, collapse = ', ')
+string_WP_IDs_overlap_all <- paste0(WP_IDs_overlap_all, collapse = ', ')
+string_WP_IDs_overlap_all_mset <- paste0(mset_WP_IDs_overlap_all, collapse = ', ')
+
+paste0("All significant and interesting metabolic pathways are: ", string_WP_IDs_overlap_sign_interest_mset)
+paste0("All significant pathways that overlap for disorder ", disorder," are: ", string_WP_IDs_overlap_sign)
+paste0("All significant metabolic pathways are: ", string_WP_IDs_overlap_sign_mset)
+paste0("All interesting pathways that overlap for disorder ", disorder," are: ", string_WP_IDs_overlap_interest)
+paste0("All interesting metabolic pathways that overlap are: ", string_WP_IDs_overlap_interest_mset)
+paste0("All pathways that overlap for disorder ", disorder," are: ", string_WP_IDs_overlap_all)
+paste0("All metabolic pathways that overlap are: ", string_WP_IDs_overlap_all_mset)
+```
+
+##Print session info:
+```{r print_session_info}
+##Print session info:
+sessionInfo()
+```
+
+## Creating jupyter files
+```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+#Jupyter Notebook file
+if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
+devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+library(devtools)
+library(rmd2jupyter)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+rmd2jupyter("pathway_selection.Rmd")
+```
