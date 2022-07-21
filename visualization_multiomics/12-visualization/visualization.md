@@ -23,6 +23,58 @@ library(dplyr)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
+##Obtain transcriptomics and metabolomics data
+
+``` r
+setwd('../..')
+work_DIR <- getwd()
+
+#Set location to download data for transcriptomics:
+filelocation_t <- paste0(work_DIR, "/transcriptomics_analysis/3-identifier_mapping/output/")
+#Obtain data from step 3
+tSet_CD <- read.delim(paste0(filelocation_t, 'IDMapping_CD.tsv'), sep = "\t", na.strings=c("", "NA"))
+tSet_UC <- read.delim(paste0(filelocation_t, 'IDMapping_UC.tsv'), sep = "\t", na.strings=c("", "NA"))
+##Select the corresponding location to be visualized:
+location_transcriptomics <- "ileum" ##Options: ileum or rectum
+#filter out unused columns
+if(location_transcriptomics == "ileum"){
+tSet_CD <- na.omit(tSet_CD [,c(1,4:5)])
+tSet_UC <- na.omit(tSet_UC [,c(1,4:5)])}else if(location_transcriptomics == "rectum"){
+tSet_CD <- na.omit(tSet_CD [,c(1,6:7)])
+tSet_UC <- na.omit(tSet_UC [,c(1,6:7)])}else{print("Location for transcriptomics data not recognised.")}
+
+#Rename columns for merger later
+colnames(tSet_CD) <- c('ID','log2FC','pvalues')
+colnames(tSet_UC) <- c('ID','log2FC','pvalues')
+
+#Set location to download data for metabolomics:
+filelocation_m <- paste0(work_DIR, "/metabolomics_analysis/10-identifier_mapping/output/")
+#Obtain data from step 10
+mSet_CD <- read.csv(paste0(filelocation_m, 'mbx_mapped_data_CD.tsv'), sep = "\t", na.strings=c("", "NA"))
+mSet_UC <- read.csv(paste0(filelocation_m, 'mbx_mapped_data_UC.tsv'), sep = "\t", na.strings=c("", "NA"))
+#filter out unused columns
+mSet_CD <- na.omit(mSet_CD [,c(2,4:5)])
+mSet_UC <- na.omit(mSet_UC [,c(2,4:5)])
+
+#Rename columns for merger later
+colnames(mSet_CD) <- c('ID','log2FC','pvalues')
+colnames(mSet_UC) <- c('ID','log2FC','pvalues')
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+```
+
+##Combine both dataframes
+
+``` r
+combined.data_CD <- rbind(tSet_CD, mSet_CD)
+combined.data_UC <- rbind(tSet_UC, mSet_UC)
+##Select disorder to visualize later on:
+disorder <- "UC" ##Options are: CD,UC
+if(disorder == "CD"){combined.data <- combined.data_CD}else if(disorder == "UC"){combined.data <- combined.data_UC}else{print("Disorder not recognized.")}
+```
+
 ## Import pathway
 
 ``` r
@@ -30,8 +82,22 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 cytoscapePing()
 #close all opened session before starting
 closeSession(FALSE)
+#Set up WikiPathways app in Cytoscape, v.3.3.10
+if("WikiPathways" %in% commandsHelp("")) print("Success: the WikiPathways app is installed") else print("Warning: WikiPathways app is not installed. Please install the WikiPathways app before proceeding.")
+```
+
+    ## [1] "Available namespaces:"
+    ## [1] "Warning: WikiPathways app is not installed. Please install the WikiPathways app before proceeding."
+
+``` r
+if(!"WikiPathways" %in% commandsHelp("")) installApp("WikiPathways")
+```
+
+    ## [1] "Available namespaces:"
+
+``` r
 #pathway IDs to be visualized
-pathway.id <- "WP4723"# omega-3/omega-6 fatty acid synthesis pathway is one of the enriched pathways in our study
+pathway.id <- "WP4726"# Sphingolipid metabolism: integrated pathway is a relevant and significantly altered pathways regarding metabolomics data.
 #import pathways as pathway in cytoscape
 RCy3::commandsRun(paste0('wikipathways import-as-pathway id=',pathway.id )) 
 ```
@@ -39,12 +105,6 @@ RCy3::commandsRun(paste0('wikipathways import-as-pathway id=',pathway.id ))
 ## Data upload
 
 ``` r
-# to read data as input we need go back to previous branch
-setwd('..')
-combined.data <- read.delim("10-identifier_mapping/output/combinedData")
-#set wd back to the main folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-
 #get node table from imported pathway in cytoscape
 ID.cols <- getTableColumns(table ="node", columns = c("XrefId","Ensembl", "ChEBI"))
 #filter out rows which contain NA value for columns Ensembl and ChEBI
@@ -57,12 +117,10 @@ ID.cols <- data.frame(ID.cols[,c(1,2)])
 colnames(ID.cols)[2] <- "omics.ID"
 
 #merge two data frames for adding xrefid to the combined data frame
-data <- merge(combined.data, ID.cols, by.x = "Identifier", by.y = "omics.ID" )
+data <- merge(combined.data, ID.cols, by.x = "ID", by.y = "omics.ID" )
 #remove duplicate rows
-data <- data %>% distinct(Identifier, .keep_all = TRUE)
-#change column order
-data <- data [,c(5,1,2,3,4)]
-colnames(data)[2] <- "omics.ID"
+data <- data %>% distinct(ID, .keep_all = TRUE)
+colnames(data)[1] <- "omics.ID"
 #load data to the imported pathway in cytoscape by key column as XrefId
 loadTableData(table = "node", data = data, data.key.column = "XrefId", table.key.column = "XrefId")
 ```
@@ -100,7 +158,7 @@ RCy3::setNodeHeightMapping('Type',c('GeneProduct','Protein', 'Metabolite'), c(23
 
 ``` r
 #change node width
-RCy3::setNodeWidthMapping('Type',c('GeneProduct','Protein', 'Metabolite'), c(60,60,175), mapping.type = "d", style.name = "pathwayStyle")
+RCy3::setNodeWidthMapping('Type',c('GeneProduct','Protein', 'Metabolite'), c(60,60,100), mapping.type = "d", style.name = "pathwayStyle")
 ```
 
     ## NULL
@@ -114,38 +172,37 @@ setNodeColorMapping("log2FC", c(-1,0,1), node.colors, default.color = "#D3D3D3",
     ## NULL
 
 ``` r
-#set node border width and color based on p-value
-#first we need to get all p-values from node table
-pvalues = getTableColumns(table = 'node',columns = c('name','pvalue'))  
-min.pval = min(pvalues[,2],na.rm=TRUE)
-#get non-significant nodes (p-value>0.05)
-nonsign.nodes <- pvalues  %>% filter(pvalue > 0.05, na.rm = TRUE)
-
-#set node border width for all nodes which has a p-value
-setNodeBorderWidthMapping('pvalue', c(min.pval,0.05), c(10,10) , mapping.type = "c", style.name = "pathwayStyle")
+#Set node border width and color based on p-value
+#First we need to get all p-values from node table
+pvalues <- getTableColumns(table = 'node', columns = 'pvalues')
+pvalues <- na.omit(pvalues)
+#Create a range for all sign. p-values, and one for all not significant.
+significant_pvalues <- pvalues[(pvalues < 0.05)]
+not.significant_pvalues <- pvalues[(pvalues >= 0.05)]
+significant_pvalues.colors <- rep("#2e9d1d", length(significant_pvalues))
+not.significant_pvalues.colors <- rep("#FFFFFF", length(not.significant_pvalues))
+setNodeBorderWidthMapping('pvalues', table.column.values = NULL , c(6,6) , mapping.type = "c", style.name = "pathwayStyle")
 ```
 
     ## NULL
 
 ``` r
-#set node border color for all nodes which has a p-value
-setNodeBorderColorMapping('pvalue', c(min.pval,0.05), c('#00FF00','#00FF00'), style.name = "pathwayStyle")
+setNodeBorderColorMapping('pvalues', c(significant_pvalues,not.significant_pvalues), c(significant_pvalues.colors, not.significant_pvalues.colors), default.color = "#AAAAAA", mapping.type = "d", style.name = "pathwayStyle")
 ```
 
     ## NULL
 
 ``` r
-#filter our non-sign nodes from the visualization
-RCy3::setNodeBorderWidthBypass(nonsign.nodes$name, new.sizes = 2)
-RCy3::setNodeBorderColorBypass(nonsign.nodes$name, new.colors = "#D3D3D3")
-
-#save output 
-png.file <- file.path(getwd(), "output/omics_visualization.png")
-exportImage(png.file,'PNG', zoom = 500)
+#Save output 
+filename_multiomics <- paste0("output/", pathway.id, "_", disorder, "_location_", location_transcriptomics,"_visualization.png")
+png.file <- file.path(getwd(), filename_multiomics)
+exportImage(png.file, 'PNG', zoom = 500)
 ```
 
-    ##                                                                                                                                                                      file 
-    ## "C:\\Users\\dedePC\\Desktop\\FNS_CLOUD\\GITHUB_codes\\Transcriptomics_Metabolomics_Analysis\\visualization_multiomics\\11-visualization\\output\\omics_visualization.png"
+    ##                                                                                                                                                                     file 
+    ## "/home/deniseslenter/Documents/GitHub/Transcriptomics_Metabolomics_Analysis/visualization_multiomics/12-visualization/output/WP4726_UC_location_ileum_visualization.png"
+
+## Creating jupyter files
 
 ``` r
 #Jupyter Notebook file
@@ -154,14 +211,13 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\RtmpwrGTN8\remotes3a3ce9d69ff\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
-    ## * preparing 'rmd2jupyter':
+    ## * checking for file ‘/tmp/RtmpLsBMee/remotes5c2542bd9e21/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
     ## * checking for empty or unneeded directories
-    ## Omitted 'LazyData' from DESCRIPTION
-    ## * building 'rmd2jupyter_0.1.0.tar.gz'
-    ## 
+    ## Omitted ‘LazyData’ from DESCRIPTION
+    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
 
 ``` r
 library(devtools)
