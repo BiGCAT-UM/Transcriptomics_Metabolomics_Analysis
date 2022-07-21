@@ -77,7 +77,7 @@ work_DIR <- getwd()
 combined.data_CD <- rbind(tSet_CD, mSet_CD)
 combined.data_UC <- rbind(tSet_UC, mSet_UC)
 ##Select disorder to visualize later on:
-disorder <- "UC" ##Options are: CD,UC
+disorder <- "CD" ##Options are: CD,UC
 if(disorder == "CD"){combined.data <- combined.data_CD}else if(disorder == "UC"){combined.data <- combined.data_UC}else{print("Disorder not recognized.")}
 ```
 
@@ -126,8 +126,11 @@ RCy3::setVisualStyle("pathwayStyle")
 #set node dimensions as fixed sizes
 RCy3::lockNodeDimensions(TRUE, style.name="pathwayStyle")
 
+##Update relevant interactions to directional ones:
+RCy3::setEdgeTargetArrowMapping('EndArrow',c('mim-conversion','mim-catalysis', 'Arrow', 'mim-stimulation'),c('Delta','Open Circle','Delta', 'Open Delta'), style.name="pathwayStyle")
+
 #node shape mapping
-RCy3::setNodeShapeMapping('Type',c('GeneProduct','Protein', 'Metabolite'),c('ELLIPSE','ELLIPSE','RECTANGLE'),style.name="pathwayStyle")
+RCy3::setNodeShapeMapping('Type',c('GeneProduct','Protein', 'Metabolite'),c('ELLIPSE','ELLIPSE','RECTANGLE'), style.name="pathwayStyle")
 #change node height
 RCy3::setNodeHeightMapping('Type',c('GeneProduct','Protein', 'Metabolite'), c(23,23,25), mapping.type = "d", style.name = "pathwayStyle")
 #change node width
