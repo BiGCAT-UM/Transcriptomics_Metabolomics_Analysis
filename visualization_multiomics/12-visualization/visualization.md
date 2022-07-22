@@ -71,7 +71,7 @@ work_DIR <- getwd()
 combined.data_CD <- rbind(tSet_CD, mSet_CD)
 combined.data_UC <- rbind(tSet_UC, mSet_UC)
 ##Select disorder to visualize later on:
-disorder <- "UC" ##Options are: CD,UC
+disorder <- "CD" ##Options are: CD,UC
 if(disorder == "CD"){combined.data <- combined.data_CD}else if(disorder == "UC"){combined.data <- combined.data_UC}else{print("Disorder not recognized.")}
 ```
 
@@ -144,7 +144,7 @@ RCy3::setVisualStyle("pathwayStyle")
 RCy3::lockNodeDimensions(TRUE, style.name="pathwayStyle")
 
 #node shape mapping
-RCy3::setNodeShapeMapping('Type',c('GeneProduct','Protein', 'Metabolite'),c('ELLIPSE','ELLIPSE','RECTANGLE'),style.name="pathwayStyle")
+RCy3::setNodeShapeMapping('Type',c('GeneProduct','Protein', 'Metabolite'),c('ELLIPSE','ELLIPSE','RECTANGLE'), style.name="pathwayStyle")
 ```
 
     ## NULL
@@ -181,13 +181,20 @@ significant_pvalues <- pvalues[(pvalues < 0.05)]
 not.significant_pvalues <- pvalues[(pvalues >= 0.05)]
 significant_pvalues.colors <- rep("#2e9d1d", length(significant_pvalues))
 not.significant_pvalues.colors <- rep("#FFFFFF", length(not.significant_pvalues))
-setNodeBorderWidthMapping('pvalues', table.column.values = NULL , c(6,6) , mapping.type = "c", style.name = "pathwayStyle")
+RCy3::setNodeBorderWidthMapping('pvalues', table.column.values = NULL , c(6,6) , mapping.type = "c", style.name = "pathwayStyle")
 ```
 
     ## NULL
 
 ``` r
-setNodeBorderColorMapping('pvalues', c(significant_pvalues,not.significant_pvalues), c(significant_pvalues.colors, not.significant_pvalues.colors), default.color = "#AAAAAA", mapping.type = "d", style.name = "pathwayStyle")
+RCy3::setNodeBorderColorMapping('pvalues', c(significant_pvalues,not.significant_pvalues), c(significant_pvalues.colors, not.significant_pvalues.colors), default.color = "#AAAAAA", mapping.type = "d", style.name = "pathwayStyle")
+```
+
+    ## NULL
+
+``` r
+##Update relevant interactions to directional ones:
+RCy3::setEdgeTargetArrowShapeMapping(table.column = 'EndArrow', c('mim-conversion', 'Arrow', 'mim-catalysis'), c('DELTA', 'DELTA', 'OPEN_CIRCLE'), style.name = "pathwayStyle")
 ```
 
     ## NULL
@@ -200,7 +207,58 @@ exportImage(png.file, 'PNG', zoom = 500)
 ```
 
     ##                                                                                                                                                                     file 
-    ## "/home/deniseslenter/Documents/GitHub/Transcriptomics_Metabolomics_Analysis/visualization_multiomics/12-visualization/output/WP4726_UC_location_ileum_visualization.png"
+    ## "/home/deniseslenter/Documents/GitHub/Transcriptomics_Metabolomics_Analysis/visualization_multiomics/12-visualization/output/WP4726_CD_location_ileum_visualization.png"
+
+##Print session info:
+
+``` r
+##Print session info:
+sessionInfo()
+```
+
+    ## R version 4.2.0 (2022-04-22)
+    ## Platform: x86_64-pc-linux-gnu (64-bit)
+    ## Running under: Ubuntu 18.04.6 LTS
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
+    ## 
+    ## locale:
+    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+    ##  [3] LC_TIME=nl_NL.UTF-8        LC_COLLATE=en_US.UTF-8    
+    ##  [5] LC_MONETARY=nl_NL.UTF-8    LC_MESSAGES=en_US.UTF-8   
+    ##  [7] LC_PAPER=nl_NL.UTF-8       LC_NAME=C                 
+    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+    ## [11] LC_MEASUREMENT=nl_NL.UTF-8 LC_IDENTIFICATION=C       
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ## [1] dplyr_1.0.9          RColorBrewer_1.1-3   rWikiPathways_1.16.0
+    ## [4] RCy3_2.16.0          rstudioapi_0.13     
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] pbdZMQ_0.3-7        tidyselect_1.1.2    xfun_0.31          
+    ##  [4] repr_1.1.4          purrr_0.3.4         vctrs_0.4.1        
+    ##  [7] generics_0.1.3      htmltools_0.5.3     stats4_4.2.0       
+    ## [10] yaml_2.3.5          base64enc_0.1-3     utf8_1.2.2         
+    ## [13] XML_3.99-0.9        rlang_1.0.4         pillar_1.8.0       
+    ## [16] DBI_1.1.3           glue_1.6.2          BiocGenerics_0.42.0
+    ## [19] uuid_1.1-0          lifecycle_1.0.1     stringr_1.4.0      
+    ## [22] evaluate_0.15       uchardet_1.1.0      knitr_1.39         
+    ## [25] fastmap_1.1.0       curl_4.3.2          fansi_1.0.3        
+    ## [28] IRdisplay_1.1       backports_1.4.1     BiocManager_1.30.17
+    ## [31] IRkernel_1.3        graph_1.74.0        jsonlite_1.8.0     
+    ## [34] fs_1.5.2            rjson_0.2.21        digest_0.6.29      
+    ## [37] stringi_1.7.8       RJSONIO_1.3-1.6     cli_3.3.0          
+    ## [40] tools_4.2.0         bitops_1.0-7        magrittr_2.0.3     
+    ## [43] base64url_1.4       RCurl_1.98-1.6      tibble_3.1.7       
+    ## [46] crayon_1.5.1        tidyr_1.2.0         pkgconfig_2.0.3    
+    ## [49] ellipsis_0.3.2      data.table_1.14.2   assertthat_0.2.1   
+    ## [52] rmarkdown_2.14      httr_1.4.3          R6_2.5.1           
+    ## [55] compiler_4.2.0
 
 ## Creating jupyter files
 
@@ -211,7 +269,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpLsBMee/remotes5c2542bd9e21/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
+    ## * checking for file ‘/tmp/RtmpqYwyeu/remotes1c3726fc623c/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
     ## * preparing ‘rmd2jupyter’:
     ## * checking DESCRIPTION meta-information ... OK
     ## * checking for LF line-endings in source and make files and shell scripts
