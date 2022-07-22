@@ -119,6 +119,9 @@ ewp.ileum <- clusterProfiler::enricher(
 
 ewp.ileum.res <- as.data.frame(ewp.ileum) 
 
+#Count all significant pathways that have p.adjust value lower than 0.05 and qvalue<0.02
+ileum.sign <- ewp.ileum.res[(ewp.ileum.res$p.adjust<0.05)&(ewp.ileum.res$qvalue<0.02),]
+
 #interpretation of the output: 
 #     BgRatio   = (number of genes measured in the current pathway) / (number of genes measured in all pathways)
 #     geneRatio = (number of DEGs in the current pathway) / (total number of DEGs in all pathways)
@@ -131,6 +134,8 @@ paste0("The number of genes measured in all pathways is: ", length(ewp.ileum@uni
 paste0("The number of DEGs measured in all pathways is: ", length(deg.ileum$ENTREZ.ID[deg.ileum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 #number of enriched pathways
 paste0("The number of enriched pathways is: ", num.pathways.ileum <- dim(ewp.ileum.res)[1])
+#number of significantly enriched pathways
+paste0("The number of significantly enriched pathways is: ", num.pathways.ileum.sign <- dim(ileum.sign)[1])
 
 #exporting results to the file
 write.table(ewp.ileum.res, file=paste0("output/enrichResults_ORA_",disorder,"_ileum.tsv"),
@@ -138,7 +143,7 @@ write.table(ewp.ileum.res, file=paste0("output/enrichResults_ORA_",disorder,"_il
 
 ##################RECTUM location#######################
 ewp.rectum <- clusterProfiler::enricher(
-  deg.rectum$ENTREZ.ID,
+  deg.rectum$ENTREZ.ID, # a vector of gene IDs; options
   universe = as.character(dataset$ENTREZ.ID), #background genes to be used in enrichment analysis
   pAdjustMethod = "fdr",#you can change it as BH, bonferronni etc.
   pvalueCutoff = 1, #padjust cutoff
@@ -146,6 +151,9 @@ ewp.rectum <- clusterProfiler::enricher(
   TERM2GENE = wpid2gene,
   TERM2NAME = wpid2name)
 ewp.rectum.res <- as.data.frame(ewp.rectum) 
+
+#Count all significant pathways that have p.adjust value lower than 0.05 and qvalue<0.02
+rectum.sign <- ewp.rectum.res[(ewp.rectum.res$p.adjust<0.05)&(ewp.rectum.res$qvalue<0.02),]
 
 ##Print location:
 paste0("Pathways enrichment results for disorder: ", disorder , ", location: RECTUM")
@@ -155,6 +163,8 @@ paste0("The number of genes measured in all pathways is: ", length(ewp.rectum@un
 paste0("The number of DEGs measured in all pathways is: ", length(deg.rectum$ENTREZ.ID[deg.rectum$ENTREZ.ID %in% unique(wp2gene$gene)]))
 #number of enriched pathways
 paste0("The number of enriched pathways is: ", num.pathways.rectum <- dim(ewp.rectum.res)[1])
+#number of significantly enriched pathways
+paste0("The number of significantly enriched pathways is: ", num.pathways.rectum.sign <- dim(rectum.sign)[1])
 
 #exporting results to the file
 write.table(ewp.rectum.res, file=paste0("output/enrichResults_ORA_",disorder,"_rectum.tsv"),
