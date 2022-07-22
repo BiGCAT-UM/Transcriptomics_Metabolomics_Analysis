@@ -126,9 +126,6 @@ RCy3::setVisualStyle("pathwayStyle")
 #set node dimensions as fixed sizes
 RCy3::lockNodeDimensions(TRUE, style.name="pathwayStyle")
 
-##Update relevant interactions to directional ones:
-RCy3::setEdgeTargetArrowMapping('EndArrow',c('mim-conversion','mim-catalysis', 'Arrow', 'mim-stimulation'),c('Delta','Open Circle','Delta', 'Open Delta'), style.name="pathwayStyle")
-
 #node shape mapping
 RCy3::setNodeShapeMapping('Type',c('GeneProduct','Protein', 'Metabolite'),c('ELLIPSE','ELLIPSE','RECTANGLE'), style.name="pathwayStyle")
 #change node height
@@ -149,13 +146,21 @@ significant_pvalues <- pvalues[(pvalues < 0.05)]
 not.significant_pvalues <- pvalues[(pvalues >= 0.05)]
 significant_pvalues.colors <- rep("#2e9d1d", length(significant_pvalues))
 not.significant_pvalues.colors <- rep("#FFFFFF", length(not.significant_pvalues))
-setNodeBorderWidthMapping('pvalues', table.column.values = NULL , c(6,6) , mapping.type = "c", style.name = "pathwayStyle")
-setNodeBorderColorMapping('pvalues', c(significant_pvalues,not.significant_pvalues), c(significant_pvalues.colors, not.significant_pvalues.colors), default.color = "#AAAAAA", mapping.type = "d", style.name = "pathwayStyle")
+RCy3::setNodeBorderWidthMapping('pvalues', table.column.values = NULL , c(6,6) , mapping.type = "c", style.name = "pathwayStyle")
+RCy3::setNodeBorderColorMapping('pvalues', c(significant_pvalues,not.significant_pvalues), c(significant_pvalues.colors, not.significant_pvalues.colors), default.color = "#AAAAAA", mapping.type = "d", style.name = "pathwayStyle")
+
+##Update relevant interactions to directional ones:
+RCy3::setEdgeTargetArrowShapeMapping(table.column = 'EndArrow', c('mim-conversion', 'Arrow', 'mim-catalysis'), c('DELTA', 'DELTA', 'OPEN_CIRCLE'), style.name = "pathwayStyle")
 
 #Save output 
 filename_multiomics <- paste0("output/", pathway.id, "_", disorder, "_location_", location_transcriptomics,"_visualization.png")
 png.file <- file.path(getwd(), filename_multiomics)
 exportImage(png.file, 'PNG', zoom = 500)
+```
+##Print session info:
+```{r print_session_info}
+##Print session info:
+sessionInfo()
 ```
 
 ## Creating jupyter files
