@@ -1,4 +1,4 @@
-The transcriptomics workflow consist out of six steps in total:
+The transcriptomics workflow consists of six steps in total:
 
 [1-Data preprocessing](https://github.com/BiGCAT-UM/Transcriptomics_Metabolomics_Analysis/tree/master/transcriptomics_analysis/1-data_preprocessing)<br /> 
 [2-Differential gene expression analysis](/transcriptomics_analysis/2-differential_gene_expression_analysis/)<br />
