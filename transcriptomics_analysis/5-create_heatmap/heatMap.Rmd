@@ -130,7 +130,7 @@ colnames(all.pathways) <- c("CD.ileum","CD.rectum","UC.ileum","UC.rectum")
 if(!dir.exists("output")) dir.create("output")
 
 ## Select a size to visualize the heatmap with (options; large or small)
-size_heatmap <- "small"
+size_heatmap <- "large"
 
 ##Print labels large for paper, small for notebook:
 fontsize_row_l = 30 
