@@ -5,17 +5,18 @@ This workflow, developed in R markdown files as well as and Jupyter notebook fil
 Transcriptomics analysis:  
 [1-Data preprocessing](https://github.com/BiGCAT-UM/Transcriptomics_Metabolomics_Analysis/tree/master/transcriptomics_analysis/1-data_preprocessing)<br /> 
 [2-Differential gene expression analysis](/transcriptomics_analysis/2-differential_gene_expression_analysis/)<br />
-[3-Gene Pathway Analysis (ORA)](/transcriptomics_analysis/3-pathway_analysis/)<br />
-[4-Heatmap creation](/transcriptomics_analysis/4-create_heatmap/)<br />
-[5-Overlapped genes extraction](/transcriptomics_analysis/5-extract-overlapped_genes/)<br />
+[3-Identifier mapping](/transcriptomics_analysis/3-identifier_mapping/)<br />
+[4-Gene Pathway analysis (ORA)](/transcriptomics_analysis/4-pathway_analysis/)<br />
+[5-OHeatmap creation](/transcriptomics_analysis/5-create_heatmap/)<br />
 [6-Network analysis](/transcriptomics_analysis/6-network_analysis)<br />
 Metabolomics analysis:  
 [7-Data preprocessing](metabolomics_analysis/7-metabolite_data_preprocessing/)<br />
 [8-Significantly changed metabolites analysis](metabolomics_analysis/8-significantly_changed_metabolites_analysis/)<br />
 [9-Metabolite Pathway Analysis (ORA)](metabolomics_analysis/9-metabolite_pathway_analysis/)<br />
+[10-Identifier mapping](metabolomics_analysis/10-identifier_mapping/)<br />
 Multi-omics visualization<br />
-[10-Identifier mapping](visualization_multiomics/10-identifier_mapping/)<br />
-[11-Visualizaiton of multi-omics](visualization_multiomics/11-visualization/)<br />
+[11-Pathway selection](visualization_multiomics/11-pathway_selection/)<br />
+[12-Visualizaiton of multi-omics](visualization_multiomics/12-visualization/)<br />
 
 
 The setup of this project has been tested with:
@@ -28,4 +29,4 @@ The workflow is an example of how to bring together different software tools and
 
 ### Acknowledgment
 
-This research was undertaken by Maastricht University (UM, Netherlands), a beneficiary in FNS-Cloud, which has received funding from the European Union’s Horizon 2020 Research and Innovation programme (H2020-EU.3.2.2.3. – A sustainable and competitive agri-food industry) under Grant Agreement No. 863059. 
+This research was undertaken by Maastricht University (UM, Netherlands), a beneficiary in FNS-Cloud, which has received funding from the European Union’s Horizon 2020 Research and Innovation programme (H2020-EU.3.2.2.3. – A sustainable and competitive agri-food industry) under Grant Agreement No. 863059.
