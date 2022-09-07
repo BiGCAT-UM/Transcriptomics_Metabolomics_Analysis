@@ -38,7 +38,7 @@ if (disorder == "CD") {
     print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
 ```
 
-Find pathways based on relevant IDs column
+## Find pathways based on relevant IDs column
 ```{r pathway_retrieval,warning=FALSE, message=FALSE}
 if(!"SPARQL" %in% installed.packages()){
   install.packages("SPARQL")
@@ -113,7 +113,7 @@ print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:5)])
 remove(cleaned_string_HMDB, list_Relevant_HMDB_IDs, query_HMDBs)
 ```
 
-Calculate the ORA score for each pathway, using the Fishers exact test.
+## Calculate the ORA score for each pathway, using the Fishers exact test.
 ```{r pathway_analysis, warning=FALSE, message=FALSE}
 ##Based on: https://www.pathwaycommons.org/guide/primers/statistics/fishers_exact_test/
 ##TODO: finish this section!
@@ -151,7 +151,7 @@ nameDataFile <- paste0("output/mbxPWdata_", disorder ,".csv")
 write.table(pathwayAnalysis_results_sorted, nameDataFile, sep =",", row.names = FALSE)
 ```
 
-Print significantly changed metabolites which were not in a pathway, by ID and name:
+## Print significantly changed metabolites which were not in a pathway, by ID and name:
 ```{r missing_data,warning=FALSE, message=FALSE }
 ##Find Missing Biomarkers (not part of any Human pathway model)
 item1 = "PREFIX ch: <https://identifiers.org/hmdb/>
@@ -194,13 +194,13 @@ if(length(intersectingHMDB) == 0 ){print("All relevant biomarkers are in a pathw
   print(paste0("For the disorder ", disorder, ", ", length(intersectingHMDB), " biomarkers are not in a pathway; with the following HMDB IDs: " , string_intersectingHMDB, "; with the following Database names: ", string_missingNames))}
 ```
 
-##Print session info:
+## Print session info:
 ```{r print_session_info}
 ##Print session info:
 sessionInfo()
 ```
 
-### Last, we create a Jupyter notebook file from this script:
+## Last, we create a Jupyter notebook file from this script:
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
 if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
