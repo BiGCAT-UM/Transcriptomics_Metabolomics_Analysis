@@ -11,7 +11,8 @@ always_allow_html: true
 ---
 ## Introduction
 In this workflow, we will create protein-protein interaction (PPI) networks for both biopsy locations ileum and rectum.
-Then these networks will be extended with pathways from WikiPathways database to create PPI-pathway networks. Finally, MCL (Markov Clustering) network clustering algorithm will be applied to get clusters within the network.
+Then these networks will be extended with pathways from WikiPathways database to create PPI-pathway networks. 
+Finally, MCL (Markov Clustering) network clustering algorithm will be applied to get clusters within the network.
 
 ## Setup
 Installing and loading required libraries
@@ -46,10 +47,10 @@ setwd('..')
 work_DIR <- getwd()
 
 #read all DEG data
-CD.ileum <- read.delim("4-pathway_analysis/output/DEGs_CD_ileum",sep = "\t", header = TRUE)
-CD.rectum <- read.delim("4-pathway_analysis/output/DEGs_CD_rectum", sep = "\t",header = TRUE)
-UC.ileum <- read.delim("4-pathway_analysis/output/DEGs_UC_ileum",sep = "\t", header = TRUE)
-UC.rectum <- read.delim("4-pathway_analysis/output/DEGs_UC_rectum", sep = "\t",header = TRUE)
+CD.ileum <- read.delim("4-pathway_analysis/output/DEGs_CD_ileum.tsv",sep = "\t", header = TRUE)
+CD.rectum <- read.delim("4-pathway_analysis/output/DEGs_CD_rectum.tsv", sep = "\t",header = TRUE)
+UC.ileum <- read.delim("4-pathway_analysis/output/DEGs_UC_ileum.tsv",sep = "\t", header = TRUE)
+UC.rectum <- read.delim("4-pathway_analysis/output/DEGs_UC_rectum.tsv", sep = "\t",header = TRUE)
 
 # Set Working Directory back to current folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -94,10 +95,9 @@ merged.ileum.downCDupUC <- merge(x=CD.down.ileum,y=UC.up.ileum,by=c('ENTREZ', 'H
 DEG.overlapped_ileum <- rbind(merged.ileum.downCDdownUC, merged.ileum.upCDdownUC, merged.ileum.upCDupUC, merged.ileum.downCDupUC)
 if(!dir.exists("output")) dir.create("output")
 write.table(DEG.overlapped_ileum ,"output/DEG.overlapped_ileum",row.names=FALSE,col.names = TRUE,quote= FALSE, sep = "\t")
-##############################################################################################
 ```
 
-## Finding overlapped genes between diseases on rectum biopsy location
+## Finding overlapping genes between diseases on rectum biopsy location
 ```{r}
 ######################################FOR RECTUM biopsy location#######################################
 # overlap genes between CD down and UC down
@@ -115,7 +115,6 @@ merged.rectum.downCDupUC <- merge(x=CD.down.rectum,y=UC.up.rectum,by=c('ENTREZ',
 #merge all DEG with corresponding logFC for both diseases
 DEG.overlapped_rectum <- rbind(merged.rectum.downCDdownUC, merged.rectum.upCDdownUC, merged.rectum.upCDupUC, merged.rectum.downCDupUC)
 write.table(DEG.overlapped_rectum ,"output/DEG.overlapped_rectum",row.names=FALSE,col.names = TRUE,quote= FALSE, sep = "\t")
-##############################################################################################
 ```
 
 ## Create Protein-Protein Interaction (PPI) network for selected biopsy location
@@ -201,7 +200,6 @@ nodes.ppi <- dplyr::bind_rows(genes,pwy.filtered)
 rownames(nodes.ppi) <- NULL
 edges.ppi <- unique(dplyr::bind_rows(ppis.3[,c(3,4,5)], wp2gene.filtered[,c(3,5,6)]))
 rownames(edges.ppi) <- NULL
-
 ```
 
 ## Create Protein-Protein-pathway-interaction (PPPI) network for selected biopsy location
@@ -232,7 +230,6 @@ if(!dir.exists("output")) dir.create("output")
 outputName = paste0 ("output/PPI_Pathway_Network_", wp.hs.gmt, location,".png")
 png.file <- file.path(getwd(), outputName)
 exportImage(png.file,'PNG', zoom = 500)
-
 ```
 
 ## Clustering obtained networks
