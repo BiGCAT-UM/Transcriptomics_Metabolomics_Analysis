@@ -7,7 +7,7 @@ Transcriptomics analysis:
 [2-Differential gene expression analysis](/transcriptomics_analysis/2-differential_gene_expression_analysis/)<br />
 [3-Identifier mapping](/transcriptomics_analysis/3-identifier_mapping/)<br />
 [4-Gene Pathway analysis (ORA)](/transcriptomics_analysis/4-pathway_analysis/)<br />
-[5-OHeatmap creation](/transcriptomics_analysis/5-create_heatmap/)<br />
+[5-Heatmap creation](/transcriptomics_analysis/5-create_heatmap/)<br />
 [6-Network analysis](/transcriptomics_analysis/6-network_analysis)<br />
 Metabolomics analysis:  
 [7-Data preprocessing](metabolomics_analysis/7-metabolite_data_preprocessing/)<br />
