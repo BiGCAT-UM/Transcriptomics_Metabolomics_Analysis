@@ -12,7 +12,7 @@ always_allow_html: true
 ## Introduction
 In this section of the workflow, we will obtain the metabolomics data and apply filtering options, to create a dataset ready for further statistical and pathway analysis.
 
-### First, we setup the required libraries to get started.
+## First, we setup the required libraries to get started.
 ```{r setup, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
@@ -30,7 +30,7 @@ library(stringr)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
-### Second, we download the required data, read the metadata and filter out not-relevant data.
+## Second, we download the required data, read the metadata and filter out not-relevant data.
 ```{r read_data, warning=FALSE, message=FALSE}
 #Library to download data from online files:
 if(!"downloader" %in% installed.packages()){install.packages("downloader")}
@@ -73,7 +73,7 @@ mbxData <- read.csv("data/metabolomics.csv")
 #delete not used columns
 mbxData = subset(mbxData, select = -c(1,2,3,4,7) )
 ```
-### Third, we perform data extraction, and process the data
+## Third, we perform data extraction, and process the data
 ```{r filtering,warning=FALSE, message=FALSE}
 ### row (metabolite) filtering ###
 #delete metabolite or row if it has NA or empty value for hmdbID
@@ -111,7 +111,7 @@ diseaseLabels <- append(diseaseLabels, "NA",after = 0)
 mbxData <- rbind(diseaseLabels, mbxData)
 ```
 
-### Fourth, we split up the data for UC and CD, include the control data nonIBD, and save this data to an output folder.
+## Fourth, we split up the data for UC and CD, include the control data nonIBD, and save this data to an output folder.
 ```{r writing_to_file,warning=FALSE, message=FALSE }
 #write only UC versus nonIBD comparison
 mbxDataUC <- mbxData[ ,(mbxData[1, ] == "UC" | mbxData[1, ] == "nonIBD")]
