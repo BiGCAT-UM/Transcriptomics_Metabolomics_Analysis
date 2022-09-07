@@ -25,7 +25,7 @@ The setup of this project has been tested with:
 
 The workflow is an example of how to bring together different software tools and methods to analyze transcriptomics and metabolomics data to reveal the underlying mechanism behind IBD disease as a use case study.
 
-![workflow](https://user-images.githubusercontent.com/65600609/169603139-1732ce3c-fd87-4c8e-9925-9ce7134653d8.png)
+![workflow pptx](https://user-images.githubusercontent.com/65600609/188980035-77b3204c-dc1f-4c02-97e8-58cf655f624f.svg)
 
 ### Acknowledgment
 
