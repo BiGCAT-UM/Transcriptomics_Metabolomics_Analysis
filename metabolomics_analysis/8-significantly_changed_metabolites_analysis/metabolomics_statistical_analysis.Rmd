@@ -9,11 +9,10 @@ output:
     variant: markdown_github
 always_allow_html: true
 ---
-
 ## Introduction
 In this workflow, we will apply statistical analysis on metabolomics data and link the metabolites of interest to pathway data from WikiPathways.
 
-First we locate the metabolomics data from step 7 (preprocessing).
+## First we locate the metabolomics data from step-7 (preprocessing).
 ```{r data_download,warning=FALSE, message=FALSE}
 # Obtain Working Directory for step 7 to find data
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -38,7 +37,7 @@ if (disorder == "CD") {
     mSet = mSet_UC
     print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
 ```
-Second, we perform data extraction from the file, and process the data
+## Second, we perform data extraction from the file, and process the data
 ```{r data_import,warning=FALSE, message=FALSE}
 ##DATA CLEANUP:
 #if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
@@ -250,7 +249,7 @@ volcanoPlot_disorder <- volcanoPlot_disorder + ggtitle(titleVolcano) + labs(y = 
 # Show the Volcano plot in the notebook output:
 volcanoPlot_disorder
 ```
-Export the data and Volcano Plot:
+## Export the data and Volcano Plot:
 ```{r data_export, warning=FALSE, message=FALSE}
 ##Save the data file
 nameDataFile <- paste0("output/mbxData_", disorder ,".csv")
