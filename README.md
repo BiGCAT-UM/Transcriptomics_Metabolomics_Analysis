@@ -27,7 +27,7 @@ The workflow is an example of how to bring together different software tools and
 ![workflow](https://user-images.githubusercontent.com/65600609/194023024-aa22130f-570c-4273-8e56-952dfe6f84d8.jpg)
 
 ### Setup and Preparation
-Please follow the instructions in the link below to prepare your working environment
+Please follow the instructions in the link below to prepare your working environment < br />
 https://bigcat-um.github.io/Transcriptomics_Metabolomics_tutorials/pages/prep
 
 ### Acknowledgment
