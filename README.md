@@ -18,14 +18,12 @@ Multi-omics visualization<br />
 [11-Pathway selection](visualization_multiomics/11-pathway_selection/)<br />
 [12-Visualizaiton of multi-omics](visualization_multiomics/12-visualization/)<br />
 
-
 The setup of this project has been tested with:
 - OS Windows 10, R-studio 2021.09.02, R 4.1.3.
 - OS Linux (Debian), R-studio 2022.02.2, R 4.2.
 
 The workflow is an example of how to bring together different software tools and methods to analyze transcriptomics and metabolomics data to reveal the underlying mechanism behind IBD disease as a use case study.
 
-![workflow pptx](https://user-images.githubusercontent.com/65600609/188980035-77b3204c-dc1f-4c02-97e8-58cf655f624f.svg)
 ![workflow](https://user-images.githubusercontent.com/65600609/194023024-aa22130f-570c-4273-8e56-952dfe6f84d8.jpg)
 
 ### Acknowledgment
