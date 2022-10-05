@@ -26,6 +26,10 @@ The workflow is an example of how to bring together different software tools and
 
 ![workflow](https://user-images.githubusercontent.com/65600609/194023024-aa22130f-570c-4273-8e56-952dfe6f84d8.jpg)
 
+### Setup and Preparation
+Please follow the instructions in the link below to prepare your working environment
+https://bigcat-um.github.io/Transcriptomics_Metabolomics_tutorials/pages/prep
+
 ### Acknowledgment
 
 This research was undertaken by Maastricht University (UM, Netherlands), a beneficiary in FNS-Cloud, which has received funding from the European Union’s Horizon 2020 Research and Innovation programme (H2020-EU.3.2.2.3. – A sustainable and competitive agri-food industry) under Grant Agreement No. 863059.
