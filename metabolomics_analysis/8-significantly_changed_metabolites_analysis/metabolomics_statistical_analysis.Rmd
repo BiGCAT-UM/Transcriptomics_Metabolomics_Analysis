@@ -119,6 +119,7 @@ mSet_FINAL <- mSet_transformed[ , order(names(mSet_transformed))]}else{mSet_FINA
 ##Move Name column back to column 2
 columnNumber <- which(colnames(mSet_FINAL)=="Compound.Name")
 mSet_FINAL <- mSet_FINAL[,c(columnNumber,1:ncol(mSet_FINAL)-1)]## WHILE APPLYING THIS STEP ONE COLOUMN WAS DELETED ->  FOR CD "nonIBD_MSM9VZMM" is deleted
+#we need to change it as mSet_FINAL <- mSet_FINAL[,c(columnNumber,1:ncol(mSet_FINAL))
 mSet_FINAL <- mSet_FINAL [,-(columnNumber+1)]
 
 ##Move HMDB column back to the start
