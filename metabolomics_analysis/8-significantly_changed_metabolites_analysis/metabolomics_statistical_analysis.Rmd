@@ -52,7 +52,7 @@ mSet <- mSet [-1,]
 #Remove metabolites with < 50% data (located in columns 8-553.
 columns <- ncol(mSet)
 rowsData <- nrow(mSet)
-removeLines <- rowSums(is.na(mSet[,3-columns]))
+removeLines <- rowSums(is.na(mSet[,3-columns])) #HERE WE DELETE A COLUMN WHICH SHOULD NOT BE LIKE THAT -it should be like-> mSet[,3:columns]
 fifty_percent <- floor((columns)/2)
 
 mSet_MissingDataCounted <- cbind(mSet, removeLines)
