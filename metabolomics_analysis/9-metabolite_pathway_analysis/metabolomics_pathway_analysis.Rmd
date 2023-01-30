@@ -76,24 +76,20 @@ string_HMDB <- paste(c(query_HMDBs), collapse=' ' )
 #For now, filter out Reactome PWs due to visualization issues in Cytoscape.
 item1 = "PREFIX ch: <https://identifiers.org/hmdb/>
 PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
-select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?hmdbMetabolite) AS ?HMDBsInPWs) (count(distinct ?metaboliteDatanode) AS ?TotalMetabolitesinPW) (GROUP_CONCAT(DISTINCT fn:substring(?hgnc,37);separator=' ') AS ?Proteins) (count(distinct ?hgnc) AS ?ProteinsInPWs) (GROUP_CONCAT(DISTINCT fn:substring(?hmdbMetabolite,30);separator=' ') AS ?includedHMDBs)
+select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?hmdbMetabolite) AS ?HMDBsInPWs) 
+(GROUP_CONCAT(DISTINCT fn:substring(?hmdbMetabolite,30);separator=' ') AS ?includedHMDBs)
 where {
 VALUES ?hmdbMetabolite {"
 item2 = "}
  
- ?metaboliteDatanode	a wp:Metabolite ;
-                        dcterms:isPartOf ?pathwayRes .
- 
  ?datanode	a wp:Metabolite ;          
            	wp:bdbHmdb  ?hmdbMetabolite ;
     		dcterms:isPartOf ?pathwayRes .
+    		
  ?pathwayRes a wp:Pathway ;
              wp:organismName 'Homo sapiens' ; 
     		dcterms:identifier ?wpid ;
     		dc:title ?title .
-    		
- ?datanode2 wp:bdbHgncSymbol ?hgnc ;
-    		dcterms:isPartOf ?pathwayRes .
     		
   #?pathwayRes wp:ontologyTag cur:Reactome_Approved . 
   ?pathwayRes wp:ontologyTag cur:AnalysisCollection .   		
@@ -105,27 +101,74 @@ remove(item1, item2)
 results_CombinePWs <- SPARQL(endpointwp,query_CombinePWs,curl_args=list(useragent=R.version.string))
 showresults_CombinePWs <- results_CombinePWs$results
 remove(query_CombinePWs,results_CombinePWs)
-#Print table with first 5 relevant pathways (if less than 5 are found, print only those)
+#Keep and print table with first 5 relevant pathways (if less than 5 are found, print only those)
 if(nrow(showresults_CombinePWs) < 5){
-print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:5)])
-}else{print(showresults_CombinePWs[1:5,c(2:5)])}
+print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:4)])
+}else{
+  #delete 4th,5th and 1st rows
+  showresults_CombinePWs <- showresults_CombinePWs[-c(6:nrow(showresults_CombinePWs)),]
+  print(showresults_CombinePWs[1:5,c(2:4)])}
 
 remove(cleaned_string_HMDB, list_Relevant_HMDB_IDs, query_HMDBs)
 ```
 
+Retrieve additional relevant pathway data, for example protein and gene data
+```{r}
+string_WP_IDs_list <- paste0("'", showresults_CombinePWs$pathway ,"'")
+string_WP_IDs <- paste(c(string_WP_IDs_list), collapse=' ' )
+
+item1 = "
+PREFIX ch: <https://identifiers.org/hmdb/>
+PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
+select distinct ?pathwayRes (count(distinct ?metaboliteDatanode) AS ?TotalMetabolitesinPW) (GROUP_CONCAT(DISTINCT fn:substring(?hgnc,37);separator=' ') AS ?Proteins) (count(distinct ?hgnc) AS ?ProteinsInPWs)
+where {
+VALUES ?wpid {
+"
+item2 = "
+}
+ 
+ ?metaboliteDatanode	a wp:Metabolite ;
+                       dcterms:isPartOf ?pathwayRes .
+ 
+ ?pathwayRes a wp:Pathway ;
+             wp:organismName 'Homo sapiens' ; 
+    		 dcterms:identifier ?wpid ;
+    		 dc:title ?title ;
+             wp:ontologyTag cur:AnalysisCollection .   
+  OPTIONAL{  		
+ ?datanode2 wp:bdbHgncSymbol ?hgnc ;
+    		dcterms:isPartOf ?pathwayRes .
+  }
+		
+}
+"
+query_CombinePWs_gene <- paste(item1,string_WP_IDs,item2)
+remove(item1, item2)
+
+results_CombinePWs_gene <- SPARQL(endpointwp,query_CombinePWs_gene,curl_args=list(useragent=R.version.string))
+showresults_CombinePWs_gene <- results_CombinePWs_gene$results
+remove(query_CombinePWs_gene,results_CombinePWs_gene)
+
+##Merge the two dataframes together:
+showresults_CombinePW_data <- merge(x = showresults_CombinePWs, y = showresults_CombinePWs_gene, by = "pathwayRes", all.x = TRUE)
+##Reorder data to fit previous format:
+showresults_CombinePW_data <- showresults_CombinePW_data[, c(1:4, 6:8, 5)]
+
+```
+
 ## Calculate the ORA score for each pathway, using the Fishers exact test.
+
 ```{r pathway_analysis, warning=FALSE, message=FALSE}
 ##Based on: https://www.pathwaycommons.org/guide/primers/statistics/fishers_exact_test/
-##TODO: finish this section!
 
 #Create a dataframe to store the required numbers in.
 Contingency_table <- data.frame(matrix(ncol=5,nrow=0, dimnames=list(NULL, c("WP.ID", "x", "m", "n", "k"))))
 counter = 1
-for (i in 1:nrow(showresults_CombinePWs)) {
-   Contingency_table[counter,1] <- (showresults_CombinePWs[i,2]) #WP.ID
-   Contingency_table[counter,2] <- (showresults_CombinePWs[i,4]) ##x <- (number4) #Total differentially changed metabolites, also in a PW. (HMDBsInPWs)
-   Contingency_table[counter,3] <- (showresults_CombinePWs[i,5]) ##m <- (number) #Total Metabolites in PW (TotalMetabolitesinPW)
-   Contingency_table[counter,4] <- (length(unique(mSet[,1])) - showresults_CombinePWs[i,4]) ##n <- (number2) #Total Metabolites measured not in PW (DISTINCT all_HMDB - HMDBsInPWs)
+for (i in 1:nrow(showresults_CombinePW_data)) {
+   Contingency_table[counter,1] <- (showresults_CombinePW_data[i,2]) #WP.ID
+   Contingency_table[counter,2] <- (showresults_CombinePW_data[i,4]) ##x <- (number4) #Total differentially changed metabolites, also in a PW. (HMDBsInPWs)
+   Contingency_table[counter,3] <- (showresults_CombinePW_data[i,5]) ##m <- (number) #Total Metabolites in PW (TotalMetabolitesinPW)
+   Contingency_table[counter,4] <- (length(unique(mSet[,1])) - showresults_CombinePW_data[i,4]) ##n <- (number2) #Total Metabolites measured not in PW (DISTINCT all_HMDB - HMDBsInPWs)
    Contingency_table[counter,5] <- length(unique(vector_HMDB)) ##k <- (number3) #Total differentially changed metabolites. (DISTINCT vector_HMDB)
 
    counter <- counter + 1
@@ -135,7 +178,7 @@ for (i in 1:nrow(showresults_CombinePWs)) {
 i <- 1:nrow(Contingency_table)
 probabilities <- dhyper(Contingency_table[i,2], Contingency_table[i,3], Contingency_table[i,4], Contingency_table[i,5], log = FALSE)
 
-pathwayAnalysis_results <- cbind(showresults_CombinePWs[, c(2:4)], probabilities, showresults_CombinePWs[, c(6,7)])
+pathwayAnalysis_results <- cbind(showresults_CombinePW_data[, c(2:4)], probabilities, showresults_CombinePW_data[, c(6,7)])
 colnames(pathwayAnalysis_results)[5] <- "HGNCs"
 colnames(pathwayAnalysis_results)[6] <- "ProteinsInPWs"
 

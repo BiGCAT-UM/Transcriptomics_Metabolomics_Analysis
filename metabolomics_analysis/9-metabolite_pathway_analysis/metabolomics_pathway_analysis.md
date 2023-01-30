@@ -35,7 +35,7 @@ if (disorder == "CD") {
 
     ## [1] "Selected disorder is Crohn's disease"
 
-Find pathways based on relevant IDs column
+## Find pathways based on relevant IDs column
 
 ``` r
 if(!"SPARQL" %in% installed.packages()){
@@ -53,6 +53,8 @@ WHERE {
    dcterms:license ?license ;
    pav:createdOn ?date .
  }"
+ #below code should be performed first to handle the ssl certificate error
+options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
 resultsMetadata <- SPARQL(endpointwp,queryMetadata,curl_args=list(useragent=R.version.string))
 showresultsMetadata <- resultsMetadata$results
 remove(queryMetadata, resultsMetadata)
@@ -72,24 +74,20 @@ string_HMDB <- paste(c(query_HMDBs), collapse=' ' )
 #For now, filter out Reactome PWs due to visualization issues in Cytoscape.
 item1 = "PREFIX ch: <https://identifiers.org/hmdb/>
 PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
-select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?hmdbMetabolite) AS ?HMDBsInPWs) (count(distinct ?metaboliteDatanode) AS ?TotalMetabolitesinPW) (GROUP_CONCAT(DISTINCT fn:substring(?hgnc,37);separator=' ') AS ?Proteins) (count(distinct ?hgnc) AS ?ProteinsInPWs) (GROUP_CONCAT(DISTINCT fn:substring(?hmdbMetabolite,30);separator=' ') AS ?includedHMDBs)
+select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?hmdbMetabolite) AS ?HMDBsInPWs) 
+(GROUP_CONCAT(DISTINCT fn:substring(?hmdbMetabolite,30);separator=' ') AS ?includedHMDBs)
 where {
 VALUES ?hmdbMetabolite {"
 item2 = "}
  
- ?metaboliteDatanode    a wp:Metabolite ;
-                        dcterms:isPartOf ?pathwayRes .
- 
  ?datanode  a wp:Metabolite ;          
             wp:bdbHmdb  ?hmdbMetabolite ;
             dcterms:isPartOf ?pathwayRes .
+            
  ?pathwayRes a wp:Pathway ;
              wp:organismName 'Homo sapiens' ; 
             dcterms:identifier ?wpid ;
             dc:title ?title .
-            
- ?datanode2 wp:bdbHgncSymbol ?hgnc ;
-            dcterms:isPartOf ?pathwayRes .
             
   #?pathwayRes wp:ontologyTag cur:Reactome_Approved . 
   ?pathwayRes wp:ontologyTag cur:AnalysisCollection .           
@@ -101,43 +99,90 @@ remove(item1, item2)
 results_CombinePWs <- SPARQL(endpointwp,query_CombinePWs,curl_args=list(useragent=R.version.string))
 showresults_CombinePWs <- results_CombinePWs$results
 remove(query_CombinePWs,results_CombinePWs)
-#Print table with first 5 relevant pathways (if less than 5 are found, print only those)
+#Keep and print table with first 5 relevant pathways (if less than 5 are found, print only those)
 if(nrow(showresults_CombinePWs) < 5){
-print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:5)])
-}else{print(showresults_CombinePWs[1:5,c(2:5)])}
+print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:4)])
+}else{
+  #delete 4th,5th and 1st rows
+  showresults_CombinePWs <- showresults_CombinePWs[-c(6:nrow(showresults_CombinePWs)),]
+  print(showresults_CombinePWs[1:5,c(2:4)])}
 ```
 
-    ##   pathway                               pathwayTitle HMDBsInPWs
-    ## 1  WP3925                      Amino acid metabolism          7
-    ## 2  WP4723     Omega-3 / omega-6 fatty acid synthesis          6
-    ## 3    WP15             Selenium micronutrient network          6
-    ## 4  WP3940 One-carbon metabolism and related pathways          6
-    ## 5   WP661                        Glucose homeostasis          6
-    ##   TotalMetabolitesinPW
-    ## 1                  108
-    ## 2                   38
-    ## 3                  110
-    ## 4                   41
-    ## 5                   21
+    ##   pathway                                                  pathwayTitle
+    ## 1  WP3604                                  Biochemical pathways: part I
+    ## 2  WP2525 Trans-sulfuration, one-carbon metabolism and related pathways
+    ## 3  WP4723                        Omega-3 / omega-6 fatty acid synthesis
+    ## 4  WP3925                                         Amino acid metabolism
+    ## 5   WP661                                           Glucose homeostasis
+    ##   HMDBsInPWs
+    ## 1         17
+    ## 2          8
+    ## 3          7
+    ## 4          7
+    ## 5          6
 
 ``` r
 remove(cleaned_string_HMDB, list_Relevant_HMDB_IDs, query_HMDBs)
 ```
 
-Calculate the ORA score for each pathway, using the Fishers exact test.
+Retrieve additional relevant pathway data, for example protein and gene
+data
+
+``` r
+string_WP_IDs_list <- paste0("'", showresults_CombinePWs$pathway ,"'")
+string_WP_IDs <- paste(c(string_WP_IDs_list), collapse=' ' )
+
+item1 = "
+PREFIX ch: <https://identifiers.org/hmdb/>
+PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
+select distinct ?pathwayRes (count(distinct ?metaboliteDatanode) AS ?TotalMetabolitesinPW) (GROUP_CONCAT(DISTINCT fn:substring(?hgnc,37);separator=' ') AS ?Proteins) (count(distinct ?hgnc) AS ?ProteinsInPWs)
+where {
+VALUES ?wpid {
+"
+item2 = "
+}
+ 
+ ?metaboliteDatanode    a wp:Metabolite ;
+                       dcterms:isPartOf ?pathwayRes .
+ 
+ ?pathwayRes a wp:Pathway ;
+             wp:organismName 'Homo sapiens' ; 
+             dcterms:identifier ?wpid ;
+             dc:title ?title ;
+             wp:ontologyTag cur:AnalysisCollection .   
+  OPTIONAL{         
+ ?datanode2 wp:bdbHgncSymbol ?hgnc ;
+            dcterms:isPartOf ?pathwayRes .
+  }
+        
+}
+"
+query_CombinePWs_gene <- paste(item1,string_WP_IDs,item2)
+remove(item1, item2)
+
+results_CombinePWs_gene <- SPARQL(endpointwp,query_CombinePWs_gene,curl_args=list(useragent=R.version.string))
+showresults_CombinePWs_gene <- results_CombinePWs_gene$results
+remove(query_CombinePWs_gene,results_CombinePWs_gene)
+
+##Merge the two dataframes together:
+showresults_CombinePW_data <- merge(x = showresults_CombinePWs, y = showresults_CombinePWs_gene, by = "pathwayRes", all.x = TRUE)
+##Reorder data to fit previous format:
+showresults_CombinePW_data <- showresults_CombinePW_data[, c(1:4, 6:8, 5)]
+```
+
+## Calculate the ORA score for each pathway, using the Fishers exact test.
 
 ``` r
 ##Based on: https://www.pathwaycommons.org/guide/primers/statistics/fishers_exact_test/
-##TODO: finish this section!
 
 #Create a dataframe to store the required numbers in.
 Contingency_table <- data.frame(matrix(ncol=5,nrow=0, dimnames=list(NULL, c("WP.ID", "x", "m", "n", "k"))))
 counter = 1
-for (i in 1:nrow(showresults_CombinePWs)) {
-   Contingency_table[counter,1] <- (showresults_CombinePWs[i,2]) #WP.ID
-   Contingency_table[counter,2] <- (showresults_CombinePWs[i,4]) ##x <- (number4) #Total differentially changed metabolites, also in a PW. (HMDBsInPWs)
-   Contingency_table[counter,3] <- (showresults_CombinePWs[i,5]) ##m <- (number) #Total Metabolites in PW (TotalMetabolitesinPW)
-   Contingency_table[counter,4] <- (length(unique(mSet[,1])) - showresults_CombinePWs[i,4]) ##n <- (number2) #Total Metabolites measured not in PW (DISTINCT all_HMDB - HMDBsInPWs)
+for (i in 1:nrow(showresults_CombinePW_data)) {
+   Contingency_table[counter,1] <- (showresults_CombinePW_data[i,2]) #WP.ID
+   Contingency_table[counter,2] <- (showresults_CombinePW_data[i,4]) ##x <- (number4) #Total differentially changed metabolites, also in a PW. (HMDBsInPWs)
+   Contingency_table[counter,3] <- (showresults_CombinePW_data[i,5]) ##m <- (number) #Total Metabolites in PW (TotalMetabolitesinPW)
+   Contingency_table[counter,4] <- (length(unique(mSet[,1])) - showresults_CombinePW_data[i,4]) ##n <- (number2) #Total Metabolites measured not in PW (DISTINCT all_HMDB - HMDBsInPWs)
    Contingency_table[counter,5] <- length(unique(vector_HMDB)) ##k <- (number3) #Total differentially changed metabolites. (DISTINCT vector_HMDB)
 
    counter <- counter + 1
@@ -147,7 +192,7 @@ for (i in 1:nrow(showresults_CombinePWs)) {
 i <- 1:nrow(Contingency_table)
 probabilities <- dhyper(Contingency_table[i,2], Contingency_table[i,3], Contingency_table[i,4], Contingency_table[i,5], log = FALSE)
 
-pathwayAnalysis_results <- cbind(showresults_CombinePWs[, c(2:4)], probabilities, showresults_CombinePWs[, c(6,7)])
+pathwayAnalysis_results <- cbind(showresults_CombinePW_data[, c(2:4)], probabilities, showresults_CombinePW_data[, c(6,7)])
 colnames(pathwayAnalysis_results)[5] <- "HGNCs"
 colnames(pathwayAnalysis_results)[6] <- "ProteinsInPWs"
 
@@ -157,23 +202,29 @@ pathwayAnalysis_results_sorted <- pathwayAnalysis_results[  with(pathwayAnalysis
 print(pathwayAnalysis_results_sorted[1:5,])
 ```
 
-    ##   pathway                               pathwayTitle HMDBsInPWs probabilities
-    ## 1  WP3925                      Amino acid metabolism          7  1.109534e-04
-    ## 3    WP15             Selenium micronutrient network          6  2.236586e-05
-    ## 4  WP3940 One-carbon metabolism and related pathways          6  1.079858e-01
-    ## 2  WP4723     Omega-3 / omega-6 fatty acid synthesis          6  1.322064e-01
-    ## 5   WP661                        Glucose homeostasis          6  1.428674e-01
-    ##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                HGNCs
-    ## 1                  ACAA1 ACADM ACLY ACO2 ACSS1 ADH1C ADH4 ADH5 ADH7 ALDH18A1 ALDH1A1 ALDH7A1 AOC3 ARG1 ARG2 ASNS ASS1 AUH BCAT1 BHMT CAD CBS CPS1 CS CTH DBH DDC DLD DLST EHHADH EPRS1 FAH FARSB FH FTCD G6PC2 GCLM GLS GLUD1 GLUL GOT1 GOT2 GPT2 GSR GSS HADH HAL HDC HIBADH HIBCH HMGCL HMGCS2 HNMT IARS1 IDH1 LARS2 LDHA MAOA MARS2 MCCC1 MDH1 MDH2 MMUT MPST OAT ODC1 OGDH OTC P4HA2 PC PCK1 PDHA1 PDHX PDK4 PKM PNMT PPM1L PYCR1 RARS1 SDHA SDS SMS SRM SUCLG1 TAT TDO2 TH TPH1 TPO VARS1 WARS1
-    ## 3 ABCA1 ALB ALOX15B ALOX5 ALOX5AP APOA1 APOB CAT CBS CCL2 CRP CTH DIO1 DIO2 DIO3 F2 F7 FGA FGB FGG FLAD1 GGT1 GPX1 GPX2 GPX3 GPX4 GPX6 GSR HBA1 HBB ICAM1 IFNG IL1B IL6 INS INSR KMO KYNU LDLR MPO MSRB1 MTHFR MTR NFKB1 NFKB2 PLAT PLG PNPO PRDX1 PRDX2 PRDX3 PRDX4 PRDX5 PTGS1 PTGS2 RELA RFK SAA1 SAA2 SAA3P SAA4 SCARB1 SELENOF SELENOH SELENOI SELENOK SELENOM SELENON SELENOO SELENOP SELENOS SELENOT SELENOV SELENOW SEPHS2 SERPINA3 SERPINE1 SOD1 SOD2 SOD3 TNF TXN TXNRD1 TXNRD2 TXNRD3 XDH
-    ## 4                                                                                                                                                                                                           AGXT2 AHCYL1 BAAT BCAT1 BCAT2 BHMT BHMT2 CBSL CDO1 CEPT1 CHDH CHKA CHKB CHPT1 CSAD CTH DHFR2 DMGDH DNM1 DNMT3A ETNK1 ETNK2 GAD1 GAD2 GCLC GCLM GNMT GPX1 GPX2 GPX3 GPX4 GPX5 GPX6 GPX7 GSR GSS MAT1A MAT2A MTHFR MTR PCYT1A PCYT1B PCYT2 PEMT PLD1 SARDH SHMT1 SHMT2 SOD1 SOD2 SOD3 TYMS
-    ## 2                                                                                                                                                                                                                                                                                                                                                                                                        ACOT2 ACOX1 ACOX3 ACSL1 ACSL3 ACSL4 ELOVL2 ELOVL5 FADS1 FADS2 PLA2G4A PLA2G4B PLA2G5 PLA2G6
-    ## 5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                INS
+    ##   pathway                                                  pathwayTitle
+    ## 2  WP3604                                  Biochemical pathways: part I
+    ## 1  WP2525 Trans-sulfuration, one-carbon metabolism and related pathways
+    ## 3  WP3925                                         Amino acid metabolism
+    ## 4  WP4723                        Omega-3 / omega-6 fatty acid synthesis
+    ## 5   WP661                                           Glucose homeostasis
+    ##   HMDBsInPWs probabilities
+    ## 2         17  3.544334e-14
+    ## 1          8  7.972883e-02
+    ## 3          7  1.109534e-04
+    ## 4          7  1.551589e-01
+    ## 5          6  1.428674e-01
+    ##                                                                                                                                                                                                                                                                                                                                                                                                                                                                               HGNCs
+    ## 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+    ## 1                                                                                              AGXT2 AHCY AHCYL1 AHCYL2 AMT BAAT BCAT1 BCAT2 BHMT BHMT2 CBS CBSL CDO1 CEPT1 CHDH CHKA CHKB CHPT1 CSAD CTH DHFR DHFR2 DMGDH DNM1 DNMT3A DNMT3B DNMT3L ETNK1 ETNK2 GAD1 GAD2 GCLC GCLM GNMT GPX1 GPX2 GPX3 GPX4 GPX5 GPX6 GPX7 GSR GSS MAT1A MAT2A MAT2B MTHFD1 MTHFD1L MTHFD2 MTHFD2L MTHFR MTR PCYT1A PCYT1B PCYT2 PEMT PHGDH PLD1 PSAT1 PSPH SARDH SHMT1 SHMT2 SOD1 SOD2 SOD3 TYMS
+    ## 3 ACAA1 ACADM ACLY ACO2 ACSS1 ADH1C ADH4 ADH5 ADH7 ALDH18A1 ALDH1A1 ALDH7A1 AOC3 ARG1 ARG2 ASNS ASS1 AUH BCAT1 BHMT CAD CBS CPS1 CS CTH DBH DDC DLD DLST EHHADH EPRS1 FAH FARSB FH FTCD G6PC2 GCLM GLS GLUD1 GLUL GOT1 GOT2 GPT2 GSR GSS HADH HAL HDC HIBADH HIBCH HMGCL HMGCS2 HNMT IARS1 IDH1 LARS2 LDHA MAOA MARS2 MCCC1 MDH1 MDH2 MMUT MPST OAT ODC1 OGDH OTC P4HA2 PC PCK1 PDHA1 PDHX PDK4 PKM PNMT PPM1L PYCR1 RARS1 SDHA SDS SMS SRM SUCLG1 TAT TDO2 TH TPH1 TPO VARS1 WARS1
+    ## 4                                                                                                                                                                                                                                                                                                                                                                                 ACOT1 ACOT2 ACOX1 ACOX3 ACSL1 ACSL3 ACSL4 ELOVL2 ELOVL5 FADS1 FADS2 PLA2G4A PLA2G4B PLA2G5 PLA2G6
+    ## 5                                                                                                                                                                                                                                                                                                                                                                                                                                                                               INS
     ##   ProteinsInPWs
-    ## 1            91
-    ## 3            86
-    ## 4            52
-    ## 2            14
+    ## 2             0
+    ## 1            67
+    ## 3            91
+    ## 4            15
     ## 5             1
 
 Export the pathway data:
@@ -184,8 +235,7 @@ nameDataFile <- paste0("output/mbxPWdata_", disorder ,".csv")
 write.table(pathwayAnalysis_results_sorted, nameDataFile, sep =",", row.names = FALSE)
 ```
 
-Print significantly changed metabolites which were not in a pathway, by
-ID and name:
+## Print significantly changed metabolites which were not in a pathway, by ID and name:
 
 ``` r
 ##Find Missing Biomarkers (not part of any Human pathway model)
@@ -229,9 +279,45 @@ if(length(intersectingHMDB) == 0 ){print("All relevant biomarkers are in a pathw
   print(paste0("For the disorder ", disorder, ", ", length(intersectingHMDB), " biomarkers are not in a pathway; with the following HMDB IDs: " , string_intersectingHMDB, "; with the following Database names: ", string_missingNames))}
 ```
 
-    ## [1] "For the disorder CD, 53 biomarkers are not in a pathway; with the following HMDB IDs: HMDB0000479, HMDB0000610, HMDB0000779, HMDB0000792, HMDB0000848, HMDB0000885, HMDB0000932, HMDB0001906, HMDB0002064, HMDB0002250, HMDB0002815, HMDB0004159, HMDB0004161, HMDB0005015, HMDB0005060, HMDB0005065, HMDB0005066, HMDB0005462, HMDB0005476, HMDB0006726, HMDB0006731, HMDB0006733, HMDB0007199, HMDB0007871, HMDB0007970, HMDB0008006, HMDB0008038, HMDB0010169, HMDB0010370, HMDB0010379, HMDB0010383, HMDB0010384, HMDB0010391, HMDB0010393, HMDB0010395, HMDB0010404, HMDB0010407, HMDB0011208, HMDB0011212, HMDB0011241, HMDB0011243, HMDB0011252, HMDB0011310, HMDB0011503, HMDB0011507, HMDB0011520, HMDB0012097, HMDB0012104, HMDB0013122, HMDB0013287, HMDB0013325, HMDB0015070, HMDB0030180; with the following Database names: 3-methylhistidine, C18:2 CE, phenylalanine, sebacate, C18 carnitine, C16:0 CE, tauro-alpha-muricholate/tauro-beta-muricholate, aminoisobutyric acid/GABA, N-acetylputrescine, C12 carnitine, C18:1 LPC, urobilin, urobilin, gabapentin, eicosadienoate, C18:1 carnitine, C14 carnitine, C56:7 TAG, C58:10 TAG, C20:4 CE, C20:5 CE, C22:6 CE, C38:5 DAG, C32:0 PC, C34:0 PC, C34:3 PC, C36:1 PC, C16:0 SM, C18:3 CE, C16:0 LPC, C16:1 LPC, C18:0 LPC, C20:1 LPC, C20:3 LPC, C20:4 LPC, C22:6 LPC, C16:1 LPC plasmalogen, C34:1 PC plasmalogen, C34:4 PC plasmalogen, C36:1 PC plasmalogen, C36:2 PC plasmalogen, C38:4 PC plasmalogen, C36:4 PC plasmalogen, C16:0 LPE, C18:2 LPE, C22:0 LPE, C14:0 SM, C22:1 SM, C18:1 LPC plasmalogen, N6,N6-dimethyllysine, C10:2 carnitine, oxymetazoline, crustecdysone"
+    ## [1] "For the disorder CD, 50 biomarkers are not in a pathway; with the following HMDB IDs: HMDB0000479, HMDB0000610, HMDB0000779, HMDB0000792, HMDB0000848, HMDB0000885, HMDB0000932, HMDB0001906, HMDB0002250, HMDB0002815, HMDB0004161, HMDB0005015, HMDB0005065, HMDB0005066, HMDB0005462, HMDB0005476, HMDB0006726, HMDB0006731, HMDB0006733, HMDB0007199, HMDB0007871, HMDB0007970, HMDB0008006, HMDB0008038, HMDB0010169, HMDB0010370, HMDB0010379, HMDB0010383, HMDB0010384, HMDB0010391, HMDB0010393, HMDB0010395, HMDB0010404, HMDB0010407, HMDB0011208, HMDB0011212, HMDB0011241, HMDB0011243, HMDB0011252, HMDB0011310, HMDB0011503, HMDB0011507, HMDB0011520, HMDB0012097, HMDB0012104, HMDB0013122, HMDB0013287, HMDB0013325, HMDB0015070, HMDB0030180; with the following Database names: 3-methylhistidine, C18:2 CE, phenylalanine, sebacate, C18 carnitine, C16:0 CE, tauro-alpha-muricholate/tauro-beta-muricholate, aminoisobutyric acid/GABA, C12 carnitine, C18:1 LPC, urobilin, gabapentin, C18:1 carnitine, C14 carnitine, C56:7 TAG, C58:10 TAG, C20:4 CE, C20:5 CE, C22:6 CE, C38:5 DAG, C32:0 PC, C34:0 PC, C34:3 PC, C36:1 PC, C16:0 SM, C18:3 CE, C16:0 LPC, C16:1 LPC, C18:0 LPC, C20:1 LPC, C20:3 LPC, C20:4 LPC, C22:6 LPC, C16:1 LPC plasmalogen, C34:1 PC plasmalogen, C34:4 PC plasmalogen, C36:1 PC plasmalogen, C36:2 PC plasmalogen, C38:4 PC plasmalogen, C36:4 PC plasmalogen, C16:0 LPE, C18:2 LPE, C22:0 LPE, C14:0 SM, C22:1 SM, C18:1 LPC plasmalogen, N6,N6-dimethyllysine, C10:2 carnitine, oxymetazoline, crustecdysone"
 
-### Last, we create a Jupyter notebook and markdown file from this script
+## Print session info:
+
+``` r
+##Print session info:
+sessionInfo()
+```
+
+    ## R version 4.2.2 Patched (2022-11-10 r83330)
+    ## Platform: x86_64-pc-linux-gnu (64-bit)
+    ## Running under: Ubuntu 18.04.6 LTS
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
+    ## 
+    ## locale:
+    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+    ##  [3] LC_TIME=nl_NL.UTF-8        LC_COLLATE=en_US.UTF-8    
+    ##  [5] LC_MONETARY=nl_NL.UTF-8    LC_MESSAGES=en_US.UTF-8   
+    ##  [7] LC_PAPER=nl_NL.UTF-8       LC_NAME=C                 
+    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+    ## [11] LC_MEASUREMENT=nl_NL.UTF-8 LC_IDENTIFICATION=C       
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ## [1] SPARQL_1.16    RCurl_1.98-1.9 XML_3.99-0.9  
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] digest_0.6.31   bitops_1.0-7    lifecycle_1.0.3 magrittr_2.0.3 
+    ##  [5] evaluate_0.19   rlang_1.0.6     stringi_1.7.8   cli_3.4.1      
+    ##  [9] rstudioapi_0.14 vctrs_0.5.1     rmarkdown_2.19  tools_4.2.2    
+    ## [13] stringr_1.5.0   glue_1.6.2      xfun_0.35       yaml_2.3.6     
+    ## [17] fastmap_1.1.0   compiler_4.2.2  htmltools_0.5.4 knitr_1.41
+
+## Last, we create a Jupyter notebook file from this script:
 
 ``` r
 #Jupyter Notebook file
@@ -240,13 +326,15 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpPyKkz2/remotes4fb71148f719/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
-    ## * checking DESCRIPTION meta-information ... OK
-    ## * checking for LF line-endings in source and make files and shell scripts
-    ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ##      checking for file ‘/tmp/Rtmp8b9bv0/remotes4c90616a3c0e/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ...  ✔  checking for file ‘/tmp/Rtmp8b9bv0/remotes4c90616a3c0e/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’
+    ##   ─  preparing ‘rmd2jupyter’:
+    ##      checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##   ─  checking for LF line-endings in source and make files and shell scripts
+    ##   ─  checking for empty or unneeded directories
+    ##    Omitted ‘LazyData’ from DESCRIPTION
+    ##   ─  building ‘rmd2jupyter_0.1.0.tar.gz’
+    ##      
+    ## 
 
 ``` r
 library(devtools)
