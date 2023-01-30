@@ -101,12 +101,16 @@ remove(item1, item2)
 results_CombinePWs <- SPARQL(endpointwp,query_CombinePWs,curl_args=list(useragent=R.version.string))
 showresults_CombinePWs <- results_CombinePWs$results
 remove(query_CombinePWs,results_CombinePWs)
-#Keep and print table with first 5 relevant pathways (if less than 5 are found, print only those)
-if(nrow(showresults_CombinePWs) < 5){
+
+##Top pathway cuttoff threshold (can be defined by users)
+pathway_cutoff_metabolites = 10
+
+#Keep and print table within threshold (if less than threshold are found, print only those)
+if(nrow(showresults_CombinePWs) < pathway_cutoff_metabolites){
 print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:4)])
 }else{
-  #delete 4th,5th and 1st rows
-  showresults_CombinePWs <- showresults_CombinePWs[-c(6:nrow(showresults_CombinePWs)),]
+  #delete rows below threshold
+  showresults_CombinePWs <- showresults_CombinePWs[-c((pathway_cutoff_metabolites+1):nrow(showresults_CombinePWs)),]
   print(showresults_CombinePWs[1:5,c(2:4)])}
 
 remove(cleaned_string_HMDB, list_Relevant_HMDB_IDs, query_HMDBs)
