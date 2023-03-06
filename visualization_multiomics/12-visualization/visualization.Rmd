@@ -95,6 +95,7 @@ pathway.id <- "WP4726"# Sphingolipid metabolism: integrated pathway is a relevan
 #import pathways as pathway in cytoscape
 RCy3::commandsRun(paste0('wikipathways import-as-pathway id=',pathway.id )) 
 ```
+
 ## Data upload
 ```{r data_upload, warning=FALSE, message=FALSE}
 #get node table from imported pathway in cytoscape
@@ -107,6 +108,8 @@ ID.cols$Ensembl <- ifelse(is.na(ID.cols$Ensembl), ID.cols$ChEBI, ID.cols$Ensembl
 ID.cols <- data.frame(ID.cols[,c(1,2)])
 #change column name
 colnames(ID.cols)[2] <- "omics.ID"
+##Remove ':T" in mapped IDs for now:
+ID.cols$omics.ID<-gsub(":T","", as.character(ID.cols$omics.ID))
 
 #merge two data frames for adding xrefid to the combined data frame
 data <- merge(combined.data, ID.cols, by.x = "ID", by.y = "omics.ID" )
