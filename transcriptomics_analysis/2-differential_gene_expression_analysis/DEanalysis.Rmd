@@ -45,7 +45,7 @@ library(limma)
 #library(R2HTML)
 
 # set working environment to the location where current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #include some functions adapted from ArrayAnalysis.org scripts
 source("functions_ArrayAnalysis_v2.R")
 WORK.DIR <- getwd()

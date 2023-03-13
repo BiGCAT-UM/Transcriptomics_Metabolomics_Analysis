@@ -23,7 +23,9 @@ library(readxl)
 library(dplyr)
 
 # set working environment to the location where current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+# R-users can use the command below
+# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
 ```
 ## Read and filter out metadata 
 ```{r read_filter_meta_data, warning=FALSE, message=FALSE}
@@ -53,7 +55,7 @@ htxMeta <- htxMeta %>% dplyr::select(External.ID,Participant.ID,biopsy_location,
 #Order htxMeta data based on external ID to match samples with htx count correctly
 htxMeta<- htxMeta[order(htxMeta$External.ID),]#order htxMeta by external ID
 ```
-# Filter out host transcriptomics (htx) count data based on sample names obtained from htx meta data, save data in output file.
+## Filter out host transcriptomics (htx) count data based on sample names obtained from htx meta data, save data in output file.
 ```{r read_filter_count_data, warning=FALSE, message=FALSE}
 #transcript count (htx count) original file is read
 htxOrj <- read.csv("data/host_tx_counts.tsv",sep = "\t")
@@ -82,7 +84,7 @@ write.table(htxMeta, "output/sampleLabels.csv", sep=",",quote=FALSE,row.names = 
 ##Print session info:information about R, the OS and attached or loaded packages.
 sessionInfo()
 ```
-### Last, we create a Jupyter notebook from this script
+## Last, we create a Jupyter notebook from this script
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
 if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
