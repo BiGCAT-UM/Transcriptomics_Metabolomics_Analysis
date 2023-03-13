@@ -63,7 +63,8 @@ htxCount <- read.csv("1-data_preprocessing/output/htxCount.csv")
 sampleLabels <- read.csv("1-data_preprocessing/output/sampleLabels.csv", header=FALSE)
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd("2-differential_gene_expression_analysis")
 WORK.DIR<- getwd()
 
 #checking which samples have all zero values across all genes
@@ -77,7 +78,7 @@ sampleLabels <- sampleLabels[-idx , ]
 #Set column one as rownames
 rownames(sampleLabels) <- sampleLabels[,1]
 sampleLabels <- sampleLabels[,-1]
-#add column names 
+#add column names
 colnames(sampleLabels) <- c( "sampleID", "biopsy_location","disease")
 #check whether sample names are in same order
 #all(colnames(htxCount) == rownames(sampleLabels2))
