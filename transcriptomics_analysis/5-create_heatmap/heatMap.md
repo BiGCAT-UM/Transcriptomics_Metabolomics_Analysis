@@ -19,7 +19,7 @@ library(dplyr)
 library (pheatmap)
 
 # set your working environment to the location where your current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Importing dataset
@@ -32,10 +32,10 @@ setwd('..')
 work_DIR <- getwd()
 #we have four datasets in total
 #read all pathway lists
-CD.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_ileum",sep = "\t", header = TRUE)
-CD.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_rectum", sep = "\t",header = TRUE)
-UC.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_ileum",sep = "\t", header = TRUE)
-UC.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_rectum", sep = "\t",header = TRUE)
+CD.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_ileum.tsv",sep = "\t", header = TRUE)
+CD.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_rectum.tsv", sep = "\t",header = TRUE)
+UC.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_ileum.tsv",sep = "\t", header = TRUE)
+UC.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_rectum.tsv", sep = "\t",header = TRUE)
 
 # Set Working Directory back to current folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -130,7 +130,7 @@ colnames(all.pathways) <- c("CD.ileum","CD.rectum","UC.ileum","UC.rectum")
 if(!dir.exists("output")) dir.create("output")
 
 ## Select a size to visualize the heatmap with (options; large or small)
-size_heatmap <- "small"
+size_heatmap <- "large"
 
 ##Print labels large for paper, small for notebook:
 fontsize_row_l = 30 
@@ -185,42 +185,35 @@ save_pheatmap_png(my_heatmap, name_heatmap_file)
 sessionInfo()
 ```
 
-    ## R version 4.2.0 (2022-04-22)
-    ## Platform: x86_64-pc-linux-gnu (64-bit)
-    ## Running under: Ubuntu 18.04.6 LTS
+    ## R version 4.2.2 (2022-10-31 ucrt)
+    ## Platform: x86_64-w64-mingw32/x64 (64-bit)
+    ## Running under: Windows 10 x64 (build 19044)
     ## 
     ## Matrix products: default
-    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
-    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
     ## 
     ## locale:
-    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
-    ##  [3] LC_TIME=nl_NL.UTF-8        LC_COLLATE=en_US.UTF-8    
-    ##  [5] LC_MONETARY=nl_NL.UTF-8    LC_MESSAGES=en_US.UTF-8   
-    ##  [7] LC_PAPER=nl_NL.UTF-8       LC_NAME=C                 
-    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-    ## [11] LC_MEASUREMENT=nl_NL.UTF-8 LC_IDENTIFICATION=C       
+    ## [1] LC_COLLATE=English_Netherlands.utf8  LC_CTYPE=English_Netherlands.utf8   
+    ## [3] LC_MONETARY=English_Netherlands.utf8 LC_NUMERIC=C                        
+    ## [5] LC_TIME=English_Netherlands.utf8    
     ## 
     ## attached base packages:
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] pheatmap_1.0.12    dplyr_1.0.9        RColorBrewer_1.1-3
+    ## [1] pheatmap_1.0.12    dplyr_1.1.0        RColorBrewer_1.1-3
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] highr_0.9           pillar_1.7.0        compiler_4.2.0     
-    ##  [4] BiocManager_1.30.17 tools_4.2.0         digest_0.6.29      
-    ##  [7] evaluate_0.15       lifecycle_1.0.1     tibble_3.1.7       
-    ## [10] gtable_0.3.0        pkgconfig_2.0.3     rlang_1.0.2        
-    ## [13] cli_3.3.0           DBI_1.1.2           rstudioapi_0.13    
-    ## [16] yaml_2.3.5          xfun_0.31           fastmap_1.1.0      
-    ## [19] stringr_1.4.0       knitr_1.39          generics_0.1.2     
-    ## [22] vctrs_0.4.1         grid_4.2.0          tidyselect_1.1.2   
-    ## [25] glue_1.6.2          R6_2.5.1            fansi_1.0.3        
-    ## [28] rmarkdown_2.14      purrr_0.3.4         magrittr_2.0.3     
-    ## [31] scales_1.2.0        ellipsis_0.3.2      htmltools_0.5.2    
-    ## [34] assertthat_0.2.1    colorspace_2.0-3    utf8_1.2.2         
-    ## [37] stringi_1.7.6       munsell_0.5.0       crayon_1.5.1
+    ##  [1] rstudioapi_0.14     knitr_1.42          magrittr_2.0.3     
+    ##  [4] munsell_0.5.0       tidyselect_1.2.0    colorspace_2.1-0   
+    ##  [7] R6_2.5.1            rlang_1.0.6         fastmap_1.1.1      
+    ## [10] fansi_1.0.4         highr_0.10          tools_4.2.2        
+    ## [13] grid_4.2.2          gtable_0.3.1        xfun_0.37          
+    ## [16] utf8_1.2.3          cli_3.6.0           htmltools_0.5.4    
+    ## [19] yaml_2.3.7          digest_0.6.31       tibble_3.1.8       
+    ## [22] lifecycle_1.0.3     BiocManager_1.30.20 vctrs_0.5.2        
+    ## [25] glue_1.6.2          evaluate_0.20       rmarkdown_2.20     
+    ## [28] compiler_4.2.2      pillar_1.8.1        scales_1.2.1       
+    ## [31] generics_0.1.3      pkgconfig_2.0.3
 
 ``` r
 ##Remove data objects which are not needed for further processing:
@@ -236,17 +229,20 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpfrNVPL/remotes6e282b26e5e7/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
-    ## * checking DESCRIPTION meta-information ... OK
-    ## * checking for LF line-endings in source and make files and shell scripts
-    ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ## ── R CMD build ─────────────────────────────────────────────────────────────────
+    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpSUtVH4\remotese74f95c19\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpSUtVH4\remotese74f95c19\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##       ─  preparing 'rmd2jupyter':
+    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##       ─  checking for LF line-endings in source and make files and shell scripts
+    ##   ─  checking for empty or unneeded directories
+    ##    Omitted 'LazyData' from DESCRIPTION
+    ##       ─  building 'rmd2jupyter_0.1.0.tar.gz'
+    ##      
+    ## 
 
 ``` r
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("heatMap.Rmd")
 ```

@@ -36,7 +36,7 @@ library(rWikiPathways)
 library(RColorBrewer)
 
 # set your working environment to the location where your current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Importing dataset
@@ -53,7 +53,8 @@ UC.ileum <- read.delim("4-pathway_analysis/output/DEGs_UC_ileum.tsv",sep = "\t",
 UC.rectum <- read.delim("4-pathway_analysis/output/DEGs_UC_rectum.tsv", sep = "\t",header = TRUE)
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd("6-network_analysis")
 work_DIR <- getwd()
 
 #Listing all up and down regulated genes separately for CD:
@@ -286,6 +287,6 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("Network_analysis.Rmd")
 ```

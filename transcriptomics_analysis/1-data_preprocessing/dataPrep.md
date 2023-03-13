@@ -1,7 +1,7 @@
 ## Introduction
 
 In this script, filtering options will be applied for transcriptomics
-data to be prepared for the analysis ## Setup
+data to be prepared for the analysis \## Setup
 
 ``` r
 # check if libraries are already installed > otherwise install it
@@ -16,7 +16,8 @@ library(readxl)
 library(dplyr)
 
 # set working environment to the location where current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+# R-users can use the command below
+# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Read and filter out metadata
@@ -54,7 +55,7 @@ htxMeta <- htxMeta %>% dplyr::select(External.ID,Participant.ID,biopsy_location,
 htxMeta<- htxMeta[order(htxMeta$External.ID),]#order htxMeta by external ID
 ```
 
-# Filter out host transcriptomics (htx) count data based on sample names obtained from htx meta data, save data in output file.
+## Filter out host transcriptomics (htx) count data based on sample names obtained from htx meta data, save data in output file.
 
 ``` r
 #transcript count (htx count) original file is read
@@ -92,39 +93,35 @@ write.table(htxMeta, "output/sampleLabels.csv", sep=",",quote=FALSE,row.names = 
 sessionInfo()
 ```
 
-    ## R version 4.1.3 (2022-03-10)
+    ## R version 4.2.2 (2022-10-31 ucrt)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
     ## Running under: Windows 10 x64 (build 19044)
     ## 
     ## Matrix products: default
     ## 
     ## locale:
-    ## [1] LC_COLLATE=English_United States.1252 
-    ## [2] LC_CTYPE=English_United States.1252   
-    ## [3] LC_MONETARY=English_United States.1252
-    ## [4] LC_NUMERIC=C                          
-    ## [5] LC_TIME=English_United States.1252    
+    ## [1] LC_COLLATE=English_Netherlands.utf8  LC_CTYPE=English_Netherlands.utf8   
+    ## [3] LC_MONETARY=English_Netherlands.utf8 LC_NUMERIC=C                        
+    ## [5] LC_TIME=English_Netherlands.utf8    
     ## 
     ## attached base packages:
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] dplyr_1.0.8     readxl_1.4.0    rstudioapi_0.13
+    ## [1] dplyr_1.1.0     readxl_1.4.2    rstudioapi_0.14
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] knitr_1.39          magrittr_2.0.2      tidyselect_1.1.2   
-    ##  [4] R6_2.5.1            rlang_1.0.1         fastmap_1.1.0      
-    ##  [7] fansi_1.0.3         stringr_1.4.0       tools_4.1.3        
-    ## [10] xfun_0.30           utf8_1.2.2          DBI_1.1.2          
-    ## [13] cli_3.2.0           htmltools_0.5.2     ellipsis_0.3.2     
-    ## [16] assertthat_0.2.1    yaml_2.3.5          digest_0.6.29      
-    ## [19] tibble_3.1.6        lifecycle_1.0.1     crayon_1.5.1       
-    ## [22] purrr_0.3.4         BiocManager_1.30.17 vctrs_0.3.8        
-    ## [25] glue_1.6.2          evaluate_0.15       rmarkdown_2.14     
-    ## [28] stringi_1.7.6       compiler_4.1.3      pillar_1.7.0       
-    ## [31] cellranger_1.1.0    generics_0.1.2      pkgconfig_2.0.3
+    ##  [1] knitr_1.42          magrittr_2.0.3      tidyselect_1.2.0   
+    ##  [4] R6_2.5.1            rlang_1.0.6         fastmap_1.1.1      
+    ##  [7] fansi_1.0.4         tools_4.2.2         xfun_0.37          
+    ## [10] utf8_1.2.3          cli_3.6.0           withr_2.5.0        
+    ## [13] htmltools_0.5.4     yaml_2.3.7          digest_0.6.31      
+    ## [16] tibble_3.1.8        lifecycle_1.0.3     BiocManager_1.30.20
+    ## [19] vctrs_0.5.2         glue_1.6.2          evaluate_0.20      
+    ## [22] rmarkdown_2.20      compiler_4.2.2      pillar_1.8.1       
+    ## [25] cellranger_1.1.0    generics_0.1.3      pkgconfig_2.0.3
 
-### Last, we create a Jupyter notebook from this script
+## Last, we create a Jupyter notebook from this script
 
 ``` r
 #Jupyter Notebook file
@@ -133,18 +130,20 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file 'C:\Users\dedePC\AppData\Local\Temp\Rtmpc1Po6w\remotes4b6c2bf9186\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ... OK
-    ## * preparing 'rmd2jupyter':
-    ## * checking DESCRIPTION meta-information ... OK
-    ## * checking for LF line-endings in source and make files and shell scripts
-    ## * checking for empty or unneeded directories
-    ## Omitted 'LazyData' from DESCRIPTION
-    ## * building 'rmd2jupyter_0.1.0.tar.gz'
+    ## ── R CMD build ─────────────────────────────────────────────────────────────────
+    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpqwNLGP\remotes4ef86ff21ddb\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpqwNLGP\remotes4ef86ff21ddb\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##       ─  preparing 'rmd2jupyter':
+    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##       ─  checking for LF line-endings in source and make files and shell scripts
+    ##   ─  checking for empty or unneeded directories
+    ##    Omitted 'LazyData' from DESCRIPTION
+    ##       ─  building 'rmd2jupyter_0.1.0.tar.gz'
+    ##      
     ## 
 
 ``` r
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("dataPrep.Rmd")
 ```

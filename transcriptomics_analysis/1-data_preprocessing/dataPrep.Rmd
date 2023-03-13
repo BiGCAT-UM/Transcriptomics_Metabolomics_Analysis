@@ -91,6 +91,6 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("dataPrep.Rmd")
 ```

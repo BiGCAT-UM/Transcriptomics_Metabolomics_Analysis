@@ -33,7 +33,7 @@ library(clusterProfiler) # for implementing methods to analyze and visualize fun
 library(dplyr)
 
 # set your working environment to the location where your current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Importing dataset
@@ -190,6 +190,6 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("pathway_analysis.Rmd")
 ```

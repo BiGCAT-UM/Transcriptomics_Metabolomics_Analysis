@@ -40,7 +40,7 @@ library(limma)
 #library(R2HTML)
 
 # set working environment to the location where current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #include some functions adapted from ArrayAnalysis.org scripts
 source("functions_ArrayAnalysis_v2.R")
 WORK.DIR <- getwd()
@@ -61,7 +61,8 @@ htxCount <- read.csv("1-data_preprocessing/output/htxCount.csv")
 sampleLabels <- read.csv("1-data_preprocessing/output/sampleLabels.csv", header=FALSE)
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd("2-differential_gene_expression_analysis")
 WORK.DIR<- getwd()
 
 #checking which samples have all zero values across all genes
@@ -75,7 +76,7 @@ sampleLabels <- sampleLabels[-idx , ]
 #Set column one as rownames
 rownames(sampleLabels) <- sampleLabels[,1]
 sampleLabels <- sampleLabels[,-1]
-#add column names 
+#add column names
 colnames(sampleLabels) <- c( "sampleID", "biopsy_location","disease")
 #check whether sample names are in same order
 #all(colnames(htxCount) == rownames(sampleLabels2))
@@ -145,6 +146,7 @@ normlog <- log(norm+1,2)
 #for QC remove genes that have not been measured in any sample in the experiment
 datlogQC <- datlog[rowSums(datlog)!=0,]
 normlogQC <- normlog[rowSums(normlog)!=0,]
+
 #create QC plots for raw data, colored by different variables
 factors <- c("disease","biopsy_location","group")
 if(!dir.exists("QCraw")) dir.create("QCraw")
@@ -160,11 +162,13 @@ dev.off()
 ``` r
 createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
 setwd("..")
-#create QC plots for normalized data coloured by different variables
+
+#create QC plots for normalized data colored by different variables
 if(!dir.exists("QCnorm")) dir.create("QCnorm")
 setwd(paste(WORK.DIR,"QCnorm",sep="/"))
 createQCPlots(normlogQC, factors, Table=sampleLabels, normMeth="DESeq", postfix="")
 setwd("..")
+
 #sample MSM719M9 is an outlier remove it from dataset
 #sample HSM5FZAZ is an outlier remove it from dataset
 htxCount <- htxCount[,-match(c("MSM719M9","HSM5FZAZ"),colnames(htxCount))]
@@ -194,6 +198,7 @@ dev.off()
 ``` r
 createQCPlots(datlogQC, factors, Table=sampleLabels, normMeth="", postfix="")
 setwd("..")
+
 #create QC plots for normalized data coloured by different variables
 if(!dir.exists("QCnorm2")) dir.create("QCnorm2")
 setwd(paste(WORK.DIR,"QCnorm2",sep="/"))
@@ -208,7 +213,6 @@ if(!dir.exists("statsmodel")) dir.create("statsmodel")
 setwd(paste(WORK.DIR,"statsmodel",sep="/"))
 #run differential analysis
 dds <- DESeq(dds)
-#results(dds) #runs the default DESeq2 comparison    (last factor level versus first factor level)
 cont.matrix <- makeContrasts(
   #CD disease on ileum and rectum 
   CD_Ileum_vs_nonIBD_Ileum   = groupCD_Ileum - groupnonIBD_Ileum,
@@ -255,7 +259,6 @@ files <- saveStatOutputDESeq2(cont.matrix,dds,postfix="",annotation=NULL)
 
 ``` r
 #create summary table of the contrast results
-#up and down for p-val and adj p-val are decided by log2FC>=0.58 and  log2FC<0.58
 createPvalTab(files,postfix="",namePVal="pvalue",nameAdjPVal="padj",nameFC="FoldChange",nameLogFC="log2FoldChange",html=TRUE)
 ```
 
@@ -309,69 +312,63 @@ for(i in 1:length(files)) {
 sessionInfo()
 ```
 
-    ## R version 4.2.0 (2022-04-22)
-    ## Platform: x86_64-pc-linux-gnu (64-bit)
-    ## Running under: Ubuntu 18.04.6 LTS
+    ## R version 4.2.2 (2022-10-31 ucrt)
+    ## Platform: x86_64-w64-mingw32/x64 (64-bit)
+    ## Running under: Windows 10 x64 (build 19044)
     ## 
     ## Matrix products: default
-    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
-    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
     ## 
     ## locale:
-    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
-    ##  [3] LC_TIME=nl_NL.UTF-8        LC_COLLATE=en_US.UTF-8    
-    ##  [5] LC_MONETARY=nl_NL.UTF-8    LC_MESSAGES=en_US.UTF-8   
-    ##  [7] LC_PAPER=nl_NL.UTF-8       LC_NAME=C                 
-    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-    ## [11] LC_MEASUREMENT=nl_NL.UTF-8 LC_IDENTIFICATION=C       
+    ## [1] LC_COLLATE=English_Netherlands.utf8  LC_CTYPE=English_Netherlands.utf8   
+    ## [3] LC_MONETARY=English_Netherlands.utf8 LC_NUMERIC=C                        
+    ## [5] LC_TIME=English_Netherlands.utf8    
     ## 
     ## attached base packages:
     ## [1] parallel  stats4    stats     graphics  grDevices utils     datasets 
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] R2HTML_2.3.2                gplots_3.1.3               
-    ##  [3] EnhancedVolcano_1.14.0      ggrepel_0.9.1              
-    ##  [5] ggplot2_3.3.6               magrittr_2.0.3             
-    ##  [7] dplyr_1.0.9                 biomaRt_2.52.0             
-    ##  [9] bioDist_1.68.0              KernSmooth_2.23-20         
-    ## [11] edgeR_3.38.0                limma_3.52.0               
-    ## [13] DESeq2_1.36.0               SummarizedExperiment_1.26.1
-    ## [15] Biobase_2.56.0              MatrixGenerics_1.8.0       
-    ## [17] matrixStats_0.62.0          baySeq_2.30.0              
-    ## [19] abind_1.4-5                 GenomicRanges_1.48.0       
-    ## [21] GenomeInfoDb_1.32.2         IRanges_2.30.0             
-    ## [23] S4Vectors_0.34.0            BiocGenerics_0.42.0        
-    ## [25] rstudioapi_0.13            
+    ##  [1] R2HTML_2.3.3                gdata_2.18.0.1             
+    ##  [3] gplots_3.1.3                EnhancedVolcano_1.16.0     
+    ##  [5] ggrepel_0.9.3               ggplot2_3.4.1              
+    ##  [7] magrittr_2.0.3              dplyr_1.1.0                
+    ##  [9] biomaRt_2.54.0              bioDist_1.70.0             
+    ## [11] KernSmooth_2.23-20          edgeR_3.40.2               
+    ## [13] limma_3.54.2                DESeq2_1.38.3              
+    ## [15] SummarizedExperiment_1.28.0 Biobase_2.58.0             
+    ## [17] MatrixGenerics_1.10.0       matrixStats_0.63.0         
+    ## [19] baySeq_2.32.0               abind_1.4-5                
+    ## [21] GenomicRanges_1.50.2        GenomeInfoDb_1.34.9        
+    ## [23] IRanges_2.32.0              S4Vectors_0.36.2           
+    ## [25] BiocGenerics_0.44.0         rstudioapi_0.14            
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] bitops_1.0-7           bit64_4.0.5            filelock_1.0.2        
-    ##  [4] RColorBrewer_1.1-3     progress_1.2.2         httr_1.4.3            
-    ##  [7] tools_4.2.0            utf8_1.2.2             R6_2.5.1              
-    ## [10] DBI_1.1.2              colorspace_2.0-3       withr_2.5.0           
-    ## [13] tidyselect_1.1.2       prettyunits_1.1.1      curl_4.3.2            
-    ## [16] bit_4.0.4              compiler_4.2.0         cli_3.3.0             
-    ## [19] xml2_1.3.3             DelayedArray_0.22.0    labeling_0.4.2        
-    ## [22] caTools_1.18.2         scales_1.2.0           genefilter_1.78.0     
-    ## [25] rappdirs_0.3.3         stringr_1.4.0          digest_0.6.29         
-    ## [28] rmarkdown_2.14         XVector_0.36.0         pkgconfig_2.0.3       
-    ## [31] htmltools_0.5.2        highr_0.9              dbplyr_2.1.1          
-    ## [34] fastmap_1.1.0          rlang_1.0.2            RSQLite_2.2.13        
-    ## [37] farver_2.1.0           generics_0.1.2         gtools_3.9.2          
-    ## [40] BiocParallel_1.30.0    RCurl_1.98-1.6         GenomeInfoDbData_1.2.8
-    ## [43] Matrix_1.4-1           Rcpp_1.0.8.3           munsell_0.5.0         
-    ## [46] fansi_1.0.3            lifecycle_1.0.1        stringi_1.7.6         
-    ## [49] yaml_2.3.5             zlibbioc_1.42.0        BiocFileCache_2.4.0   
-    ## [52] grid_4.2.0             blob_1.2.3             crayon_1.5.1          
-    ## [55] lattice_0.20-45        Biostrings_2.64.0      splines_4.2.0         
-    ## [58] annotate_1.74.0        hms_1.1.1              KEGGREST_1.36.0       
-    ## [61] locfit_1.5-9.5         knitr_1.39             pillar_1.7.0          
-    ## [64] geneplotter_1.74.0     XML_3.99-0.9           glue_1.6.2            
-    ## [67] evaluate_0.15          BiocManager_1.30.17    png_0.1-7             
-    ## [70] vctrs_0.4.1            gtable_0.3.0           purrr_0.3.4           
-    ## [73] assertthat_0.2.1       cachem_1.0.6           xfun_0.31             
-    ## [76] xtable_1.8-4           survival_3.3-1         tibble_3.1.7          
-    ## [79] AnnotationDbi_1.58.0   memoise_2.0.1          ellipsis_0.3.2
+    ##  [4] RColorBrewer_1.1-3     progress_1.2.2         httr_1.4.5            
+    ##  [7] tools_4.2.2            utf8_1.2.3             R6_2.5.1              
+    ## [10] DBI_1.1.3              colorspace_2.1-0       withr_2.5.0           
+    ## [13] tidyselect_1.2.0       prettyunits_1.1.1      bit_4.0.5             
+    ## [16] curl_5.0.0             compiler_4.2.2         cli_3.6.0             
+    ## [19] xml2_1.3.3             DelayedArray_0.24.0    labeling_0.4.2        
+    ## [22] caTools_1.18.2         scales_1.2.1           rappdirs_0.3.3        
+    ## [25] stringr_1.5.0          digest_0.6.31          rmarkdown_2.20        
+    ## [28] XVector_0.38.0         pkgconfig_2.0.3        htmltools_0.5.4       
+    ## [31] highr_0.10             dbplyr_2.3.1           fastmap_1.1.1         
+    ## [34] rlang_1.0.6            RSQLite_2.3.0          farver_2.1.1          
+    ## [37] generics_0.1.3         gtools_3.9.4           BiocParallel_1.32.5   
+    ## [40] RCurl_1.98-1.10        GenomeInfoDbData_1.2.9 Matrix_1.5-3          
+    ## [43] Rcpp_1.0.10            munsell_0.5.0          fansi_1.0.4           
+    ## [46] lifecycle_1.0.3        stringi_1.7.12         yaml_2.3.7            
+    ## [49] zlibbioc_1.44.0        BiocFileCache_2.6.1    grid_4.2.2            
+    ## [52] blob_1.2.3             crayon_1.5.2           lattice_0.20-45       
+    ## [55] Biostrings_2.66.0      annotate_1.76.0        hms_1.1.2             
+    ## [58] KEGGREST_1.38.0        locfit_1.5-9.7         knitr_1.42            
+    ## [61] pillar_1.8.1           geneplotter_1.76.0     codetools_0.2-19      
+    ## [64] XML_3.99-0.13          glue_1.6.2             evaluate_0.20         
+    ## [67] BiocManager_1.30.20    png_0.1-8              vctrs_0.5.2           
+    ## [70] gtable_0.3.1           cachem_1.0.7           xfun_0.37             
+    ## [73] xtable_1.8-4           tibble_3.1.8           AnnotationDbi_1.60.0  
+    ## [76] memoise_2.0.1          ellipsis_0.3.2
 
 ``` r
 ##Remove data objects which are not needed for further processing:
@@ -387,17 +384,20 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpLN4cki/remotes5cf47a1507d/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
-    ## * checking DESCRIPTION meta-information ... OK
-    ## * checking for LF line-endings in source and make files and shell scripts
-    ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ## ── R CMD build ─────────────────────────────────────────────────────────────────
+    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpCO0e4d\remotes375c71eb78ad\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpCO0e4d\remotes375c71eb78ad\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##       ─  preparing 'rmd2jupyter':
+    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##       ─  checking for LF line-endings in source and make files and shell scripts
+    ##   ─  checking for empty or unneeded directories
+    ##    Omitted 'LazyData' from DESCRIPTION
+    ##       ─  building 'rmd2jupyter_0.1.0.tar.gz'
+    ##      
+    ## 
 
 ``` r
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("DEanalysis.Rmd")
 ```
