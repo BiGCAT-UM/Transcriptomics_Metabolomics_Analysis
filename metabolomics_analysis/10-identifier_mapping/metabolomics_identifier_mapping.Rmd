@@ -30,7 +30,7 @@ library(BridgeDbR)
 library(rJava)
 
 # set your working environment to the location where your current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Process metabolite data
@@ -45,7 +45,7 @@ mSet_CD <- mSet_CD [,c(1:4)]
 mSet_UC <- mSet_UC [,c(1:4)]
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd("10-identifier_mapping")
 work_DIR <- getwd()
 
 ##Retain all metabolite IDs from CD and UC for identifier mapping:
@@ -109,7 +109,7 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("metabolomics_identifier_mapping.Rmd")
 ```
 

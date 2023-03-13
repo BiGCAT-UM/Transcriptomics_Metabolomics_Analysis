@@ -4,7 +4,7 @@ In this section of the workflow, we will obtain the metabolomics data
 and apply filtering options, to create a dataset ready for further
 statistical and pathway analysis.
 
-### First, we setup the required libraries to get started.
+## First, we setup the required libraries to get started.
 
 ``` r
 # check if libraries are already installed > otherwise install it
@@ -20,10 +20,10 @@ library(rstudioapi)
 library(dplyr)
 library(stringr)
 # set your working environment to the location where your current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
-### Second, we download the required data, read the metadata and filter out not-relevant data.
+## Second, we download the required data, read the metadata and filter out not-relevant data.
 
 ``` r
 #Library to download data from online files:
@@ -50,7 +50,7 @@ metaDataMBX<- subset(metaDataMBX, metaDataMBX$visit_num == 4)
 #we should match transcriptomics (htx) samples and metabolomics (mbx) samples with participantID
 #but samples are given by their externalID in mbx file so we should keep them both
 #select columns which will be used
-metaDataMBX <- metaDataMBX %>% select(External.ID,Participant.ID,diagnosis)
+metaDataMBX <- metaDataMBX %>% dplyr::select(External.ID,Participant.ID,diagnosis)
 #rename columns of metaDataMBX
 colnames(metaDataMBX) <- c("ExternalID","ParticipantID","disease" )
 
@@ -80,7 +80,7 @@ mbxData <- read.csv("data/metabolomics.csv")
 mbxData = subset(mbxData, select = -c(1,2,3,4,7) )
 ```
 
-### Third, we perform data extraction, and process the data
+## Third, we perform data extraction, and process the data
 
 ``` r
 ### row (metabolite) filtering ###
@@ -119,7 +119,7 @@ diseaseLabels <- append(diseaseLabels, "NA",after = 0)
 mbxData <- rbind(diseaseLabels, mbxData)
 ```
 
-### Fourth, we split up the data for UC and CD, include the control data nonIBD, and save this data to an output folder.
+## Fourth, we split up the data for UC and CD, include the control data nonIBD, and save this data to an output folder.
 
 ``` r
 #write only UC versus nonIBD comparison
@@ -147,18 +147,21 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpdN5n3N/remotes5468280a06f1/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
-    ## * checking DESCRIPTION meta-information ... OK
-    ## * checking for LF line-endings in source and make files and shell scripts
-    ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ## ── R CMD build ─────────────────────────────────────────────────────────────────
+    ##       ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpgVap3m\remotes422049c37151\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##       ─  preparing 'rmd2jupyter':
+    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##       ─  checking for LF line-endings in source and make files and shell scripts
+    ##   ─  checking for empty or unneeded directories
+    ##    Omitted 'LazyData' from DESCRIPTION
+    ##       ─  building 'rmd2jupyter_0.1.0.tar.gz'
+    ##      
+    ## 
 
 ``` r
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("dataPreprocessing.Rmd")
 
 #markdown_file <- "dataPreprocessing.md"
@@ -171,5 +174,3 @@ rmd2jupyter("dataPreprocessing.Rmd")
 ##Clean up R-studio environment
 remove(diseaseLabels, fileUrl, names.use, mbxData, mbxData.b, mbxDataCD, mbxDataUC, metaDataMBX, metaData)
 ```
-
-### After data processing, we continue to step 8, to find significantly changes metabolites.

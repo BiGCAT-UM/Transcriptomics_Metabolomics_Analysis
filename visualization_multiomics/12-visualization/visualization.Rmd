@@ -28,7 +28,7 @@ library(rWikiPathways)#to get pathways from WikiPathways
 library(RColorBrewer)#to manage colors with R
 library(dplyr)
 # set your working environment to the location where your current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ##Obtain transcriptomics and metabolomics data
@@ -68,8 +68,8 @@ colnames(mSet_CD) <- c('ID','log2FC','pvalues')
 colnames(mSet_UC) <- c('ID','log2FC','pvalues')
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#work_DIR <- getwd()
 ```
 
 ##Combine both dataframes
@@ -154,10 +154,10 @@ RCy3::setNodeBorderColorMapping('pvalues', c(significant_pvalues,not.significant
 
 ##Update relevant interactions to directional ones:
 RCy3::setEdgeTargetArrowShapeMapping(table.column = 'EndArrow', c('mim-conversion', 'Arrow', 'mim-catalysis'), c('DELTA', 'DELTA', 'OPEN_CIRCLE'), style.name = "pathwayStyle")
-
+work_DIR
 #Save output 
-filename_multiomics <- paste0("output/", pathway.id, "_", disorder, "_location_", location_transcriptomics,"_visualization.png")
-png.file <- file.path(getwd(), filename_multiomics)
+filename_multiomics <- paste0(work_DIR, "/visualization_multiomics/12-visualization/output/", pathway.id, "_", disorder, "_location_", location_transcriptomics,"_visualization.png")
+png.file <- file.path( filename_multiomics)
 exportImage(png.file, 'PNG', zoom = 500)
 ```
 ##Print session info:

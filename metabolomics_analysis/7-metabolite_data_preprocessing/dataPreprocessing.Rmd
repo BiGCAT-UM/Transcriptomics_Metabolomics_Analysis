@@ -27,7 +27,7 @@ library(rstudioapi)
 library(dplyr)
 library(stringr)
 # set your working environment to the location where your current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Second, we download the required data, read the metadata and filter out not-relevant data.
@@ -137,7 +137,7 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("dataPreprocessing.Rmd")
 
 #markdown_file <- "dataPreprocessing.md"
@@ -150,5 +150,3 @@ rmd2jupyter("dataPreprocessing.Rmd")
 ##Clean up R-studio environment
 remove(diseaseLabels, fileUrl, names.use, mbxData, mbxData.b, mbxDataCD, mbxDataUC, metaDataMBX, metaData)
 ```
-
-### After data processing, we continue to step 8, to find significantly changes metabolites.

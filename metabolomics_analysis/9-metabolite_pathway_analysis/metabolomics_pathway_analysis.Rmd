@@ -15,18 +15,13 @@ In this workflow, we link the metabolites of interest to pathway data from WikiP
 
 ```{r data_import,warning=FALSE, message=FALSE}
 # Obtain Working Directory for step 8 to find processed data
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-getwd()
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd('..')
 work_DIR <- getwd()
 
 #Obtain data from step 8
 mSet_CD <- read.csv("8-significantly_changed_metabolites_analysis/output/mbxData_CD.csv", na.strings=c("", "NA"))
 mSet_UC <- read.csv("8-significantly_changed_metabolites_analysis/output/mbxData_UC.csv", na.strings=c("", "NA"))
-
-# Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
 
 ## Select a disorder to analyse (options; CD or UC)
 disorder <- "CD"
@@ -37,7 +32,6 @@ if (disorder == "CD") {
     mSet = mSet_UC
     print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
 ```
-
 ## Find pathways based on relevant IDs column
 ```{r pathway_retrieval,warning=FALSE, message=FALSE}
 if(!"SPARQL" %in% installed.packages()){
@@ -60,7 +54,6 @@ options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.ve
 resultsMetadata <- SPARQL(endpointwp,queryMetadata,curl_args=list(useragent=R.version.string))
 showresultsMetadata <- resultsMetadata$results
 remove(queryMetadata, resultsMetadata)
-
 
 ## Create a list of HMDB IDs according to filtering criteria from step 8.
 list_Relevant_HMDB_IDs <- list(mSet$relevant_ids)
@@ -191,7 +184,7 @@ pathwayAnalysis_results_sorted <- pathwayAnalysis_results[  with(pathwayAnalysis
 
 print(pathwayAnalysis_results_sorted[1:5,])
 ```
-Export the pathway data:
+## Export the pathway data:
 ```{r data_export, warning=FALSE, message=FALSE}
 ##Save the data file
 nameDataFile <- paste0("output/mbxPWdata_", disorder ,".csv")
@@ -254,7 +247,7 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("metabolomics_pathway_analysis.Rmd")
 
 #markdown_file <- "metabolomics_pathway_analysis.md"

@@ -15,18 +15,13 @@ In this workflow, we will apply statistical analysis on metabolomics data and li
 ## First we locate the metabolomics data from step-7 (preprocessing).
 ```{r data_download,warning=FALSE, message=FALSE}
 # Obtain Working Directory for step 7 to find data
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-getwd()
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd('..')
 work_DIR <- getwd()
 
 #Obtain data from step 7
 mSet_CD <- read.csv("7-metabolite_data_preprocessing/output/mbxDataCD_nonIBD.csv", na.strings=c("", "NA"))
 mSet_UC <- read.csv("7-metabolite_data_preprocessing/output/mbxDataUC_nonIBD.csv", na.strings=c("", "NA"))
-
-# Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
 
 ## Select a disorder to analyse (options; CD or UC)
 disorder <- "CD"
@@ -35,8 +30,10 @@ if (disorder == "CD") {
   mSet = mSet_CD 
   print("Selected disorder is Crohn's disease")}else if(disorder == "UC"){ 
     mSet = mSet_UC
-    print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
+  print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")
+}
 ```
+
 ## Second, we perform data extraction from the file, and process the data
 ```{r data_import,warning=FALSE, message=FALSE}
 ##DATA CLEANUP:
@@ -266,14 +263,14 @@ nameVolcano <- paste0("output/", disorder, "_", selectViz, "_VolcanoPlot_absLogF
 ggsave(nameVolcano)
 
 ```
-### Last, we create a Jupyter notebook and markdown file from this script
+## Last, we create a Jupyter notebook and markdown file from this script
 ```{r writing_to_notebooks,warning=FALSE, message=FALSE }
 #Jupyter Notebook file
 if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("metabolomics_statistical_analysis.Rmd")
 
 #markdown_file <- "metabolomics_statistical_analysis.md"

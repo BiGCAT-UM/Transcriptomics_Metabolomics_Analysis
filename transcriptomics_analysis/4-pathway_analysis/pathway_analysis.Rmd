@@ -58,7 +58,7 @@ if (disorder == "CD") {
   }
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 work_DIR <- getwd()
 ```
 

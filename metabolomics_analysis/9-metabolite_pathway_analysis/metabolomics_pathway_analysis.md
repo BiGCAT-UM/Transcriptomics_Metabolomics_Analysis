@@ -5,23 +5,13 @@ from WikiPathways, based on their HMDB identifier.
 
 ``` r
 # Obtain Working Directory for step 8 to find processed data
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-getwd()
-```
-
-    ## [1] "/home/deniseslenter/Documents/GitHub/Transcriptomics_Metabolomics_Analysis/metabolomics_analysis/9-metabolite_pathway_analysis"
-
-``` r
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd('..')
 work_DIR <- getwd()
 
 #Obtain data from step 8
 mSet_CD <- read.csv("8-significantly_changed_metabolites_analysis/output/mbxData_CD.csv", na.strings=c("", "NA"))
 mSet_UC <- read.csv("8-significantly_changed_metabolites_analysis/output/mbxData_UC.csv", na.strings=c("", "NA"))
-
-# Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
 
 ## Select a disorder to analyse (options; CD or UC)
 disorder <- "CD"
@@ -58,7 +48,6 @@ options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.ve
 resultsMetadata <- SPARQL(endpointwp,queryMetadata,curl_args=list(useragent=R.version.string))
 showresultsMetadata <- resultsMetadata$results
 remove(queryMetadata, resultsMetadata)
-
 
 ## Create a list of HMDB IDs according to filtering criteria from step 8.
 list_Relevant_HMDB_IDs <- list(mSet$relevant_ids)
@@ -99,12 +88,16 @@ remove(item1, item2)
 results_CombinePWs <- SPARQL(endpointwp,query_CombinePWs,curl_args=list(useragent=R.version.string))
 showresults_CombinePWs <- results_CombinePWs$results
 remove(query_CombinePWs,results_CombinePWs)
-#Keep and print table with first 5 relevant pathways (if less than 5 are found, print only those)
-if(nrow(showresults_CombinePWs) < 5){
+
+##Top pathway cuttoff threshold (can be defined by users)
+pathway_cutoff_metabolites = 10
+
+#Keep and print table within threshold (if less than threshold are found, print only those)
+if(nrow(showresults_CombinePWs) < pathway_cutoff_metabolites){
 print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:4)])
 }else{
-  #delete 4th,5th and 1st rows
-  showresults_CombinePWs <- showresults_CombinePWs[-c(6:nrow(showresults_CombinePWs)),]
+  #delete rows below threshold
+  showresults_CombinePWs <- showresults_CombinePWs[-c((pathway_cutoff_metabolites+1):nrow(showresults_CombinePWs)),]
   print(showresults_CombinePWs[1:5,c(2:4)])}
 ```
 
@@ -203,31 +196,31 @@ print(pathwayAnalysis_results_sorted[1:5,])
 ```
 
     ##   pathway                                                  pathwayTitle
-    ## 2  WP3604                                  Biochemical pathways: part I
-    ## 1  WP2525 Trans-sulfuration, one-carbon metabolism and related pathways
-    ## 3  WP3925                                         Amino acid metabolism
-    ## 4  WP4723                        Omega-3 / omega-6 fatty acid synthesis
-    ## 5   WP661                                           Glucose homeostasis
+    ## 4  WP3604                                  Biochemical pathways: part I
+    ## 2  WP2525 Trans-sulfuration, one-carbon metabolism and related pathways
+    ## 5  WP3925                                         Amino acid metabolism
+    ## 6  WP4723                        Omega-3 / omega-6 fatty acid synthesis
+    ## 1    WP15                                Selenium micronutrient network
     ##   HMDBsInPWs probabilities
-    ## 2         17  3.544334e-14
-    ## 1          8  7.972883e-02
-    ## 3          7  1.109534e-04
-    ## 4          7  1.551589e-01
-    ## 5          6  1.428674e-01
-    ##                                                                                                                                                                                                                                                                                                                                                                                                                                                                               HGNCs
-    ## 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
-    ## 1                                                                                              AGXT2 AHCY AHCYL1 AHCYL2 AMT BAAT BCAT1 BCAT2 BHMT BHMT2 CBS CBSL CDO1 CEPT1 CHDH CHKA CHKB CHPT1 CSAD CTH DHFR DHFR2 DMGDH DNM1 DNMT3A DNMT3B DNMT3L ETNK1 ETNK2 GAD1 GAD2 GCLC GCLM GNMT GPX1 GPX2 GPX3 GPX4 GPX5 GPX6 GPX7 GSR GSS MAT1A MAT2A MAT2B MTHFD1 MTHFD1L MTHFD2 MTHFD2L MTHFR MTR PCYT1A PCYT1B PCYT2 PEMT PHGDH PLD1 PSAT1 PSPH SARDH SHMT1 SHMT2 SOD1 SOD2 SOD3 TYMS
-    ## 3 ACAA1 ACADM ACLY ACO2 ACSS1 ADH1C ADH4 ADH5 ADH7 ALDH18A1 ALDH1A1 ALDH7A1 AOC3 ARG1 ARG2 ASNS ASS1 AUH BCAT1 BHMT CAD CBS CPS1 CS CTH DBH DDC DLD DLST EHHADH EPRS1 FAH FARSB FH FTCD G6PC2 GCLM GLS GLUD1 GLUL GOT1 GOT2 GPT2 GSR GSS HADH HAL HDC HIBADH HIBCH HMGCL HMGCS2 HNMT IARS1 IDH1 LARS2 LDHA MAOA MARS2 MCCC1 MDH1 MDH2 MMUT MPST OAT ODC1 OGDH OTC P4HA2 PC PCK1 PDHA1 PDHX PDK4 PKM PNMT PPM1L PYCR1 RARS1 SDHA SDS SMS SRM SUCLG1 TAT TDO2 TH TPH1 TPO VARS1 WARS1
-    ## 4                                                                                                                                                                                                                                                                                                                                                                                 ACOT1 ACOT2 ACOX1 ACOX3 ACSL1 ACSL3 ACSL4 ELOVL2 ELOVL5 FADS1 FADS2 PLA2G4A PLA2G4B PLA2G5 PLA2G6
-    ## 5                                                                                                                                                                                                                                                                                                                                                                                                                                                                               INS
+    ## 4         17  3.544334e-14
+    ## 2          8  7.972883e-02
+    ## 5          7  1.109534e-04
+    ## 6          7  1.551589e-01
+    ## 1          6  2.236586e-05
+    ##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                HGNCs
+    ## 4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    ## 2                                                                                                               AGXT2 AHCY AHCYL1 AHCYL2 AMT BAAT BCAT1 BCAT2 BHMT BHMT2 CBS CBSL CDO1 CEPT1 CHDH CHKA CHKB CHPT1 CSAD CTH DHFR DHFR2 DMGDH DNM1 DNMT3A DNMT3B DNMT3L ETNK1 ETNK2 GAD1 GAD2 GCLC GCLM GNMT GPX1 GPX2 GPX3 GPX4 GPX5 GPX6 GPX7 GSR GSS MAT1A MAT2A MAT2B MTHFD1 MTHFD1L MTHFD2 MTHFD2L MTHFR MTR PCYT1A PCYT1B PCYT2 PEMT PHGDH PLD1 PSAT1 PSPH SARDH SHMT1 SHMT2 SOD1 SOD2 SOD3 TYMS
+    ## 5                  ACAA1 ACADM ACLY ACO2 ACSS1 ADH1C ADH4 ADH5 ADH7 ALDH18A1 ALDH1A1 ALDH7A1 AOC3 ARG1 ARG2 ASNS ASS1 AUH BCAT1 BHMT CAD CBS CPS1 CS CTH DBH DDC DLD DLST EHHADH EPRS1 FAH FARSB FH FTCD G6PC2 GCLM GLS GLUD1 GLUL GOT1 GOT2 GPT2 GSR GSS HADH HAL HDC HIBADH HIBCH HMGCL HMGCS2 HNMT IARS1 IDH1 LARS2 LDHA MAOA MARS2 MCCC1 MDH1 MDH2 MMUT MPST OAT ODC1 OGDH OTC P4HA2 PC PCK1 PDHA1 PDHX PDK4 PKM PNMT PPM1L PYCR1 RARS1 SDHA SDS SMS SRM SUCLG1 TAT TDO2 TH TPH1 TPO VARS1 WARS1
+    ## 6                                                                                                                                                                                                                                                                                                                                                                                                  ACOT1 ACOT2 ACOX1 ACOX3 ACSL1 ACSL3 ACSL4 ELOVL2 ELOVL5 FADS1 FADS2 PLA2G4A PLA2G4B PLA2G5 PLA2G6
+    ## 1 ABCA1 ALB ALOX15B ALOX5 ALOX5AP APOA1 APOB CAT CBS CCL2 CRP CTH DIO1 DIO2 DIO3 F2 F7 FGA FGB FGG FLAD1 GGT1 GPX1 GPX2 GPX3 GPX4 GPX6 GSR HBA1 HBB ICAM1 IFNG IL1B IL6 INS INSR KMO KYNU LDLR MPO MSRB1 MTHFR MTR NFKB1 NFKB2 PLAT PLG PNPO PRDX1 PRDX2 PRDX3 PRDX4 PRDX5 PTGS1 PTGS2 RELA RFK SAA1 SAA2 SAA3P SAA4 SCARB1 SELENOF SELENOH SELENOI SELENOK SELENOM SELENON SELENOO SELENOP SELENOS SELENOT SELENOV SELENOW SEPHS2 SERPINA3 SERPINE1 SOD1 SOD2 SOD3 TNF TXN TXNRD1 TXNRD2 TXNRD3 XDH
     ##   ProteinsInPWs
-    ## 2             0
-    ## 1            67
-    ## 3            91
-    ## 4            15
-    ## 5             1
+    ## 4             0
+    ## 2            67
+    ## 5            91
+    ## 6            15
+    ## 1            86
 
-Export the pathway data:
+## Export the pathway data:
 
 ``` r
 ##Save the data file
@@ -288,34 +281,28 @@ if(length(intersectingHMDB) == 0 ){print("All relevant biomarkers are in a pathw
 sessionInfo()
 ```
 
-    ## R version 4.2.2 Patched (2022-11-10 r83330)
-    ## Platform: x86_64-pc-linux-gnu (64-bit)
-    ## Running under: Ubuntu 18.04.6 LTS
+    ## R version 4.2.2 (2022-10-31 ucrt)
+    ## Platform: x86_64-w64-mingw32/x64 (64-bit)
+    ## Running under: Windows 10 x64 (build 19044)
     ## 
     ## Matrix products: default
-    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
-    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
     ## 
     ## locale:
-    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
-    ##  [3] LC_TIME=nl_NL.UTF-8        LC_COLLATE=en_US.UTF-8    
-    ##  [5] LC_MONETARY=nl_NL.UTF-8    LC_MESSAGES=en_US.UTF-8   
-    ##  [7] LC_PAPER=nl_NL.UTF-8       LC_NAME=C                 
-    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-    ## [11] LC_MEASUREMENT=nl_NL.UTF-8 LC_IDENTIFICATION=C       
+    ## [1] LC_COLLATE=English_Netherlands.utf8  LC_CTYPE=English_Netherlands.utf8   
+    ## [3] LC_MONETARY=English_Netherlands.utf8 LC_NUMERIC=C                        
+    ## [5] LC_TIME=English_Netherlands.utf8    
     ## 
     ## attached base packages:
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] SPARQL_1.16    RCurl_1.98-1.9 XML_3.99-0.9  
+    ## [1] SPARQL_1.16     RCurl_1.98-1.10 XML_3.99-0.13  
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] digest_0.6.31   bitops_1.0-7    lifecycle_1.0.3 magrittr_2.0.3 
-    ##  [5] evaluate_0.19   rlang_1.0.6     stringi_1.7.8   cli_3.4.1      
-    ##  [9] rstudioapi_0.14 vctrs_0.5.1     rmarkdown_2.19  tools_4.2.2    
-    ## [13] stringr_1.5.0   glue_1.6.2      xfun_0.35       yaml_2.3.6     
-    ## [17] fastmap_1.1.0   compiler_4.2.2  htmltools_0.5.4 knitr_1.41
+    ##  [1] compiler_4.2.2  fastmap_1.1.1   cli_3.6.0       tools_4.2.2    
+    ##  [5] htmltools_0.5.4 rstudioapi_0.14 yaml_2.3.7      rmarkdown_2.20 
+    ##  [9] knitr_1.42      xfun_0.37       digest_0.6.31   bitops_1.0-7   
+    ## [13] rlang_1.0.6     evaluate_0.20
 
 ## Last, we create a Jupyter notebook file from this script:
 
@@ -326,20 +313,21 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ##      checking for file ‘/tmp/Rtmp8b9bv0/remotes4c90616a3c0e/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ...  ✔  checking for file ‘/tmp/Rtmp8b9bv0/remotes4c90616a3c0e/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’
-    ##   ─  preparing ‘rmd2jupyter’:
-    ##      checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
-    ##   ─  checking for LF line-endings in source and make files and shell scripts
+    ## ── R CMD build ─────────────────────────────────────────────────────────────────
+    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpemjE9u\remotes363022cf3e5d\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpemjE9u\remotes363022cf3e5d\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##       ─  preparing 'rmd2jupyter':
+    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##       ─  checking for LF line-endings in source and make files and shell scripts
     ##   ─  checking for empty or unneeded directories
-    ##    Omitted ‘LazyData’ from DESCRIPTION
-    ##   ─  building ‘rmd2jupyter_0.1.0.tar.gz’
+    ##    Omitted 'LazyData' from DESCRIPTION
+    ##       ─  building 'rmd2jupyter_0.1.0.tar.gz'
     ##      
     ## 
 
 ``` r
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("metabolomics_pathway_analysis.Rmd")
 
 #markdown_file <- "metabolomics_pathway_analysis.md"

@@ -4,27 +4,17 @@ In this workflow, we will apply statistical analysis on metabolomics
 data and link the metabolites of interest to pathway data from
 WikiPathways.
 
-First we locate the metabolomics data from step 7 (preprocessing).
+## First we locate the metabolomics data from step-7 (preprocessing).
 
 ``` r
 # Obtain Working Directory for step 7 to find data
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-getwd()
-```
-
-    ## [1] "/home/deniseslenter/Documents/GitHub/Transcriptomics_Metabolomics_Analysis/metabolomics_analysis/8-significantly_changed_metabolites_analysis"
-
-``` r
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd('..')
 work_DIR <- getwd()
 
 #Obtain data from step 7
 mSet_CD <- read.csv("7-metabolite_data_preprocessing/output/mbxDataCD_nonIBD.csv", na.strings=c("", "NA"))
 mSet_UC <- read.csv("7-metabolite_data_preprocessing/output/mbxDataUC_nonIBD.csv", na.strings=c("", "NA"))
-
-# Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
 
 ## Select a disorder to analyse (options; CD or UC)
 disorder <- "CD"
@@ -33,12 +23,13 @@ if (disorder == "CD") {
   mSet = mSet_CD 
   print("Selected disorder is Crohn's disease")}else if(disorder == "UC"){ 
     mSet = mSet_UC
-    print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")}
+  print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")
+}
 ```
 
     ## [1] "Selected disorder is Crohn's disease"
 
-Second, we perform data extraction from the file, and process the data
+## Second, we perform data extraction from the file, and process the data
 
 ``` r
 ##DATA CLEANUP:
@@ -54,7 +45,7 @@ mSet <- mSet [-1,]
 #Remove metabolites with < 50% data (located in columns 8-553.
 columns <- ncol(mSet)
 rowsData <- nrow(mSet)
-removeLines <- rowSums(is.na(mSet[,3-columns]))
+removeLines <- rowSums(is.na(mSet[,3-columns])) #HERE WE DELETE A COLUMN WHICH SHOULD NOT BE LIKE THAT -it should be like-> mSet[,3:columns]
 fifty_percent <- floor((columns)/2)
 
 mSet_MissingDataCounted <- cbind(mSet, removeLines)
@@ -134,7 +125,8 @@ mSet_FINAL <- mSet_transformed[ , order(names(mSet_transformed))]}else{mSet_FINA
 
 ##Move Name column back to column 2
 columnNumber <- which(colnames(mSet_FINAL)=="Compound.Name")
-mSet_FINAL <- mSet_FINAL[,c(columnNumber,1:ncol(mSet_FINAL)-1)]
+mSet_FINAL <- mSet_FINAL[,c(columnNumber,1:ncol(mSet_FINAL)-1)]## WHILE APPLYING THIS STEP ONE COLOUMN WAS DELETED ->  FOR CD "nonIBD_MSM9VZMM" is deleted
+#we need to change it as mSet_FINAL <- mSet_FINAL[,c(columnNumber,1:ncol(mSet_FINAL))
 mSet_FINAL <- mSet_FINAL [,-(columnNumber+1)]
 
 ##Move HMDB column back to the start
@@ -190,7 +182,7 @@ remove(mSet_transformed, columns_disorders, columnNumber, end_Disorders, foldcha
 The next step will visualize relevant metabolites in a Volcano plot,
 with thresholds defined for the log2FCs and p-values. Since we are
 dealing with non-targeted LC_MS data, we are applying stringent criteria
-here (p-value below 0.01, and \|log2FC\| \>= 1.5)
+here (p-value below 0.05, and \|log2FC\| \>= 1.5)
 
 ``` r
 ##Inspired by: https://biocorecrg.github.io/CRG_RIntroduction/volcano-plots.html
@@ -271,7 +263,7 @@ volcanoPlot_disorder
 ```
 
 ![](metabolomics_statistical_analysis_files/figure-markdown_github/volcano_plot-1.png)
-Export the data and Volcano Plot:
+\## Export the data and Volcano Plot:
 
 ``` r
 ##Save the data file
@@ -288,7 +280,7 @@ nameVolcano <- paste0("output/", disorder, "_", selectViz, "_VolcanoPlot_absLogF
 ggsave(nameVolcano)
 ```
 
-### Last, we create a Jupyter notebook and markdown file from this script
+## Last, we create a Jupyter notebook and markdown file from this script
 
 ``` r
 #Jupyter Notebook file
@@ -297,23 +289,26 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ```
 
     ## 
-    ## * checking for file ‘/tmp/RtmpRvj0AG/remotes5630559e0fcc/mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION’ ... OK
-    ## * preparing ‘rmd2jupyter’:
-    ## * checking DESCRIPTION meta-information ... OK
-    ## * checking for LF line-endings in source and make files and shell scripts
-    ## * checking for empty or unneeded directories
-    ## Omitted ‘LazyData’ from DESCRIPTION
-    ## * building ‘rmd2jupyter_0.1.0.tar.gz’
+    ## ── R CMD build ─────────────────────────────────────────────────────────────────
+    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpMtUw49\remotes5a287e8ead\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpMtUw49\remotes5a287e8ead\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' (339ms)
+    ##       ─  preparing 'rmd2jupyter':
+    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##       ─  checking for LF line-endings in source and make files and shell scripts
+    ##   ─  checking for empty or unneeded directories
+    ##    Omitted 'LazyData' from DESCRIPTION
+    ##       ─  building 'rmd2jupyter_0.1.0.tar.gz'
+    ##      
+    ## 
 
 ``` r
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("metabolomics_statistical_analysis.Rmd")
 
 #markdown_file <- "metabolomics_statistical_analysis.md"
 #if (file.exists(markdown_file)) {
-#   unlink(markdown_file, recursive=TRUE)#firs delete the existing one
+#   unlink(markdown_file, recursive=TRUE)#first delete the existing one
 # }
 #If this next line trows an error, build the md file with knittr manual selection (file, Knit document, or ctrl+shift+k -keyboard shortcut).
 #rmarkdown::render("metabolomics_statistical_analysis.Rmd", "md_document")

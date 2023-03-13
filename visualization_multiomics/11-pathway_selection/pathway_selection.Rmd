@@ -29,8 +29,10 @@ library(ggplot2)
 library(VennDiagram)
 library(RColorBrewer)
 # set your working environment to the location where your current source file is saved into.
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-setwd('../..')
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd('../..')
+setwd('..')
+setwd('..')
 work_DIR <- getwd()
 ```
 
@@ -54,8 +56,9 @@ mPWs_UC <- read.delim(paste0(filelocation_m, 'mbxPWdata_UC.csv'), sep = ",", na.
 #mSet_UC <- mSet_UC [,c(1:4)]
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd("visualization_multiomics")
+#work_DIR <- getwd()
 ```
 
 ##Compare PWs from transcriptomics and metabolomics to find overlap
@@ -102,13 +105,14 @@ set2 <- paste(tPWs_CD_rectum_sign[,1], sep="")
 set3 <- paste(mPWs_CD_sign[,1] , sep="")
 set4 <- paste(mPWs_UC_sign[,1] , sep="")
 namesDiagram <- c("CD ileum sign" , "CD rectum sign" , "CD metabolites sign")
-filenameDiagram <- 'output/CD_comparison_sign.png'}else if(disorder == "UC"){# Generate 3 sets for comparison:
+filenameDiagram <- paste0(work_DIR, "/visualization_multiomics/11-pathway_selection/output/CD_comparison_sign.png")
+#filenameDiagram <- 'output/CD_comparison_sign.png'}else if(disorder == "UC"){# Generate 3 sets for comparison:
 set1 <- paste(tPWs_UC_ileum_sign[,1] , sep="")
 set2 <- paste(tPWs_UC_rectum_sign[,1], sep="")
 set3 <- paste(mPWs_UC_sign[,1] , sep="")
 set4 <- paste(mPWs_CD_sign[,1] , sep="")
 namesDiagram <- c("UC ileum sign" , "UC rectum sign" , "UC metabolites sign")
-filenameDiagram <- 'output/UC_comparison_sign.png'}else{print("Disorder not recognised.")}
+filenameDiagram <- paste0(work_DIR, "/visualization_multiomics/11-pathway_selection/output/UC_comparison_sign.png")}else{print("Disorder not recognised.")}
 
 # Chart
 venn.diagram(
@@ -156,13 +160,13 @@ set2 <- paste(tPWs_CD_rectum_sign[,1], sep="")
 set3 <- paste(mPWs_CD_interest[,1] , sep="")
 set4 <- paste(mPWs_UC_interest[,1] , sep="")
 namesDiagram <- c("CD ileum sign" , "CD rectum sign" , "CD metabolites interest")
-filenameDiagram <- 'output/CD_comparison_interest.png'}else if(disorder == "UC"){# Generate 3 sets for comparison:
+filenameDiagram <- paste0(work_DIR, "/visualization_multiomics/11-pathway_selection/output/CD_comparison_interest.png")}else if(disorder == "UC"){# Generate 3 sets for comparison:
 set1 <- paste(tPWs_UC_ileum_sign[,1] , sep="")
 set2 <- paste(tPWs_UC_rectum_sign[,1], sep="")
 set3 <- paste(mPWs_UC_interest[,1] , sep="")
 set4 <- paste(mPWs_CD_interest[,1] , sep="")
 namesDiagram <- c("UC ileum sign" , "UC rectum sign" , "UC metabolites interest")
-filenameDiagram <- 'output/UC_comparison_interest.png'}else{print("Disorder not recognised.")}
+filenameDiagram <- paste0(work_DIR, "/visualization_multiomics/11-pathway_selection/output/UC_comparison_interest.png")}else{print("Disorder not recognised.")}
 
 # Chart
 venn.diagram(
@@ -210,13 +214,13 @@ set2 <- paste(tPWs_CD_rectum[,1], sep="")
 set3 <- paste(mPWs_CD[,1] , sep="")
 set4 <- paste(mPWs_UC[,1] , sep="")
 namesDiagram <- c("CD ileum" , "CD rectum " , "CD metabolites")
-filenameDiagram <- 'output/CD_comparison_All.png'}else if(disorder == "UC"){# Generate 3 sets for comparison:
+filenameDiagram <- paste0(work_DIR, "/visualization_multiomics/11-pathway_selection/output/CD_comparison_all.png")}else if(disorder == "UC"){# Generate 3 sets for comparison:
 set1 <- paste(tPWs_UC_ileum[,1] , sep="")
 set2 <- paste(tPWs_UC_rectum[,1], sep="")
 set3 <- paste(mPWs_UC[,1] , sep="")
 set4 <- paste(mPWs_CD[,1] , sep="")
 namesDiagram <- c("UC ileum" , "UC rectum " , "UC metabolites")
-filenameDiagram <- 'output/UC_comparison_All.png'}else{print("Disorder not recognised.")}
+filenameDiagram <- paste0(work_DIR, "/visualization_multiomics/11-pathway_selection/output/UC_comparison_all.png")}else{print("Disorder not recognised.")}
 
 # Chart
 venn.diagram(
@@ -288,6 +292,6 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("pathway_selection.Rmd")
 ```
