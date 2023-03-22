@@ -17,7 +17,6 @@ We will be performing pathway enrichment analysis on a differential gene express
 ```{r setup, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"org.Hs.eg.db" %in% installed.packages()) BiocManager::install("org.Hs.eg.db")  
 if(!"AnnotationDbi" %in% installed.packages()) BiocManager::install("AnnotationDbi")
 if(!"rWikiPathways" %in% installed.packages()) BiocManager::install("rWikiPathways")
@@ -25,15 +24,12 @@ if(!"clusterProfiler" %in% installed.packages()) BiocManager::install("clusterPr
 if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
 
 #loading installed libraries
-library(rstudioapi) # interface for interacting with RStudio IDE with R code.
 library(org.Hs.eg.db) #This is the organism annotation package ("org") for Homo sapiens ("Hs"), organized as an AnnotationDbi   package ("db"), using Entrez Gene IDs ("eg") as primary key.
 library(AnnotationDbi) # for connecting and querying annotation databases
 library(rWikiPathways) # for programmatic access to WikiPathways content
 library(clusterProfiler) # for implementing methods to analyze and visualize functional profiles of genomic data
 library(dplyr)
 
-# set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Importing dataset
@@ -57,8 +53,7 @@ if (disorder == "CD") {
   print("Selected disorder is Ulcerative Colitis")}else{print("Disorder not Recognised")
   }
 
-# Set Working Directory back to current folder
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd("4-pathway_analysis")
 work_DIR <- getwd()
 ```
 
@@ -190,6 +185,5 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("pathway_analysis.Rmd")
 ```

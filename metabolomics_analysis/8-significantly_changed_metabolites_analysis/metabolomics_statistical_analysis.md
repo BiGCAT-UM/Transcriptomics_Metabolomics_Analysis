@@ -7,10 +7,7 @@ WikiPathways.
 ## First we locate the metabolomics data from step-7 (preprocessing).
 
 ``` r
-# Obtain Working Directory for step 7 to find data
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd('..')
-work_DIR <- getwd()
 
 #Obtain data from step 7
 mSet_CD <- read.csv("7-metabolite_data_preprocessing/output/mbxDataCD_nonIBD.csv", na.strings=c("", "NA"))
@@ -32,10 +29,6 @@ if (disorder == "CD") {
 ## Second, we perform data extraction from the file, and process the data
 
 ``` r
-##DATA CLEANUP:
-#if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
-#library(dplyr)
-
 #Merge column headers: disorder_patientID
 names(mSet) <- paste(mSet [1, ], names(mSet), sep = "_")
 mSet <- mSet [-1,]
@@ -290,7 +283,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 
     ## 
     ## ── R CMD build ─────────────────────────────────────────────────────────────────
-    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpMtUw49\remotes5a287e8ead\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpMtUw49\remotes5a287e8ead\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' (339ms)
+    ##       ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\Rtmpyu29C9\remotes620025544512\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
     ##       ─  preparing 'rmd2jupyter':
     ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
     ##       ─  checking for LF line-endings in source and make files and shell scripts
@@ -303,15 +296,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ``` r
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("metabolomics_statistical_analysis.Rmd")
-
-#markdown_file <- "metabolomics_statistical_analysis.md"
-#if (file.exists(markdown_file)) {
-#   unlink(markdown_file, recursive=TRUE)#first delete the existing one
-# }
-#If this next line trows an error, build the md file with knittr manual selection (file, Knit document, or ctrl+shift+k -keyboard shortcut).
-#rmarkdown::render("metabolomics_statistical_analysis.Rmd", "md_document")
 
 ##Clean up R-studio environment
 remove(list_Relevant_HMDB_IDs, mSet_AnalysisFinal, mSet_AnalysisReady, mSet_AnalysisReady_Duplicates, mSet_AnalysisReady_FC, mSet_AnalysisReady_FCandp, mSet_AnalysisReady_p, mSet_transformed.b, volcanoPlot_disorder, disorderName, imageType, log2FC_max, log2FC_min, nameDataFile, nameVolcano, p_value_threshold, selectViz, titleVolcano, transformation, verticalAxisTitle)

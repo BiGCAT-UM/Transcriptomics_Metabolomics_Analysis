@@ -13,18 +13,12 @@ In this script, filtering options will be applied for transcriptomics data to be
 ```{r setup, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"readxl" %in% installed.packages()) BiocManager::install("readxl")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
 
 #load libraries
-library(rstudioapi)
 library(readxl)
 library(dplyr)
-
-# set working environment to the location where current source file is saved into.
-# R-users can use the command below
-# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 ```
 ## Read and filter out metadata 
@@ -91,6 +85,5 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("dataPrep.Rmd")
 ```

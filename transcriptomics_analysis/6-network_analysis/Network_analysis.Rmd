@@ -19,7 +19,6 @@ Installing and loading required libraries
 ```{r setup_environment, include = FALSE, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
 if(!"tidyr" %in% installed.packages()) BiocManager::install("tidyr")
 if(!"readr" %in% installed.packages()) BiocManager::install("readr")
@@ -35,8 +34,6 @@ library(RCy3)
 library(rWikiPathways)
 library(RColorBrewer)
 
-# set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Importing dataset
@@ -44,7 +41,6 @@ The data will be read for the disease on two biopsy locations
 ```{r dataset, warning=FALSE, message=FALSE}
 ##Obtain all Differentially Expressed Gene data from step 3:
 setwd('..')
-work_DIR <- getwd()
 
 #read all DEG data
 CD.ileum <- read.delim("4-pathway_analysis/output/DEGs_CD_ileum.tsv",sep = "\t", header = TRUE)
@@ -287,6 +283,5 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("Network_analysis.Rmd")
 ```

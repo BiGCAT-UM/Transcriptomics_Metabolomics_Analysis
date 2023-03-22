@@ -16,19 +16,16 @@ In this script, visualization of the enriched pathway which include both altered
 ```{r setup, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"RCy3" %in% installed.packages()) BiocManager::install("RCy3")
 if(!"rWikiPathways" %in% installed.packages()) BiocManager::install("rWikiPathways")
 if(!"RColorBrewer" %in% installed.packages()) BiocManager::install("RColorBrewer")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
 #load libraries
-library(rstudioapi)
 library(RCy3)#connect cytoscape via R
 library(rWikiPathways)#to get pathways from WikiPathways
 library(RColorBrewer)#to manage colors with R
 library(dplyr)
-# set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
 ```
 
 ##Obtain transcriptomics and metabolomics data
@@ -67,9 +64,6 @@ mSet_UC <- na.omit(mSet_UC [,c(2,4:5)])
 colnames(mSet_CD) <- c('ID','log2FC','pvalues')
 colnames(mSet_UC) <- c('ID','log2FC','pvalues')
 
-# Set Working Directory back to current folder
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-#work_DIR <- getwd()
 ```
 
 ##Combine both dataframes
@@ -173,7 +167,6 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("visualization.Rmd")
 ```
 

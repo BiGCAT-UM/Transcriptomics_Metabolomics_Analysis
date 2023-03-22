@@ -16,21 +16,17 @@ In this script, we select relevant pathways for both transcriptomics and metabol
 ```{r setup, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
 #Regular R packages:
 if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
 if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
 if(!"RColorBrewer" %in% installed.packages()){install.packages("RColorBrewer")}
 #load libraries
-library(rstudioapi)
 library(dplyr)
 library(ggplot2)
 library(VennDiagram)
 library(RColorBrewer)
 # set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-#setwd('../..')
 setwd('..')
 setwd('..')
 work_DIR <- getwd()
@@ -292,6 +288,5 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("pathway_selection.Rmd")
 ```

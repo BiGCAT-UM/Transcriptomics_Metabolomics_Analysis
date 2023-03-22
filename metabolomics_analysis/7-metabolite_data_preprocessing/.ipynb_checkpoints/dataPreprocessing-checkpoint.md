@@ -1,30 +1,31 @@
----
-title: "dataPreparation"
-author: 
-- "ddedesener"
-- "DeniseSl22"
-date: "05/02/22"
-output:
- md_document:
-    variant: markdown_github
-always_allow_html: true
----
 ## Introduction
-In this section of the workflow, we will obtain the metabolomics data and apply filtering options, to create a dataset ready for further statistical and pathway analysis.
+
+In this section of the workflow, we will obtain the metabolomics data
+and apply filtering options, to create a dataset ready for further
+statistical and pathway analysis.
 
 ## First, we setup the required libraries to get started.
-```{r setup, warning=FALSE, message=FALSE}
+
+``` r
 # check if libraries are already installed > otherwise install it
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
+if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
+#Libraries required for markdown documents:
+if(!"markdown" %in% installed.packages()){install.packages("markdown")}
+if(!"rmarkdown" %in% installed.packages()){install.packages("rmarkdown")}
 if(!"stringr" %in% installed.packages()){install.packages("stringr")}
 #load libraries
+library(rstudioapi)
 library(dplyr)
 library(stringr)
+# set your working environment to the location where your current source file is saved into.
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Second, we download the required data, read the metadata and filter out not-relevant data.
-```{r read_data, warning=FALSE, message=FALSE}
+
+``` r
 #Library to download data from online files:
 if(!"downloader" %in% installed.packages()){install.packages("downloader")}
 require(downloader)
@@ -35,7 +36,11 @@ fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metadata/hmp2_metadata.csv?a
 require(downloader)
 download(fileUrl, "data/hmp2_metadata.csv", mode = "wb")
 }
+```
 
+    ## [1] "Metadata already downloaded"
+
+``` r
 #read metadata file
 metaData <- read.csv("data/hmp2_metadata.csv")
 #filter out by data type and week number
@@ -54,20 +59,30 @@ if(file.exists("data/metabolomics.csv.gz")){print("Metabolomics zipped data alre
 fileUrl <- "https://ibdmdb.org/tunnel/products/HMP2/Metabolites/1723/HMP2_metabolomics.csv.gz?accessType=DOWNLOAD"
 download(fileUrl, "data/metabolomics.csv.gz", mode = "wb")
 }
+```
 
+    ## [1] "Metabolomics zipped data already downloaded"
+
+``` r
 #Note: if the URL download does not work, the zipped file is located on GitHub to continue the rest of this script.
 if(file.exists("data/metabolomics.csv")){print("Unzipped Metabolomics data already downloaded")}else{
 if(!"R.utils" %in% installed.packages()){install.packages("R.utils")}
 library(R.utils)
 gunzip("data/metabolomics.csv.gz", remove=FALSE)
 }
+```
 
+    ## [1] "Unzipped Metabolomics data already downloaded"
+
+``` r
 mbxData <- read.csv("data/metabolomics.csv")
 #delete not used columns
 mbxData = subset(mbxData, select = -c(1,2,3,4,7) )
 ```
+
 ## Third, we perform data extraction, and process the data
-```{r filtering,warning=FALSE, message=FALSE}
+
+``` r
 ### row (metabolite) filtering ###
 #delete metabolite or row if it has NA or empty value for hmdbID
 mbxData<- mbxData[!(is.na(mbxData$HMDB...Representative.ID.) | mbxData$HMDB...Representative.ID.=="") , ]
@@ -98,14 +113,15 @@ colnames(mbxData)[2] <- "Compound.Name"
 
 #add disease labels to the mbx data
 diseaseLabels <- metaDataMBX$disease
-##Add two empty strings to match with additional column data.
+##Add two empty strings to macth with additional column data.
 diseaseLabels <- append(diseaseLabels, "NA",after = 0)
 diseaseLabels <- append(diseaseLabels, "NA",after = 0)
 mbxData <- rbind(diseaseLabels, mbxData)
 ```
 
 ## Fourth, we split up the data for UC and CD, include the control data nonIBD, and save this data to an output folder.
-```{r writing_to_file,warning=FALSE, message=FALSE }
+
+``` r
 #write only UC versus nonIBD comparison
 mbxDataUC <- mbxData[ ,(mbxData[1, ] == "UC" | mbxData[1, ] == "nonIBD")]
 #add hmdb id again
@@ -120,17 +136,41 @@ mbxDataCD <- cbind(mbxData[,1:2],mbxDataCD)
 colnames(mbxDataCD)[1]="HMBDB.ID"
 colnames(mbxDataCD)[2] <- "Compound.Name"
 write.table(mbxDataCD, "output/mbxDataCD_nonIBD.csv", sep =",", row.names = FALSE)
-
 ```
 
 ### Last, we create a Jupyter notebook and markdown file from this script
-```{r writing_to_notebooks,warning=FALSE, message=FALSE }
+
+``` r
 #Jupyter Notebook file
 if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
+```
+
+    ## 
+    ## ── R CMD build ─────────────────────────────────────────────────────────────────
+    ##       ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpgVap3m\remotes422049c37151\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##       ─  preparing 'rmd2jupyter':
+    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##       ─  checking for LF line-endings in source and make files and shell scripts
+    ##   ─  checking for empty or unneeded directories
+    ##    Omitted 'LazyData' from DESCRIPTION
+    ##       ─  building 'rmd2jupyter_0.1.0.tar.gz'
+    ##      
+    ## 
+
+``` r
 library(devtools)
 library(rmd2jupyter)
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("dataPreprocessing.Rmd")
+
+#markdown_file <- "dataPreprocessing.md"
+#if (file.exists(markdown_file)) {
+#   unlink(markdown_file, recursive=TRUE)#firs delete the existing one
+# }
+#Still trows an error, now build with knittr manual selection.
+#rmarkdown::render("dataPreprocessing.Rmd", "md_document")
+
 ##Clean up R-studio environment
 remove(diseaseLabels, fileUrl, names.use, mbxData, mbxData.b, mbxDataCD, mbxDataUC, metaDataMBX, metaData)
 ```

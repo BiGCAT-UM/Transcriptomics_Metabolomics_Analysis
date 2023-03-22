@@ -5,9 +5,7 @@ from WikiPathways, based on their HMDB identifier.
 
 ``` r
 # Obtain Working Directory for step 8 to find processed data
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd('..')
-work_DIR <- getwd()
 
 #Obtain data from step 8
 mSet_CD <- read.csv("8-significantly_changed_metabolites_analysis/output/mbxData_CD.csv", na.strings=c("", "NA"))
@@ -314,7 +312,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 
     ## 
     ## ── R CMD build ─────────────────────────────────────────────────────────────────
-    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpemjE9u\remotes363022cf3e5d\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpemjE9u\remotes363022cf3e5d\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpQTnLcr\remotes49dc34c469f0\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpQTnLcr\remotes49dc34c469f0\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
     ##       ─  preparing 'rmd2jupyter':
     ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
     ##       ─  checking for LF line-endings in source and make files and shell scripts
@@ -327,15 +325,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ``` r
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("metabolomics_pathway_analysis.Rmd")
-
-#markdown_file <- "metabolomics_pathway_analysis.md"
-#if (file.exists(markdown_file)) {
-#   unlink(markdown_file, recursive=TRUE)#first delete the existing one
-# }
-#If this next line trows an error, build the md file with knittr manual selection (file, Knit document, or ctrl+shift+k -keyboard shortcut).
-#rmarkdown::render("metabolomics_pathway_analysis.Rmd", "md_document")
 
 ##Clean up data
 remove(counter, i, probabilities, string_HMDB, vector_HMDB, Contingency_table, pathwayAnalysis_results, showresults_CombinePWs, showresultsMetadata)

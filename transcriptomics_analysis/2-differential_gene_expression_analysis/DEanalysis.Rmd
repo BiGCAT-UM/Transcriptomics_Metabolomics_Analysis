@@ -15,7 +15,6 @@ First, install all required packages.
 ```{r setup, warning=FALSE, message=FALSE}
 # check if BioCmanager libraries are already installed > otherwise install it
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"baySeq" %in% installed.packages()) BiocManager::install("baySeq")
 if(!"DESeq2" %in% installed.packages()) BiocManager::install("DESeq2")
 if(!"edgeR" %in% installed.packages()) BiocManager::install("edgeR")
@@ -31,7 +30,6 @@ if(!"limma" %in% installed.packages()){install.packages("limma")}
 #if(!"R2HTML" %in% installed.packages()){install.packages("R2HTML")}
 
 #load packages
-library(rstudioapi)
 library(baySeq)
 library(DESeq2)
 library(edgeR)
@@ -48,7 +46,6 @@ library(limma)
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #include some functions adapted from ArrayAnalysis.org scripts
 source("functions_ArrayAnalysis_v2.R")
-WORK.DIR <- getwd()
 ```
 
 ## Data Preparations
@@ -261,6 +258,5 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("DEanalysis.Rmd")
 ```

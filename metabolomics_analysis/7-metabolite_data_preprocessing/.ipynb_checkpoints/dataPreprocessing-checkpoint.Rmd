@@ -98,7 +98,7 @@ colnames(mbxData)[2] <- "Compound.Name"
 
 #add disease labels to the mbx data
 diseaseLabels <- metaDataMBX$disease
-##Add two empty strings to match with additional column data.
+##Add two empty strings to macth with additional column data.
 diseaseLabels <- append(diseaseLabels, "NA",after = 0)
 diseaseLabels <- append(diseaseLabels, "NA",after = 0)
 mbxData <- rbind(diseaseLabels, mbxData)
