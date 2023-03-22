@@ -17,7 +17,6 @@ Therefor, metabolite data is mapped to ChEBI IDS.
 ```{r setup, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 #if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
 if(!"BridgeDbR" %in% installed.packages()) BiocManager::install("BridgeDbR")
 install.packages("rJava",repos = "http://cran.us.r-project.org" )
@@ -29,8 +28,6 @@ library(dplyr)
 library(BridgeDbR)
 library(rJava)
 
-# set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Process metabolite data

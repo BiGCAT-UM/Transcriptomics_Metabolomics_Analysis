@@ -16,18 +16,11 @@ In this section of the workflow, we will obtain the metabolomics data and apply 
 ```{r setup, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
-#Libraries required for markdown documents:
-if(!"markdown" %in% installed.packages()){install.packages("markdown")}
-if(!"rmarkdown" %in% installed.packages()){install.packages("rmarkdown")}
 if(!"stringr" %in% installed.packages()){install.packages("stringr")}
 #load libraries
-library(rstudioapi)
 library(dplyr)
 library(stringr)
-# set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Second, we download the required data, read the metadata and filter out not-relevant data.
@@ -137,16 +130,7 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("dataPreprocessing.Rmd")
-
-#markdown_file <- "dataPreprocessing.md"
-#if (file.exists(markdown_file)) {
-#   unlink(markdown_file, recursive=TRUE)#firs delete the existing one
-# }
-#Still trows an error, now build with knittr manual selection.
-#rmarkdown::render("dataPreprocessing.Rmd", "md_document")
-
 ##Clean up R-studio environment
 remove(diseaseLabels, fileUrl, names.use, mbxData, mbxData.b, mbxDataCD, mbxDataUC, metaDataMBX, metaData)
 ```
