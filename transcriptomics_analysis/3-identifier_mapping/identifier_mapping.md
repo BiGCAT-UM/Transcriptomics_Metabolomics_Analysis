@@ -10,20 +10,19 @@ IDs.
 ``` r
 # check if libraries are already installed > otherwise install it
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"org.Hs.eg.db" %in% installed.packages()) BiocManager::install("org.Hs.eg.db")  
 if(!"AnnotationDbi" %in% installed.packages()) BiocManager::install("AnnotationDbi")
 if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
 
 #loading installed libraries
-library(rstudioapi) # interface for interacting with RStudio IDE with R code.
-library(org.Hs.eg.db) #This is the organism annotation package ("org") for Homo sapiens ("Hs"), organized as an AnnotationDbi   package ("db"), using Entrez Gene IDs ("eg") as primary key.
+library(org.Hs.eg.db) #This is the organism annotation package ("org") for Homo sapiens ("Hs"), 
+#organized as an AnnotationDbi   package ("db"), using Entrez Gene IDs ("eg") as primary key.
 library(AnnotationDbi) # for connecting and querying annotation databases
 library(dplyr)
-
-# set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+print(getwd())
 ```
+
+    ## [1] "C:/Users/duygu/surfdrive/FNS_CLOUD/GITHUB_codes/Transcriptomics_Metabolomics_Analysis/transcriptomics_analysis/3-identifier_mapping"
 
 ## Importing dataset
 
@@ -32,9 +31,9 @@ The data will be read for the disease on two biopsy locations
 ``` r
 ## Select a disorder to analyse (options; CD or UC)
 disorder <- "CD"
-##Obtain data from step 2:
+##set wd as as one level back to obtain data from previuos step that is DE analysis
 setwd('..')
-work_DIR <- getwd()
+
 #we have two datasets from different biopsy locations
 dataset1 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Ileum_vs_nonIBD_Ileum.tab")
 dataset2 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Rectum_vs_nonIBD_Rectum.tab")
@@ -42,8 +41,8 @@ dataset3 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table
 dataset4 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Rectum_vs_nonIBD_Rectum.tab")
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
+setwd("3-identifier_mapping")
+#work_DIR <- getwd()
 
 if (disorder == "CD") {
   #filter out  unused columns, we select geneSymbol, log2FC and pvalue
@@ -101,10 +100,6 @@ dataset <- cbind(ensemblID$ENSEMBL,dataset)
 colnames(dataset)[1] = "Ensembl.ID"
 #filter out genes that has NA value for entrezID
 #dataset<- dataset %>% tidyr::drop_na(Ensembl.ID)
-
-
-##TODO: add NA removal before PW analysis (and network analysis?)
-##TODO: print some stats on mapping (issues)
 ```
 
 ##Save data, print session info and remove large datasets:
@@ -137,7 +132,7 @@ sessionInfo()
     ## other attached packages:
     ## [1] dplyr_1.1.0          org.Hs.eg.db_3.16.0  AnnotationDbi_1.60.0
     ## [4] IRanges_2.32.0       S4Vectors_0.36.2     Biobase_2.58.0      
-    ## [7] BiocGenerics_0.44.0  rstudioapi_0.14     
+    ## [7] BiocGenerics_0.44.0 
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] Rcpp_1.0.10            pillar_1.8.1           compiler_4.2.2        
@@ -147,14 +142,15 @@ sessionInfo()
     ## [13] lifecycle_1.0.3        RSQLite_2.3.0          evaluate_0.20         
     ## [16] memoise_2.0.1          pkgconfig_2.0.3        png_0.1-8             
     ## [19] rlang_1.0.6            DBI_1.1.3              cli_3.6.0             
-    ## [22] yaml_2.3.7             xfun_0.37              fastmap_1.1.1         
-    ## [25] GenomeInfoDbData_1.2.9 withr_2.5.0            httr_1.4.5            
-    ## [28] knitr_1.42             generics_0.1.3         Biostrings_2.66.0     
-    ## [31] vctrs_0.5.2            tidyselect_1.2.0       bit64_4.0.5           
-    ## [34] glue_1.6.2             R6_2.5.1               fansi_1.0.4           
-    ## [37] rmarkdown_2.20         magrittr_2.0.3         blob_1.2.3            
-    ## [40] htmltools_0.5.4        KEGGREST_1.38.0        utf8_1.2.3            
-    ## [43] RCurl_1.98-1.10        cachem_1.0.7           crayon_1.5.2
+    ## [22] rstudioapi_0.14        yaml_2.3.7             xfun_0.37             
+    ## [25] fastmap_1.1.1          GenomeInfoDbData_1.2.9 withr_2.5.0           
+    ## [28] httr_1.4.5             knitr_1.42             generics_0.1.3        
+    ## [31] Biostrings_2.66.0      vctrs_0.5.2            tidyselect_1.2.0      
+    ## [34] bit64_4.0.5            glue_1.6.2             R6_2.5.1              
+    ## [37] fansi_1.0.4            rmarkdown_2.20         magrittr_2.0.3        
+    ## [40] blob_1.2.3             htmltools_0.5.4        KEGGREST_1.38.0       
+    ## [43] utf8_1.2.3             RCurl_1.98-1.10        cachem_1.0.7          
+    ## [46] crayon_1.5.2
 
 ``` r
 ##Remove data objects which are not needed for further processing:
@@ -171,7 +167,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 
     ## 
     ## ── R CMD build ─────────────────────────────────────────────────────────────────
-    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpgV5PLf\remotes4fb456897fd4\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpgV5PLf\remotes4fb456897fd4\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpMrY3Vc\remotes4d44111676ff\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpMrY3Vc\remotes4d44111676ff\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
     ##       ─  preparing 'rmd2jupyter':
     ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
     ##       ─  checking for LF line-endings in source and make files and shell scripts
@@ -184,6 +180,5 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ``` r
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("identifier_mapping.Rmd")
 ```

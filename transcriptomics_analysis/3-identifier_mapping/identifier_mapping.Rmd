@@ -16,19 +16,17 @@ In this section, identifier (IDs) mapping is performed from the original data an
 ```{r setup, warning=FALSE, message=FALSE}
 # check if libraries are already installed > otherwise install it
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"org.Hs.eg.db" %in% installed.packages()) BiocManager::install("org.Hs.eg.db")  
 if(!"AnnotationDbi" %in% installed.packages()) BiocManager::install("AnnotationDbi")
 if(!"dplyr" %in% installed.packages()){install.packages("dplyr")}
 
 #loading installed libraries
-library(rstudioapi) # interface for interacting with RStudio IDE with R code.
-library(org.Hs.eg.db) #This is the organism annotation package ("org") for Homo sapiens ("Hs"), organized as an AnnotationDbi   package ("db"), using Entrez Gene IDs ("eg") as primary key.
+library(org.Hs.eg.db) #This is the organism annotation package ("org") for Homo sapiens ("Hs"), 
+#organized as an AnnotationDbi   package ("db"), using Entrez Gene IDs ("eg") as primary key.
 library(AnnotationDbi) # for connecting and querying annotation databases
 library(dplyr)
+print(getwd())
 
-# set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ## Importing dataset
@@ -36,9 +34,9 @@ The data will be read for the disease on two biopsy locations
 ```{r dataset, warning=FALSE, message=FALSE}
 ## Select a disorder to analyse (options; CD or UC)
 disorder <- "CD"
-##Obtain data from step 2:
+##set wd as as one level back to obtain data from previuos step that is DE analysis
 setwd('..')
-work_DIR <- getwd()
+
 #we have two datasets from different biopsy locations
 dataset1 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Ileum_vs_nonIBD_Ileum.tab")
 dataset2 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_UC_Rectum_vs_nonIBD_Rectum.tab")
@@ -46,8 +44,8 @@ dataset3 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table
 dataset4 <- read.delim("2-differential_gene_expression_analysis/statsmodel/table_CD_Rectum_vs_nonIBD_Rectum.tab")
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
+setwd("3-identifier_mapping")
+#work_DIR <- getwd()
 
 if (disorder == "CD") {
   #filter out  unused columns, we select geneSymbol, log2FC and pvalue
@@ -65,7 +63,6 @@ dataset <- merge(dataset_ileum, dataset_rectum,by.x="X", by.y="X",sort = TRUE, a
 #change column names
 colnames(dataset) <- c("GeneSymbol","log2FC_ileum","pvalue_ileum","log2FC_rectum","pvalue_rectum")
 ```
-
 ## Converting hgnc gene symbols to the corresponding Entrez (NCBI) gene IDs
 ```{r converting_entrez,warning=FALSE, message=FALSE}
 #converting gene symbols to entrez ID since these are required for the enrichR function
@@ -99,10 +96,8 @@ colnames(dataset)[1] = "Ensembl.ID"
 #filter out genes that has NA value for entrezID
 #dataset<- dataset %>% tidyr::drop_na(Ensembl.ID)
 
-
-##TODO: add NA removal before PW analysis (and network analysis?)
-##TODO: print some stats on mapping (issues)
 ```
+
 ##Save data, print session info and remove large datasets:
 ```{r print_session_info}
 ##Save data:
@@ -124,6 +119,5 @@ if(!"devtools" %in% installed.packages()) BiocManager::install("devtools")
 devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("identifier_mapping.Rmd")
 ```
