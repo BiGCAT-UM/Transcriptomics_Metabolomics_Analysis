@@ -8,7 +8,6 @@ performed.
 ``` r
 # check if libraries are already installed > otherwise install it
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
 if(!"RColorBrewer" %in% installed.packages()) BiocManager::install("RColorBrewer")  
 if(!"dplyr" %in% installed.packages()) BiocManager::install("dplyr")
 if(!"pheatmap" %in% installed.packages()) BiocManager::install("pheatmap")
@@ -17,19 +16,14 @@ if(!"pheatmap" %in% installed.packages()) BiocManager::install("pheatmap")
 library(RColorBrewer) 
 library(dplyr) 
 library (pheatmap)
-
-# set your working environment to the location where your current source file is saved into.
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
-## Importing dataset
-
-Enriched pathway list will be imported.
+## Enriched pathway list will be imported.
 
 ``` r
 ##Obtain data from step 3:
 setwd('..')
-work_DIR <- getwd()
+
 #we have four datasets in total
 #read all pathway lists
 CD.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_CD_ileum.tsv",sep = "\t", header = TRUE)
@@ -38,8 +32,7 @@ UC.ileum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_ileum.tsv
 UC.rectum <- read.delim("4-pathway_analysis/output/enrichResults_ORA_UC_rectum.tsv", sep = "\t",header = TRUE)
 
 # Set Working Directory back to current folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-work_DIR <- getwd()
+setwd("5-create_heatmap")
 
 #we need to get pathways that has p.adjust value lower than 0.05 and qvalue<0.02
 #To prevent high false discovery rate (FDR) in multiple testing, q-values are also estimated for FDR control.
@@ -230,7 +223,7 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 
     ## 
     ## ── R CMD build ─────────────────────────────────────────────────────────────────
-    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpSUtVH4\remotese74f95c19\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpSUtVH4\remotese74f95c19\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
+    ##          checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpcLGaVU\remotes18a862fa58a6\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION' ...  ✔  checking for file 'C:\Users\duygu\AppData\Local\Temp\RtmpcLGaVU\remotes18a862fa58a6\mkearney-rmd2jupyter-d2bd2aa/DESCRIPTION'
     ##       ─  preparing 'rmd2jupyter':
     ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
     ##       ─  checking for LF line-endings in source and make files and shell scripts
@@ -243,6 +236,5 @@ devtools::install_github("mkearney/rmd2jupyter", force=TRUE)
 ``` r
 library(devtools)
 library(rmd2jupyter)
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rmd2jupyter("heatMap.Rmd")
 ```
