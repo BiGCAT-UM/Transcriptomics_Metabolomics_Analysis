@@ -1,0 +1,23 @@
+PREFIX ch: <https://identifiers.org/hmdb/>
+PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
+select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?hmdbMetabolite) AS ?HMDBsInPWs) 
+(GROUP_CONCAT(DISTINCT fn:substring(?hmdbMetabolite,30);separator=' ') AS ?includedHMDBs)
+where {
+VALUES ?hmdbMetabolite {
+
+  
+}
+ 
+ ?datanode	a wp:Metabolite ;          
+           	wp:bdbHmdb  ?hmdbMetabolite ;
+    		dcterms:isPartOf ?pathwayRes .
+    		
+ ?pathwayRes a wp:Pathway ;
+             wp:organismName 'Homo sapiens' ; 
+    		dcterms:identifier ?wpid ;
+    		dc:title ?title .
+    		
+  #?pathwayRes wp:ontologyTag cur:Reactome_Approved . 
+  ?pathwayRes wp:ontologyTag cur:AnalysisCollection .   		
+}
+ORDER BY DESC(?HMDBsInPWs)
