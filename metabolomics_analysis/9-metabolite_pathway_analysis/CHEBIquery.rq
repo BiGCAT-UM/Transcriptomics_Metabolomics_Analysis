@@ -1,0 +1,22 @@
+PREFIX ch: <https://identifiers.org/chebi/CHEBI:>
+PREFIX cur: <http://vocabularies.wikipathways.org/wp#Curation:>
+
+select distinct ?pathwayRes (str(?wpid) as ?pathway) (str(?title) as ?pathwayTitle) (count(distinct ?chebiMetabolite) AS ?CHEBIsInPWs) 
+(GROUP_CONCAT(DISTINCT fn:substring(?chebiMetabolite,37);separator=' ') AS ?includedCHEBIs)
+
+where {
+VALUES ?chebiMetabolite {ch:17126 ch:57589 ch:28867 ch:7676 ch:73017 ch:73026 ch:73054 ch:84634} #Some example IDs
+ 
+ ?datanode	a wp:Metabolite ;          
+           	wp:bdbChEBI  ?chebiMetabolite ;
+    		dcterms:isPartOf ?pathwayRes .
+    		
+ ?pathwayRes a wp:Pathway ;
+             wp:organismName 'Homo sapiens' ; 
+    		dcterms:identifier ?wpid ;
+    		dc:title ?title .
+    		
+  #?pathwayRes wp:ontologyTag cur:Reactome_Approved . 
+  ?pathwayRes wp:ontologyTag cur:AnalysisCollection .   		
+}
+ORDER BY DESC(?CHEBIsInPWs)
